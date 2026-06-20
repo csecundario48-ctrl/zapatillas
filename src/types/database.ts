@@ -134,72 +134,116 @@ export type Database = {
         Row: Supplier
         Insert: Omit<Supplier, 'id' | 'created_at'>
         Update: Partial<Omit<Supplier, 'id' | 'created_at'>>
-        Relationships: []
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       products: {
         Row: Omit<Product, 'suppliers'>
         Insert: Omit<Product, 'id' | 'created_at' | 'suppliers'>
         Update: Partial<Omit<Product, 'id' | 'created_at' | 'suppliers'>>
-        Relationships: [{ foreignKeyName: 'products_supplier_id_fkey'; columns: ['supplier_id']; referencedRelation: 'suppliers'; referencedColumns: ['id'] }]
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       customers: {
         Row: Customer
         Insert: Omit<Customer, 'id' | 'created_at'>
         Update: Partial<Omit<Customer, 'id' | 'created_at'>>
-        Relationships: []
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       sales: {
         Row: Omit<Sale, 'customers' | 'sale_items'>
         Insert: Omit<Sale, 'id' | 'created_at' | 'customers' | 'sale_items'>
         Update: Partial<Omit<Sale, 'id' | 'created_at' | 'customers' | 'sale_items'>>
-        Relationships: [{ foreignKeyName: 'sales_customer_id_fkey'; columns: ['customer_id']; referencedRelation: 'customers'; referencedColumns: ['id'] }]
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       sale_items: {
         Row: Omit<SaleItem, 'products'>
         Insert: Omit<SaleItem, 'id' | 'products'>
         Update: Partial<Omit<SaleItem, 'id' | 'products'>>
-        Relationships: [
-          { foreignKeyName: 'sale_items_sale_id_fkey'; columns: ['sale_id']; referencedRelation: 'sales'; referencedColumns: ['id'] },
-          { foreignKeyName: 'sale_items_product_id_fkey'; columns: ['product_id']; referencedRelation: 'products'; referencedColumns: ['id'] }
-        ]
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       purchases: {
         Row: Omit<Purchase, 'suppliers' | 'purchase_items'>
         Insert: Omit<Purchase, 'id' | 'created_at' | 'suppliers' | 'purchase_items'>
         Update: Partial<Omit<Purchase, 'id' | 'created_at' | 'suppliers' | 'purchase_items'>>
-        Relationships: [{ foreignKeyName: 'purchases_supplier_id_fkey'; columns: ['supplier_id']; referencedRelation: 'suppliers'; referencedColumns: ['id'] }]
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       purchase_items: {
         Row: Omit<PurchaseItem, 'products'>
         Insert: Omit<PurchaseItem, 'id' | 'products'>
         Update: Partial<Omit<PurchaseItem, 'id' | 'products'>>
-        Relationships: [
-          { foreignKeyName: 'purchase_items_purchase_id_fkey'; columns: ['purchase_id']; referencedRelation: 'purchases'; referencedColumns: ['id'] },
-          { foreignKeyName: 'purchase_items_product_id_fkey'; columns: ['product_id']; referencedRelation: 'products'; referencedColumns: ['id'] }
-        ]
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       expenses: {
         Row: Expense
         Insert: Omit<Expense, 'id' | 'created_at'>
         Update: Partial<Omit<Expense, 'id' | 'created_at'>>
-        Relationships: []
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       stock_adjustments: {
         Row: Omit<StockAdjustment, 'products'>
         Insert: Omit<StockAdjustment, 'id' | 'created_at' | 'products'>
         Update: Partial<Omit<StockAdjustment, 'id' | 'created_at' | 'products'>>
-        Relationships: [{ foreignKeyName: 'stock_adjustments_product_id_fkey'; columns: ['product_id']; referencedRelation: 'products'; referencedColumns: ['id'] }]
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
       user_profiles: {
         Row: UserProfile
         Insert: Omit<UserProfile, 'created_at'>
         Update: Partial<Omit<UserProfile, 'created_at'>>
-        Relationships: []
+        Relationships: {
+          foreignKeyName: string
+          columns: string[]
+          referencedRelation: string
+          referencedColumns: string[]
+        }[]
       }
     }
     Views: Record<string, never>
     Functions: {
-      get_user_role: { Args: Record<string, never>; Returns: string }
+      get_user_role: { Args: Record<PropertyKey, never>; Returns: string }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
