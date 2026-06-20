@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --prefix \"C:/Users/Usuario/Desktop/zapatill\" run build)"
+    ]
+  }
+}
