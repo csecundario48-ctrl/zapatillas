@@ -66,14 +66,8 @@ export function Sidebar({ className }: { className?: string }) {
     >
       {/* Logo */}
       <div className="px-5 h-14 flex items-center border-b border-white/[0.06]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-xs">
-            👟
-          </div>
-          <span className="font-semibold text-[13px] tracking-tight text-white">
-            Zapatillas
-          </span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/kala-logo.png" alt="KALA" className="h-[18px] w-auto" />
       </div>
 
       {/* Nav groups */}

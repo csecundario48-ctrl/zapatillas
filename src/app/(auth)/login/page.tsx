@@ -35,9 +35,8 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Brand */}
           <div className="mb-8">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl mb-5">
-              👟
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/kala-logo.png" alt="KALA" className="h-7 w-auto mb-6" />
             <h1 className="text-xl font-semibold text-white">Bienvenido de nuevo</h1>
             <p className="text-sm text-[#828282] mt-1">Ingresá a tu cuenta para continuar</p>
           </div>
@@ -98,11 +97,10 @@ export default function LoginPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full bg-indigo-500/[0.06] blur-[130px]" />
 
         <div className="relative z-10 max-w-md px-14">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-indigo-400/70 font-medium mb-5">
-            Zapatillas Dashboard
-          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/kala-logo.png" alt="KALA" className="h-9 w-auto mb-7" />
           <h2 className="text-3xl font-semibold text-white leading-[1.2] tracking-tight">
-            Todo tu negocio de zapatillas, en un solo lugar.
+            Todo tu negocio, en un solo lugar.
           </h2>
           <p className="text-[#a8a8a8] mt-5 leading-relaxed">
             Ventas, stock, compras y finanzas — claros y al instante.

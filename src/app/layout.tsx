@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zapatillas Dashboard",
-  description: "Sistema de gestión para tu negocio de zapatillas",
+  title: "KALA — Gestión",
+  description: "Panel de gestión KALA: ventas, stock, compras y finanzas",
 };
 
 export default function RootLayout({
