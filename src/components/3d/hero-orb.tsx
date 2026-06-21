@@ -1,9 +1,24 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { MeshDistortMaterial, Float, Stars } from '@react-three/drei'
 import * as THREE from 'three'
+
+// Particle cloud positions — computed once at module load (not during render).
+const PARTICLE_POSITIONS = (() => {
+  const count = 120
+  const arr = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) {
+    const theta = Math.random() * Math.PI * 2
+    const phi = Math.acos(2 * Math.random() - 1)
+    const r = 2.5 + Math.random() * 1.2
+    arr[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+    arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+    arr[i * 3 + 2] = r * Math.cos(phi)
+  }
+  return arr
+})()
 
 function DistortSphere() {
   const meshRef = useRef<THREE.Mesh>(null!)
@@ -58,20 +73,6 @@ function Ring2() {
 }
 
 function Particles() {
-  const count = 120
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const r = 2.5 + Math.random() * 1.2
-      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      arr[i * 3 + 2] = r * Math.cos(phi)
-    }
-    return arr
-  }, [])
-
   const ref = useRef<THREE.Points>(null!)
   useFrame((_, delta) => {
     ref.current.rotation.y += delta * 0.05
@@ -80,7 +81,7 @@ function Particles() {
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute args={[positions, 3]} attach="attributes-position" />
+        <bufferAttribute args={[PARTICLE_POSITIONS, 3]} attach="attributes-position" />
       </bufferGeometry>
       <pointsMaterial color="#6366f1" size={0.04} transparent opacity={0.6} />
     </points>
