@@ -12,6 +12,8 @@ import {
   Receipt,
   TrendingUp,
   BarChart3,
+  Users,
+  Contact,
 } from 'lucide-react'
 
 const navGroups = [
@@ -34,6 +36,13 @@ const navGroups = [
       { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
       { href: '/compras', label: 'Compras', icon: Truck },
       { href: '/egresos', label: 'Egresos', icon: Receipt },
+    ],
+  },
+  {
+    label: 'Relaciones',
+    items: [
+      { href: '/clientes', label: 'Clientes', icon: Users },
+      { href: '/proveedores', label: 'Proveedores', icon: Contact },
     ],
   },
   {
