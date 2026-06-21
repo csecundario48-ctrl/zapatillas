@@ -45,12 +45,12 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por marca, modelo, talle..."
-            className="w-64 bg-[#0f0f0f] border border-[#2a2a2a] text-white placeholder-[#444] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+            className="w-64 bg-[#0f0f0f] border border-white/10 text-white placeholder-[#444] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
           {isAdmin && (
             <Dialog>
               <DialogTrigger render={<Button />}>+ Nuevo producto</DialogTrigger>
-              <DialogContent className="max-w-2xl bg-[#111] border-[#2a2a2a]">
+              <DialogContent className="max-w-2xl bg-[#111] border-white/10">
                 <DialogHeader>
                   <DialogTitle className="text-white">Agregar producto</DialogTitle>
                 </DialogHeader>
@@ -62,13 +62,13 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#111] py-16 text-center">
+        <div className="rounded-xl border border-white/[0.08] bg-[#111] py-16 text-center">
           <p className="text-[#444] text-sm">
             {search ? `Sin resultados para "${search}"` : 'No hay productos cargados aún.'}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#111] overflow-hidden">
+        <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
           <ProductTable products={filtered} isAdmin={isAdmin} />
         </div>
       )}

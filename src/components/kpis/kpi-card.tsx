@@ -13,7 +13,7 @@ interface KpiCardProps {
 }
 
 const colorMap = {
-  cyan:   { bar: 'bg-cyan-400',    glow: 'rgba(34,211,238,0.12)',    text: 'text-cyan-400' },
+  cyan:   { bar: 'bg-indigo-400',    glow: 'rgba(99,102,241,0.12)',    text: 'text-indigo-400' },
   green:  { bar: 'bg-emerald-400', glow: 'rgba(52,211,153,0.12)',    text: 'text-emerald-400' },
   violet: { bar: 'bg-violet-400',  glow: 'rgba(167,139,250,0.12)',   text: 'text-violet-400' },
   red:    { bar: 'bg-red-400',     glow: 'rgba(248,113,113,0.12)',   text: 'text-red-400' },
@@ -75,7 +75,7 @@ export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix =
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative overflow-hidden rounded-xl bg-[#111] border border-[#1f1f1f] p-6 cursor-default"
+      className="relative overflow-hidden rounded-xl bg-[#111] border border-white/[0.08] p-6 cursor-default"
       style={{ transition: 'transform 0.12s ease-out, box-shadow 0.12s ease-out', transformStyle: 'preserve-3d' }}
     >
       {/* Top accent bar */}

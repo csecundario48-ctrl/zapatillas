@@ -51,14 +51,14 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'flex flex-col w-[220px] shrink-0 bg-[#080808] border-r border-[#161616] min-h-screen',
+        'flex flex-col w-[220px] shrink-0 bg-[#080808] border-r border-white/[0.06] min-h-screen',
         className
       )}
     >
       {/* Logo */}
-      <div className="px-5 h-14 flex items-center border-b border-[#161616]">
+      <div className="px-5 h-14 flex items-center border-b border-white/[0.06]">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20 flex items-center justify-center text-xs">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-xs">
             👟
           </div>
           <span className="font-semibold text-[13px] tracking-tight text-white">
@@ -92,12 +92,12 @@ export function Sidebar({ className }: { className?: string }) {
                       size={14}
                       className={cn(
                         'shrink-0',
-                        isActive ? 'text-cyan-400' : 'text-[#444] group-hover:text-[#888]'
+                        isActive ? 'text-indigo-400' : 'text-[#444] group-hover:text-[#888]'
                       )}
                     />
                     {itemLabel}
                     {isActive && (
-                      <span className="ml-auto w-1 h-1 rounded-full bg-cyan-400 shrink-0" />
+                      <span className="ml-auto w-1 h-1 rounded-full bg-indigo-400 shrink-0" />
                     )}
                   </Link>
                 )
@@ -108,7 +108,7 @@ export function Sidebar({ className }: { className?: string }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-3.5 border-t border-[#161616]">
+      <div className="px-5 py-3.5 border-t border-white/[0.06]">
         <p className="text-[10px] text-[#2a2a2a] font-mono tracking-widest uppercase">v1.0</p>
       </div>
     </aside>

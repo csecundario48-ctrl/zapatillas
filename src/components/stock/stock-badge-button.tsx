@@ -33,13 +33,13 @@ export function StockBadgeButton({ productId, productName, size, qty }: StockBad
           <button
             type="button"
             title={`Ajustar stock · T${size}`}
-            className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-xs font-bold cursor-pointer transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 ${badgeClass(qty)}`}
+            className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-xs font-bold cursor-pointer transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 ${badgeClass(qty)}`}
           />
         }
       >
         {qty}
       </DialogTrigger>
-      <DialogContent className="max-w-sm bg-[#111] border-[#2a2a2a]">
+      <DialogContent className="max-w-sm bg-[#111] border-white/10">
         <DialogHeader>
           <DialogTitle className="text-white">Ajustar stock · T{size}</DialogTitle>
         </DialogHeader>

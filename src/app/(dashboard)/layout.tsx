@@ -20,13 +20,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('stock_quantity', 0)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0a0a]">
+    <div className="relative isolate flex h-screen overflow-hidden bg-[#08090a]">
+      {/* Aurora glow backdrop (Linear-style) */}
+      <div className="aurora" />
+
       {/* Sidebar — frozen during page transitions */}
-      <div style={{ viewTransitionName: 'dashboard-sidebar' }}>
+      <div className="relative z-10" style={{ viewTransitionName: 'dashboard-sidebar' }}>
         <Sidebar className="hidden md:flex" />
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
         {/* Header — frozen during page transitions */}
         <div style={{ viewTransitionName: 'dashboard-header' }}>
           <Header userEmail={user.email ?? ''} criticalCount={criticalCount ?? 0} />

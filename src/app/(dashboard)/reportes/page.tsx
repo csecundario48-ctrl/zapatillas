@@ -44,17 +44,17 @@ export default async function ReportesPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-5">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-5">
           <p className="text-xs text-[#555] uppercase tracking-wider mb-2">Total vendido</p>
           <p className="text-2xl font-bold text-emerald-400">{formatCurrency(totalRevenue)}</p>
         </div>
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-5">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-5">
           <p className="text-xs text-[#555] uppercase tracking-wider mb-2">Costo mercadería</p>
           <p className="text-2xl font-bold text-red-400">{formatCurrency(totalCOGS)}</p>
         </div>
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-5">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-5">
           <p className="text-xs text-[#555] uppercase tracking-wider mb-2">Ganancia bruta</p>
-          <p className="text-2xl font-bold text-cyan-400">{formatCurrency(grossProfit)}</p>
+          <p className="text-2xl font-bold text-indigo-400">{formatCurrency(grossProfit)}</p>
           {totalRevenue > 0 && (
             <p className="text-xs text-[#444] mt-1">
               Margen: {((grossProfit / totalRevenue) * 100).toFixed(1)}%
@@ -66,26 +66,26 @@ export default async function ReportesPage() {
       {monthData.length > 0 ? (
         <>
           {/* Line chart */}
-          <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-6">
+          <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
             <h2 className="text-sm font-semibold text-white mb-5">Ventas por mes</h2>
             <SalesLineChart data={monthData} />
           </div>
 
           {/* Pie chart */}
-          <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-6">
+          <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
             <h2 className="text-sm font-semibold text-white mb-5">Unidades por marca</h2>
             <BrandPieChart data={brandData} />
           </div>
 
           {/* Brand ranking */}
           {brandData.length > 0 && (
-            <div className="bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#1a1a1a]">
+            <div className="bg-[#111] border border-white/[0.08] rounded-xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/[0.06]">
                 <h2 className="text-sm font-semibold text-white">Ranking de marcas</h2>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+                  <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
                     <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">#</th>
                     <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Marca</th>
                     <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Unidades</th>
@@ -93,10 +93,10 @@ export default async function ReportesPage() {
                 </thead>
                 <tbody>
                   {brandData.map((b, i) => (
-                    <tr key={b.name} className="border-b border-[#1a1a1a] hover:bg-white/[0.02] transition-colors">
+                    <tr key={b.name} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3 text-[#444] font-mono text-xs">{i + 1}</td>
                       <td className="px-4 py-3 text-white font-medium">{b.name}</td>
-                      <td className="px-4 py-3 text-cyan-400 font-semibold">{b.value}</td>
+                      <td className="px-4 py-3 text-indigo-400 font-semibold">{b.value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -105,7 +105,7 @@ export default async function ReportesPage() {
           )}
         </>
       ) : (
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#0f0f0f] py-20 text-center">
+        <div className="rounded-xl border border-white/[0.08] bg-[#0f0f0f] py-20 text-center">
           <p className="text-[#444] text-sm">No hay datos de ventas aún.</p>
           <p className="text-[#333] text-xs mt-1">Los gráficos aparecerán cuando registres tus primeras ventas.</p>
         </div>

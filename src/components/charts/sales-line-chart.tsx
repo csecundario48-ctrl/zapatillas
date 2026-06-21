@@ -38,15 +38,15 @@ export function SalesLineChart({ data }: { data: DataPoint[] }) {
           }}
           formatter={(v) => [formatCurrency(Number(v)), 'Ventas']}
           labelStyle={{ color: '#888' }}
-          cursor={{ stroke: '#22d3ee', strokeWidth: 1, strokeDasharray: '3 3' }}
+          cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '3 3' }}
         />
         <Line
           type="monotone"
           dataKey="total"
-          stroke="#22d3ee"
+          stroke="#6366f1"
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4, fill: '#22d3ee', strokeWidth: 0 }}
+          activeDot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
         />
       </LineChart>
     </ResponsiveContainer>

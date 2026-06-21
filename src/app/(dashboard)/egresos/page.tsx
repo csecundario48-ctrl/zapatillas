@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils/format'
 const categoryColors: Record<string, string> = {
   alquiler: 'text-violet-400',
   servicios: 'text-blue-400',
-  marketing: 'text-cyan-400',
+  marketing: 'text-indigo-400',
   delivery: 'text-emerald-400',
   salarios: 'text-amber-400',
   packaging: 'text-orange-400',
@@ -43,7 +43,7 @@ export default async function EgresosPage() {
           <DialogTrigger render={<Button />}>
             + Nuevo egreso
           </DialogTrigger>
-          <DialogContent className="bg-[#111] border-[#2a2a2a] text-white max-w-lg">
+          <DialogContent className="bg-[#111] border-white/10 text-white max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-white">Registrar egreso</DialogTitle>
             </DialogHeader>
@@ -52,11 +52,11 @@ export default async function EgresosPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-[#1f1f1f] bg-[#111] overflow-hidden">
+      <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
         {expenses && expenses.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+              <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Fecha</th>
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Categoría</th>
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Descripción</th>
@@ -67,7 +67,7 @@ export default async function EgresosPage() {
             </thead>
             <tbody>
               {expenses.map(e => (
-                <tr key={e.id} className="border-b border-[#1a1a1a] hover:bg-white/[0.02] transition-colors">
+                <tr key={e.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
                   <td className="px-4 py-3 text-[#888]">{formatDate(e.expense_date)}</td>
                   <td className="px-4 py-3">
                     <span className={`capitalize font-medium ${categoryColors[e.category] ?? 'text-[#ccc]'}`}>
@@ -79,7 +79,7 @@ export default async function EgresosPage() {
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${
                       e.type === 'fijo'
                         ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                        : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'
+                        : 'bg-[#1a1a1a] border-white/10 text-[#666]'
                     }`}>
                       {e.type}
                     </span>
@@ -87,7 +87,7 @@ export default async function EgresosPage() {
                   <td className="px-4 py-3 font-semibold text-white">{formatCurrency(e.amount)}</td>
                   <td className="px-4 py-3 text-center">
                     {e.recurring ? (
-                      <span className="text-cyan-400 text-xs">✓</span>
+                      <span className="text-indigo-400 text-xs">✓</span>
                     ) : (
                       <span className="text-[#333]">—</span>
                     )}

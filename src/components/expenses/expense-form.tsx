@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label'
 import { formatDateForInput } from '@/lib/utils/format'
 import { EXPENSE_CATEGORIES } from '@/lib/utils/sizes'
 
-const sel = 'w-full bg-[#0f0f0f] border border-[#2a2a2a] text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors'
+const sel = 'w-full bg-[#0f0f0f] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter()

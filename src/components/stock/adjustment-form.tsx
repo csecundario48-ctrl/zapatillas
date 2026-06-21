@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { AdjustmentReason } from '@/types/database'
 
-const sel = 'w-full bg-[#0f0f0f] border border-[#2a2a2a] text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors'
+const sel = 'w-full bg-[#0f0f0f] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface AdjustmentFormProps {
   productId: string
@@ -53,7 +53,7 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded-lg border border-[#1f1f1f] bg-[#0f0f0f] px-3 py-2.5">
+      <div className="rounded-lg border border-white/[0.08] bg-[#0f0f0f] px-3 py-2.5">
         <p className="text-sm text-white font-medium">{productName}</p>
         <p className="text-xs text-[#555] mt-0.5">
           Stock actual: <span className="text-[#888] font-semibold">{currentStock}</span> ud.

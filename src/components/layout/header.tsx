@@ -37,7 +37,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-10 flex items-center justify-between h-14 px-5 border-b border-[#161616] shrink-0"
+      className="sticky top-0 z-10 flex items-center justify-between h-14 px-5 border-b border-white/[0.06] shrink-0"
       style={{ backgroundColor: 'rgba(8,8,8,0.92)', backdropFilter: 'blur(12px)' }}
     >
       <h1 className="text-[13px] font-semibold text-white tracking-tight">{pageTitle}</h1>
@@ -55,7 +55,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
 
         <div
           title={userEmail}
-          className="w-7 h-7 rounded-full bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center text-[10px] font-bold text-[#888] select-none"
+          className="w-7 h-7 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center text-[10px] font-bold text-[#888] select-none"
         >
           {initials}
         </div>

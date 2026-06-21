@@ -49,7 +49,7 @@ export default async function FinanzasPage() {
 
       {/* Main KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-6">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-[#555] uppercase tracking-wider">Ingresos totales</p>
             <TrendingUp size={16} className="text-emerald-400" />
@@ -58,7 +58,7 @@ export default async function FinanzasPage() {
           <p className="text-xs text-[#444] mt-1">Este mes: {formatCurrency(monthIncome)}</p>
         </div>
 
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-6">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-[#555] uppercase tracking-wider">Costos totales</p>
             <TrendingDown size={16} className="text-red-400" />
@@ -83,7 +83,7 @@ export default async function FinanzasPage() {
 
       {/* Secondary metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-6">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
           <p className="text-xs text-[#555] uppercase tracking-wider mb-3">Ganancia bruta</p>
           <p className="text-2xl font-bold text-white">{formatCurrency(grossProfit)}</p>
           <p className="text-xs text-[#444] mt-1">Ventas − Costo de mercadería</p>
@@ -95,7 +95,7 @@ export default async function FinanzasPage() {
               </div>
               <div className="h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-cyan-400 rounded-full"
+                  className="h-full bg-indigo-400 rounded-full"
                   style={{ width: `${Math.max(0, Math.min(100, (grossProfit / totalIncome) * 100))}%` }}
                 />
               </div>
@@ -117,7 +117,7 @@ export default async function FinanzasPage() {
 
       {/* Expenses by category */}
       {Object.keys(expenseByCategory).length > 0 && (
-        <div className="bg-[#111] border border-[#1f1f1f] rounded-xl p-6">
+        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
           <h2 className="text-sm font-semibold text-white mb-4">Egresos por categoría</h2>
           <div className="space-y-3">
             {Object.entries(expenseByCategory)

@@ -15,8 +15,8 @@ function DistortSphere() {
     <mesh ref={meshRef}>
       <sphereGeometry args={[1.1, 64, 64]} />
       <MeshDistortMaterial
-        color="#22d3ee"
-        emissive="#0e7490"
+        color="#6366f1"
+        emissive="#4338ca"
         emissiveIntensity={0.4}
         roughness={0.1}
         metalness={0.8}
@@ -52,7 +52,7 @@ function Ring2() {
   return (
     <mesh ref={ref} rotation={[Math.PI / 3, 0, 0]}>
       <torusGeometry args={[2.1, 0.015, 16, 120]} />
-      <meshBasicMaterial color="#22d3ee" transparent opacity={0.25} />
+      <meshBasicMaterial color="#6366f1" transparent opacity={0.25} />
     </mesh>
   )
 }
@@ -82,7 +82,7 @@ function Particles() {
       <bufferGeometry>
         <bufferAttribute args={[positions, 3]} attach="attributes-position" />
       </bufferGeometry>
-      <pointsMaterial color="#22d3ee" size={0.04} transparent opacity={0.6} />
+      <pointsMaterial color="#6366f1" size={0.04} transparent opacity={0.6} />
     </points>
   )
 }
@@ -92,7 +92,7 @@ export function HeroOrb() {
     <div className="w-full h-full">
       <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
         <ambientLight intensity={0.2} />
-        <pointLight position={[5, 5, 5]} intensity={1.5} color="#22d3ee" />
+        <pointLight position={[5, 5, 5]} intensity={1.5} color="#6366f1" />
         <pointLight position={[-5, -3, -3]} intensity={0.8} color="#a78bfa" />
         <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.8}>
           <DistortSphere />

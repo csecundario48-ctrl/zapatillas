@@ -18,7 +18,7 @@ export function ProductTable({ products, isAdmin }: ProductTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+          <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
             <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">SKU</th>
             <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Producto</th>
             <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Color</th>
@@ -33,7 +33,7 @@ export function ProductTable({ products, isAdmin }: ProductTableProps) {
         </thead>
         <tbody>
           {products.map(p => (
-            <tr key={p.id} className="border-b border-[#1a1a1a] hover:bg-white/[0.02] transition-colors">
+            <tr key={p.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
               <td className="px-4 py-3 font-mono text-[10px] text-[#444]">{p.sku}</td>
               <td className="px-4 py-3 font-medium text-white">
                 {p.brand} {p.model}
@@ -63,7 +63,7 @@ export function ProductTable({ products, isAdmin }: ProductTableProps) {
                   className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${
                     p.active
                       ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                      : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#555]'
+                      : 'bg-[#1a1a1a] border-white/10 text-[#555]'
                   }`}
                 >
                   {p.active ? 'Activo' : 'Inactivo'}

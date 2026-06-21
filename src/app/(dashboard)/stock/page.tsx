@@ -61,7 +61,7 @@ export default async function StockPage() {
           { label: 'Stock bajo', value: stockBajo, color: 'text-amber-400' },
           { label: 'Sin stock', value: sinStock, color: 'text-red-400' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#111] border border-[#1f1f1f] rounded-xl p-4 text-center">
+          <div key={label} className="bg-[#111] border border-white/[0.08] rounded-xl p-4 text-center">
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
             <p className="text-xs text-[#555] mt-1">{label}</p>
           </div>
@@ -86,11 +86,11 @@ export default async function StockPage() {
 
       {/* Product groups */}
       {groups.length === 0 ? (
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#0f0f0f] py-16 text-center">
+        <div className="rounded-xl border border-white/[0.08] bg-[#0f0f0f] py-16 text-center">
           <p className="text-[#444] text-sm">No hay productos cargados aún.</p>
           <Link
             href="/catalogo"
-            className="inline-block mt-3 text-xs text-cyan-400 hover:text-cyan-300 underline"
+            className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline"
           >
             Ir al catálogo →
           </Link>
@@ -108,7 +108,7 @@ export default async function StockPage() {
                     ? 'border-red-500/20'
                     : hasLow
                     ? 'border-amber-500/20'
-                    : 'border-[#1f1f1f]'
+                    : 'border-white/[0.08]'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">

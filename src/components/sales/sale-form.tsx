@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
 import type { Product } from '@/types/database'
 
-const sel = 'w-full bg-[#0f0f0f] border border-[#2a2a2a] text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors'
+const sel = 'w-full bg-[#0f0f0f] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface SaleItem {
   product: Product
@@ -135,7 +135,7 @@ export function SaleForm({ products }: { products: Product[] }) {
           placeholder="Nike Air Force 1 Blanco T42..."
         />
         {search && (
-          <div className="rounded-xl border border-[#2a2a2a] bg-[#0f0f0f] divide-y divide-[#1a1a1a] max-h-52 overflow-y-auto shadow-xl">
+          <div className="rounded-xl border border-white/10 bg-[#0f0f0f] divide-y divide-white/[0.06] max-h-52 overflow-y-auto shadow-xl">
             {filteredProducts.slice(0, 8).map(p => (
               <button
                 key={p.id}
@@ -162,10 +162,10 @@ export function SaleForm({ products }: { products: Product[] }) {
 
       {/* Items table */}
       {items.length > 0 && (
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#111] overflow-hidden">
+        <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+              <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Producto</th>
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Cant.</th>
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Precio</th>
@@ -175,7 +175,7 @@ export function SaleForm({ products }: { products: Product[] }) {
             </thead>
             <tbody>
               {items.map(item => (
-                <tr key={item.product.id} className="border-b border-[#1a1a1a]">
+                <tr key={item.product.id} className="border-b border-white/[0.06]">
                   <td className="px-4 py-3 text-white">
                     {item.product.brand} {item.product.model} T{item.product.size}
                     <span className="text-[#555] text-xs ml-1">({item.product.color})</span>
@@ -213,7 +213,7 @@ export function SaleForm({ products }: { products: Product[] }) {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-[#2a2a2a] bg-[#0a0a0a]">
+              <tr className="border-t border-white/10 bg-[#0a0a0a]">
                 <td colSpan={3} className="px-4 py-3 text-right text-[#666] font-medium">Total:</td>
                 <td className="px-4 py-3 font-bold text-xl text-white">{formatCurrency(total)}</td>
                 <td></td>

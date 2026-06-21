@@ -31,17 +31,17 @@ export default async function ComprasPage() {
         </div>
         <Link
           href="/compras/nueva"
-          className="px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium hover:bg-cyan-500/15 transition-colors"
+          className="px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium hover:bg-indigo-500/15 transition-colors"
         >
           + Nueva compra
         </Link>
       </div>
 
-      <div className="rounded-xl border border-[#1f1f1f] bg-[#111] overflow-hidden">
+      <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
         {purchases && purchases.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+              <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Fecha</th>
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Proveedor</th>
                 <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Total</th>
@@ -54,7 +54,7 @@ export default async function ComprasPage() {
                 const isOverdue =
                   p.payment_due_date && p.payment_due_date < today && p.payment_status !== 'pagado'
                 return (
-                  <tr key={p.id} className="border-b border-[#1a1a1a] hover:bg-white/[0.02] transition-colors">
+                  <tr key={p.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3 text-[#ccc]">{formatDate(p.purchase_date)}</td>
                     <td className="px-4 py-3 text-white font-medium">{p.suppliers?.name ?? '-'}</td>
                     <td className="px-4 py-3 font-semibold text-white">{formatCurrency(p.total_amount)}</td>
@@ -81,7 +81,7 @@ export default async function ComprasPage() {
         ) : (
           <div className="py-16 text-center">
             <p className="text-[#444] text-sm">No hay compras registradas aún.</p>
-            <Link href="/compras/nueva" className="inline-block mt-3 text-xs text-cyan-400 hover:text-cyan-300 underline">
+            <Link href="/compras/nueva" className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline">
               Registrar primera compra →
             </Link>
           </div>
