@@ -1,9 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { ExpenseForm } from '@/components/expenses/expense-form'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
+
+const categoryColors: Record<string, string> = {
+  alquiler: 'text-violet-400',
+  servicios: 'text-blue-400',
+  marketing: 'text-cyan-400',
+  delivery: 'text-emerald-400',
+  salarios: 'text-amber-400',
+  packaging: 'text-orange-400',
+  otros: 'text-[#666]',
+}
 
 export default async function EgresosPage() {
   const supabase = await createClient()
@@ -13,55 +22,84 @@ export default async function EgresosPage() {
     .order('expense_date', { ascending: false })
 
   const total = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
+  const thisMonth = expenses
+    ?.filter(e => {
+      const now = new Date()
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+      return e.expense_date >= monthStart
+    })
+    .reduce((sum, e) => sum + e.amount, 0) ?? 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Egresos</h1>
-          <p className="text-gray-500 text-sm">Total registrado: {formatCurrency(total)}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Egresos</h1>
+          <p className="text-sm text-[#555] mt-0.5">
+            Este mes: {formatCurrency(thisMonth)} · Total: {formatCurrency(total)}
+          </p>
         </div>
         <Dialog>
           <DialogTrigger render={<Button />}>
             + Nuevo egreso
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-[#111] border-[#2a2a2a] text-white max-w-lg">
             <DialogHeader>
-              <DialogTitle>Registrar egreso</DialogTitle>
+              <DialogTitle className="text-white">Registrar egreso</DialogTitle>
             </DialogHeader>
             <ExpenseForm />
           </DialogContent>
         </Dialog>
       </div>
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="text-left p-3">Fecha</th>
-              <th className="text-left p-3">Categoría</th>
-              <th className="text-left p-3">Descripción</th>
-              <th className="text-left p-3">Tipo</th>
-              <th className="text-left p-3">Monto</th>
-              <th className="text-left p-3">Rec.</th>
-            </tr>
-          </thead>
-          <tbody>
-            {expenses?.map(e => (
-              <tr key={e.id} className="border-b hover:bg-gray-50">
-                <td className="p-3">{formatDate(e.expense_date)}</td>
-                <td className="p-3 capitalize">{e.category}</td>
-                <td className="p-3 text-gray-600">{e.description ?? '-'}</td>
-                <td className="p-3">
-                  <Badge variant="outline">{e.type}</Badge>
-                </td>
-                <td className="p-3 font-medium">{formatCurrency(e.amount)}</td>
-                <td className="p-3">{e.recurring ? '✓' : '-'}</td>
+
+      <div className="rounded-xl border border-[#1f1f1f] bg-[#111] overflow-hidden">
+        {expenses && expenses.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Fecha</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Categoría</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Descripción</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Tipo</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Monto</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Rec.</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {!expenses?.length && (
-          <p className="p-6 text-center text-gray-500 text-sm">No hay egresos registrados aún.</p>
+            </thead>
+            <tbody>
+              {expenses.map(e => (
+                <tr key={e.id} className="border-b border-[#1a1a1a] hover:bg-white/[0.02] transition-colors">
+                  <td className="px-4 py-3 text-[#888]">{formatDate(e.expense_date)}</td>
+                  <td className="px-4 py-3">
+                    <span className={`capitalize font-medium ${categoryColors[e.category] ?? 'text-[#ccc]'}`}>
+                      {e.category}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-[#666]">{e.description ?? '—'}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${
+                      e.type === 'fijo'
+                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'
+                    }`}>
+                      {e.type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-white">{formatCurrency(e.amount)}</td>
+                  <td className="px-4 py-3 text-center">
+                    {e.recurring ? (
+                      <span className="text-cyan-400 text-xs">✓</span>
+                    ) : (
+                      <span className="text-[#333]">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="py-16 text-center">
+            <p className="text-[#444] text-sm">No hay egresos registrados aún.</p>
+          </div>
         )}
       </div>
     </div>

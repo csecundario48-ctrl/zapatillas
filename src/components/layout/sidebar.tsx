@@ -6,69 +6,110 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Package,
-  BarChart2,
+  Boxes,
   ShoppingCart,
   Truck,
   Receipt,
   TrendingUp,
-  FileText,
-  LogOut,
+  BarChart3,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 
-const navItems = [
-  { href: '/', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/catalogo', label: 'Catálogo', icon: Package },
-  { href: '/stock', label: 'Stock', icon: BarChart2 },
-  { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
-  { href: '/compras', label: 'Compras', icon: Truck },
-  { href: '/egresos', label: 'Egresos', icon: Receipt },
-  { href: '/finanzas', label: 'Finanzas', icon: TrendingUp },
-  { href: '/reportes', label: 'Reportes', icon: FileText },
+const navGroups = [
+  {
+    label: 'Principal',
+    items: [
+      { href: '/', label: 'Inicio', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Inventario',
+    items: [
+      { href: '/catalogo', label: 'Catálogo', icon: Package },
+      { href: '/stock', label: 'Stock', icon: Boxes },
+    ],
+  },
+  {
+    label: 'Operaciones',
+    items: [
+      { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
+      { href: '/compras', label: 'Compras', icon: Truck },
+      { href: '/egresos', label: 'Egresos', icon: Receipt },
+    ],
+  },
+  {
+    label: 'Análisis',
+    items: [
+      { href: '/finanzas', label: 'Finanzas', icon: TrendingUp },
+      { href: '/reportes', label: 'Reportes', icon: BarChart3 },
+    ],
+  },
 ]
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
-  const router = useRouter()
-
-  async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
-  }
 
   return (
-    <aside className={cn('flex flex-col w-64 bg-slate-900 text-white min-h-screen', className)}>
-      <div className="p-6 border-b border-slate-700">
-        <h1 className="text-xl font-bold">👟 Zapatillas</h1>
+    <aside
+      className={cn(
+        'flex flex-col w-[220px] shrink-0 bg-[#080808] border-r border-[#161616] min-h-screen',
+        className
+      )}
+    >
+      {/* Logo */}
+      <div className="px-5 h-14 flex items-center border-b border-[#161616]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20 flex items-center justify-center text-xs">
+            👟
+          </div>
+          <span className="font-semibold text-[13px] tracking-tight text-white">
+            Zapatillas
+          </span>
+        </div>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              pathname === href
-                ? 'bg-slate-700 text-white'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-            )}
-          >
-            <Icon size={18} />
-            {label}
-          </Link>
+
+      {/* Nav groups */}
+      <nav className="flex-1 px-2.5 py-3 space-y-4 overflow-y-auto">
+        {navGroups.map(({ label, items }) => (
+          <div key={label}>
+            <p className="px-2.5 mb-1 text-[10px] font-semibold text-[#2e2e2e] uppercase tracking-[0.12em]">
+              {label}
+            </p>
+            <div className="space-y-0.5">
+              {items.map(({ href, label: itemLabel, icon: Icon }) => {
+                const isActive = pathname === href
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      'group flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-100',
+                      isActive
+                        ? 'bg-white/[0.07] text-white'
+                        : 'text-[#555] hover:text-[#bbb] hover:bg-white/[0.04]'
+                    )}
+                  >
+                    <Icon
+                      size={14}
+                      className={cn(
+                        'shrink-0',
+                        isActive ? 'text-cyan-400' : 'text-[#444] group-hover:text-[#888]'
+                      )}
+                    />
+                    {itemLabel}
+                    {isActive && (
+                      <span className="ml-auto w-1 h-1 rounded-full bg-cyan-400 shrink-0" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
         ))}
       </nav>
-      <div className="p-4 border-t border-slate-700">
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2 w-full text-sm text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-        >
-          <LogOut size={18} />
-          Cerrar sesión
-        </button>
+
+      {/* Footer */}
+      <div className="px-5 py-3.5 border-t border-[#161616]">
+        <p className="text-[10px] text-[#2a2a2a] font-mono tracking-widest uppercase">v1.0</p>
       </div>
     </aside>
   )

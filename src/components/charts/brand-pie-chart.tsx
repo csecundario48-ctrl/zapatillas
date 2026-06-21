@@ -2,7 +2,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6']
+const COLORS = ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#f472b6', '#60a5fa', '#fb7185', '#4ade80']
 
 interface BrandData {
   name: string
@@ -11,18 +11,36 @@ interface BrandData {
 
 export function BrandPieChart({ data }: { data: BrandData[] }) {
   if (data.length === 0) {
-    return <p className="text-center text-gray-500 text-sm py-12">Sin datos de ventas aún</p>
+    return <p className="text-center text-[#444] text-sm py-12">Sin datos de ventas aún</p>
   }
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
-        <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={100}
+          strokeWidth={0}
+        >
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip />
-        <Legend />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#111',
+            border: '1px solid #2a2a2a',
+            borderRadius: '8px',
+            color: '#fff',
+            fontSize: 12,
+          }}
+        />
+        <Legend
+          formatter={(value) => <span style={{ color: '#888', fontSize: 12 }}>{value}</span>}
+        />
       </PieChart>
     </ResponsiveContainer>
   )

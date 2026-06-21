@@ -1,4 +1,7 @@
+import { ViewTransition } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
+import { Header } from '@/components/layout/header'
+import { Toaster } from '@/components/ui/sonner'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -10,12 +13,34 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user) redirect('/login')
 
+  const { count: criticalCount } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('active', true)
+    .eq('stock_quantity', 0)
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar className="hidden md:flex" />
-      <main className="flex-1 overflow-auto">
-        <div className="p-4 md:p-6">{children}</div>
-      </main>
+    <div className="flex h-screen overflow-hidden bg-[#0a0a0a]">
+      {/* Sidebar — frozen during page transitions */}
+      <div style={{ viewTransitionName: 'dashboard-sidebar' }}>
+        <Sidebar className="hidden md:flex" />
+      </div>
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header — frozen during page transitions */}
+        <div style={{ viewTransitionName: 'dashboard-header' }}>
+          <Header userEmail={user.email ?? ''} criticalCount={criticalCount ?? 0} />
+        </div>
+
+        <main className="flex-1 overflow-y-auto">
+          {/* Page content slides in/out on navigation */}
+          <ViewTransition enter="page-slide" exit="page-slide">
+            <div className="p-5 md:p-7">{children}</div>
+          </ViewTransition>
+        </main>
+      </div>
+
+      <Toaster position="bottom-right" richColors />
     </div>
   )
 }

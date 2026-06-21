@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
 import type { Product, Supplier } from '@/types/database'
+
+const sel = 'w-full bg-[#0f0f0f] border border-[#2a2a2a] text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors'
 
 interface PurchaseItem {
   product: Product
@@ -73,6 +76,8 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
     )
 
     if (iErr) { setError(iErr.message); setLoading(false); return }
+
+    toast.success('Compra registrada')
     router.push('/compras')
     router.refresh()
   }
@@ -80,137 +85,127 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <Label>Proveedor</Label>
-          <select
-            value={supplierId}
-            onChange={e => setSupplierId(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm bg-white"
-          >
-            <option value="">Seleccionar proveedor</option>
-            {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-[#666] uppercase tracking-wider">Proveedor</Label>
+          <select value={supplierId} onChange={e => setSupplierId(e.target.value)} className={sel}>
+            <option value="" className="bg-[#111]">Seleccionar proveedor</option>
+            {suppliers.map(s => <option key={s.id} value={s.id} className="bg-[#111]">{s.name}</option>)}
           </select>
         </div>
-        <div className="space-y-1">
-          <Label>Fecha de compra</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-[#666] uppercase tracking-wider">Fecha de compra</Label>
           <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <Label>Estado de pago</Label>
-          <select
-            value={paymentStatus}
-            onChange={e => setPaymentStatus(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm bg-white"
-          >
-            <option value="pendiente">Pendiente</option>
-            <option value="pagado">Pagado</option>
-            <option value="parcial">Parcial</option>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-[#666] uppercase tracking-wider">Estado de pago</Label>
+          <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className={sel}>
+            <option value="pendiente" className="bg-[#111]">Pendiente</option>
+            <option value="pagado" className="bg-[#111]">Pagado</option>
+            <option value="parcial" className="bg-[#111]">Parcial</option>
           </select>
         </div>
-        <div className="space-y-1">
-          <Label>Fecha vencimiento pago</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-[#666] uppercase tracking-wider">Vencimiento pago</Label>
           <Input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)} />
         </div>
-        <div className="space-y-1 sm:col-span-2">
-          <Label>Notas (opcional)</Label>
-          <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas de la compra" />
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label className="text-xs text-[#666] uppercase tracking-wider">Notas</Label>
+          <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas de la compra..." />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Buscar producto</Label>
-        <Input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Nike Air Force 1..."
-        />
+        <Label className="text-xs text-[#666] uppercase tracking-wider">Buscar producto</Label>
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Nike Air Force 1..." />
         {search && (
-          <div className="border rounded-lg divide-y max-h-40 overflow-y-auto bg-white shadow-sm">
+          <div className="rounded-xl border border-[#2a2a2a] bg-[#0f0f0f] divide-y divide-[#1a1a1a] max-h-44 overflow-y-auto shadow-xl">
             {filteredProducts.slice(0, 8).map(p => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => addItem(p)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex justify-between"
+                className="w-full text-left px-4 py-2.5 hover:bg-white/[0.03] text-sm flex justify-between transition-colors"
               >
-                <span>{p.brand} {p.model} — {p.color} T{p.size}</span>
-                <span className="text-gray-500 text-xs">Costo: {formatCurrency(p.cost_price)}</span>
+                <span className="text-white">{p.brand} {p.model} <span className="text-[#666]">— {p.color} T{p.size}</span></span>
+                <span className="text-[#555] text-xs">Costo: {formatCurrency(p.cost_price)}</span>
               </button>
             ))}
             {filteredProducts.length === 0 && (
-              <p className="px-3 py-2 text-sm text-gray-500">Sin resultados</p>
+              <p className="px-4 py-3 text-sm text-[#444]">Sin resultados</p>
             )}
           </div>
         )}
       </div>
 
       {items.length > 0 && (
-        <table className="w-full text-sm border rounded-lg overflow-hidden">
-          <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="text-left p-3">Producto</th>
-              <th className="text-left p-3">Cant.</th>
-              <th className="text-left p-3">Costo unit.</th>
-              <th className="text-left p-3">Subtotal</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map(item => (
-              <tr key={item.product.id} className="border-b">
-                <td className="p-3">{item.product.brand} {item.product.model} T{item.product.size}</td>
-                <td className="p-3">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={item.quantity}
-                    className="w-16"
-                    onChange={e =>
-                      setItems(items.map(i =>
-                        i.product.id === item.product.id ? { ...i, quantity: Math.max(1, Number(e.target.value)) } : i
-                      ))
-                    }
-                  />
-                </td>
-                <td className="p-3">
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={item.unit_cost}
-                    className="w-28"
-                    onChange={e =>
-                      setItems(items.map(i =>
-                        i.product.id === item.product.id ? { ...i, unit_cost: Number(e.target.value) } : i
-                      ))
-                    }
-                  />
-                </td>
-                <td className="p-3">{formatCurrency(item.unit_cost * item.quantity)}</td>
-                <td className="p-3">
-                  <button
-                    type="button"
-                    onClick={() => setItems(items.filter(i => i.product.id !== item.product.id))}
-                    className="text-red-500 hover:text-red-700 text-xs"
-                  >
-                    Quitar
-                  </button>
-                </td>
+        <div className="rounded-xl border border-[#1f1f1f] bg-[#111] overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Producto</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Cant.</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Costo unit.</th>
+                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Subtotal</th>
+                <th className="px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="bg-gray-50">
-              <td colSpan={3} className="p-3 text-right font-bold">Total:</td>
-              <td className="p-3 font-bold">{formatCurrency(total)}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            <tbody>
+              {items.map(item => (
+                <tr key={item.product.id} className="border-b border-[#1a1a1a]">
+                  <td className="px-4 py-3 text-white">{item.product.brand} {item.product.model} T{item.product.size}</td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      className="w-16"
+                      onChange={e =>
+                        setItems(items.map(i =>
+                          i.product.id === item.product.id ? { ...i, quantity: Math.max(1, Number(e.target.value)) } : i
+                        ))
+                      }
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={item.unit_cost}
+                      className="w-28"
+                      onChange={e =>
+                        setItems(items.map(i =>
+                          i.product.id === item.product.id ? { ...i, unit_cost: Number(e.target.value) } : i
+                        ))
+                      }
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-white font-medium">{formatCurrency(item.unit_cost * item.quantity)}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => setItems(items.filter(i => i.product.id !== item.product.id))}
+                      className="text-[#444] hover:text-red-400 text-xs transition-colors"
+                    >
+                      Quitar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-[#2a2a2a] bg-[#0a0a0a]">
+                <td colSpan={3} className="px-4 py-3 text-right text-[#666] font-medium">Total:</td>
+                <td className="px-4 py-3 font-bold text-white text-lg">{formatCurrency(total)}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <Button type="submit" disabled={loading}>
+      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? 'Guardando...' : 'Registrar compra'}
       </Button>
     </form>
