@@ -29,24 +29,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08090a] flex items-center justify-center p-4">
-      {/* Background glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-500/5 blur-[120px]" />
-      </div>
-
-      <div className="relative w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl mx-auto mb-4">
-            👟
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#08090a]">
+      {/* ─── Left: form ─── */}
+      <div className="flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-sm">
+          {/* Brand */}
+          <div className="mb-8">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl mb-5">
+              👟
+            </div>
+            <h1 className="text-xl font-semibold text-white">Bienvenido de nuevo</h1>
+            <p className="text-sm text-[#555] mt-1">Ingresá a tu cuenta para continuar</p>
           </div>
-          <h1 className="text-xl font-bold text-white">Zapatillas Dashboard</h1>
-          <p className="text-sm text-[#555] mt-1">Ingresá a tu cuenta</p>
-        </div>
 
-        {/* Card */}
-        <div className="rounded-2xl border border-white/[0.08] bg-[#111] p-8 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-xs font-medium text-[#666] uppercase tracking-wider">
@@ -94,6 +89,35 @@ export default function LoginPage() {
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* ─── Right: brand panel (hidden on mobile) ─── */}
+      <div className="hidden lg:flex relative items-center justify-center overflow-hidden border-l border-white/[0.06]">
+        <div className="aurora" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full bg-indigo-500/[0.06] blur-[130px]" />
+
+        <div className="relative z-10 max-w-md px-14">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-indigo-400/70 font-medium mb-5">
+            Zapatillas Dashboard
+          </p>
+          <h2 className="text-3xl font-semibold text-white leading-[1.2] tracking-tight">
+            Todo tu negocio de zapatillas, en un solo lugar.
+          </h2>
+          <p className="text-[#888] mt-5 leading-relaxed">
+            Ventas, stock, compras y finanzas — claros y al instante.
+          </p>
+
+          <div className="flex gap-8 mt-10 pt-8 border-t border-white/[0.06]">
+            <div>
+              <p className="text-2xl font-semibold text-white tracking-tight">8</p>
+              <p className="text-xs text-[#555] mt-1">secciones</p>
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-white tracking-tight">Tiempo real</p>
+              <p className="text-xs text-[#555] mt-1">sin recargar</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
