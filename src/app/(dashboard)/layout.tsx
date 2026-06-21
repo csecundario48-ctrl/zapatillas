@@ -30,12 +30,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+        {/* Giant faint KALA watermark behind every section */}
+        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/kala-logo.png" alt="" className="w-[62%] max-w-4xl opacity-[0.03] select-none" />
+        </div>
+
         {/* Header — frozen during page transitions */}
-        <div style={{ viewTransitionName: 'dashboard-header' }}>
+        <div className="relative z-10" style={{ viewTransitionName: 'dashboard-header' }}>
           <Header userEmail={user.email ?? ''} criticalCount={criticalCount ?? 0} />
         </div>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="relative z-10 flex-1 overflow-y-auto">
           {/* Page content slides in/out on navigation */}
           <ViewTransition enter="page-slide" exit="page-slide">
             <div className="p-5 md:p-7">{children}</div>
