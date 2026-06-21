@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { AdjustmentReason } from '@/types/database'
 
-const sel = 'w-full bg-[#0f0f0f] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
+const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface AdjustmentFormProps {
   productId: string
@@ -53,22 +53,22 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded-lg border border-white/[0.08] bg-[#0f0f0f] px-3 py-2.5">
+      <div className="rounded-lg border border-white/[0.08] bg-[#131419] px-3 py-2.5">
         <p className="text-sm text-white font-medium">{productName}</p>
-        <p className="text-xs text-[#555] mt-0.5">
-          Stock actual: <span className="text-[#888] font-semibold">{currentStock}</span> ud.
+        <p className="text-xs text-[#828282] mt-0.5">
+          Stock actual: <span className="text-[#a8a8a8] font-semibold">{currentStock}</span> ud.
         </p>
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#666] uppercase tracking-wider">Cambio de cantidad</Label>
+        <Label className="text-xs text-[#969696] uppercase tracking-wider">Cambio de cantidad</Label>
         <Input
           type="number"
           value={quantityChange}
           onChange={e => setQuantityChange(Number(e.target.value))}
           placeholder="+5 o -3"
         />
-        <p className="text-xs text-[#555]">
+        <p className="text-xs text-[#828282]">
           Stock resultante:{' '}
           <span className={`font-semibold ${resultingStock < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
             {resultingStock}
@@ -77,17 +77,17 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#666] uppercase tracking-wider">Motivo</Label>
+        <Label className="text-xs text-[#969696] uppercase tracking-wider">Motivo</Label>
         <select value={reason} onChange={e => setReason(e.target.value as AdjustmentReason)} className={sel}>
-          <option value="ajuste_manual" className="bg-[#111]">Ajuste manual</option>
-          <option value="rotura" className="bg-[#111]">Rotura</option>
-          <option value="perdida" className="bg-[#111]">Pérdida</option>
-          <option value="devolucion_proveedor" className="bg-[#111]">Devolución a proveedor</option>
+          <option value="ajuste_manual" className="bg-[#15161c]">Ajuste manual</option>
+          <option value="rotura" className="bg-[#15161c]">Rotura</option>
+          <option value="perdida" className="bg-[#15161c]">Pérdida</option>
+          <option value="devolucion_proveedor" className="bg-[#15161c]">Devolución a proveedor</option>
         </select>
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#666] uppercase tracking-wider">Notas (opcional)</Label>
+        <Label className="text-xs text-[#969696] uppercase tracking-wider">Notas (opcional)</Label>
         <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ej: conteo físico de cierre de mes" />
       </div>
 

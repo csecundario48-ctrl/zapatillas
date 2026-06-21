@@ -11,7 +11,7 @@ const categoryColors: Record<string, string> = {
   delivery: 'text-emerald-400',
   salarios: 'text-amber-400',
   packaging: 'text-orange-400',
-  otros: 'text-[#666]',
+  otros: 'text-[#969696]',
 }
 
 export default async function EgresosPage() {
@@ -35,7 +35,7 @@ export default async function EgresosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Egresos</h1>
-          <p className="text-sm text-[#555] mt-0.5">
+          <p className="text-sm text-[#828282] mt-0.5">
             Este mes: {formatCurrency(thisMonth)} · Total: {formatCurrency(total)}
           </p>
         </div>
@@ -43,7 +43,7 @@ export default async function EgresosPage() {
           <DialogTrigger render={<Button />}>
             + Nuevo egreso
           </DialogTrigger>
-          <DialogContent className="bg-[#111] border-white/10 text-white max-w-lg">
+          <DialogContent className="bg-[#15161c] border-white/10 text-white max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-white">Registrar egreso</DialogTitle>
             </DialogHeader>
@@ -52,34 +52,34 @@ export default async function EgresosPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
+      <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
         {expenses && expenses.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Categoría</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Descripción</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Tipo</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Monto</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Rec.</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Fecha</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Categoría</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Descripción</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Tipo</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Monto</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Rec.</th>
               </tr>
             </thead>
             <tbody>
               {expenses.map(e => (
                 <tr key={e.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
-                  <td className="px-4 py-3 text-[#888]">{formatDate(e.expense_date)}</td>
+                  <td className="px-4 py-3 text-[#a8a8a8]">{formatDate(e.expense_date)}</td>
                   <td className="px-4 py-3">
-                    <span className={`capitalize font-medium ${categoryColors[e.category] ?? 'text-[#ccc]'}`}>
+                    <span className={`capitalize font-medium ${categoryColors[e.category] ?? 'text-[#dcdcdc]'}`}>
                       {e.category}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#666]">{e.description ?? '—'}</td>
+                  <td className="px-4 py-3 text-[#969696]">{e.description ?? '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${
                       e.type === 'fijo'
                         ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                        : 'bg-[#1a1a1a] border-white/10 text-[#666]'
+                        : 'bg-[#1f2026] border-white/10 text-[#969696]'
                     }`}>
                       {e.type}
                     </span>
@@ -89,7 +89,7 @@ export default async function EgresosPage() {
                     {e.recurring ? (
                       <span className="text-indigo-400 text-xs">✓</span>
                     ) : (
-                      <span className="text-[#333]">—</span>
+                      <span className="text-[#5c5c5c]">—</span>
                     )}
                   </td>
                 </tr>
@@ -98,7 +98,7 @@ export default async function EgresosPage() {
           </table>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-[#444] text-sm">No hay egresos registrados aún.</p>
+            <p className="text-[#6e6e6e] text-sm">No hay egresos registrados aún.</p>
           </div>
         )}
       </div>

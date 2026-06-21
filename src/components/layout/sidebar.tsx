@@ -71,7 +71,7 @@ export function Sidebar({ className }: { className?: string }) {
       <nav className="flex-1 px-2.5 py-3 space-y-4 overflow-y-auto">
         {navGroups.map(({ label, items }) => (
           <div key={label}>
-            <p className="px-2.5 mb-1 text-[10px] font-semibold text-[#2e2e2e] uppercase tracking-[0.12em]">
+            <p className="px-2.5 mb-1 text-[10px] font-semibold text-[#505050] uppercase tracking-[0.12em]">
               {label}
             </p>
             <div className="space-y-0.5">
@@ -85,14 +85,14 @@ export function Sidebar({ className }: { className?: string }) {
                       'group flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-100',
                       isActive
                         ? 'bg-white/[0.07] text-white'
-                        : 'text-[#555] hover:text-[#bbb] hover:bg-white/[0.04]'
+                        : 'text-[#828282] hover:text-[#cfcfcf] hover:bg-white/[0.04]'
                     )}
                   >
                     <Icon
                       size={14}
                       className={cn(
                         'shrink-0',
-                        isActive ? 'text-indigo-400' : 'text-[#444] group-hover:text-[#888]'
+                        isActive ? 'text-indigo-400' : 'text-[#6e6e6e] group-hover:text-[#a8a8a8]'
                       )}
                     />
                     {itemLabel}
@@ -109,7 +109,7 @@ export function Sidebar({ className }: { className?: string }) {
 
       {/* Footer */}
       <div className="px-5 py-3.5 border-t border-white/[0.06]">
-        <p className="text-[10px] text-[#2a2a2a] font-mono tracking-widest uppercase">v1.0</p>
+        <p className="text-[10px] text-[#4a4a4a] font-mono tracking-widest uppercase">v1.0</p>
       </div>
     </aside>
   )

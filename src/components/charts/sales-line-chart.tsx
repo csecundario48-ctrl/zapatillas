@@ -10,7 +10,7 @@ interface DataPoint {
 
 export function SalesLineChart({ data }: { data: DataPoint[] }) {
   if (data.length === 0) {
-    return <p className="text-center text-[#444] text-sm py-12">Sin datos de ventas aún</p>
+    return <p className="text-center text-[#6e6e6e] text-sm py-12">Sin datos de ventas aún</p>
   }
   return (
     <ResponsiveContainer width="100%" height={280}>

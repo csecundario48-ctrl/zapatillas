@@ -49,7 +49,7 @@ export default async function StockPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Stock</h1>
-          <p className="text-sm text-[#555] mt-0.5">Vista por modelo y talle</p>
+          <p className="text-sm text-[#828282] mt-0.5">Vista por modelo y talle</p>
         </div>
       </div>
 
@@ -61,15 +61,15 @@ export default async function StockPage() {
           { label: 'Stock bajo', value: stockBajo, color: 'text-amber-400' },
           { label: 'Sin stock', value: sinStock, color: 'text-red-400' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#111] border border-white/[0.08] rounded-xl p-4 text-center">
+          <div key={label} className="bg-[#15161c] border border-white/[0.08] rounded-xl p-4 text-center">
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-[#555] mt-1">{label}</p>
+            <p className="text-xs text-[#828282] mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Leyenda */}
-      <div className="flex items-center gap-4 text-xs text-[#555]">
+      <div className="flex items-center gap-4 text-xs text-[#828282]">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" />
           3+ unidades
@@ -86,8 +86,8 @@ export default async function StockPage() {
 
       {/* Product groups */}
       {groups.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.08] bg-[#0f0f0f] py-16 text-center">
-          <p className="text-[#444] text-sm">No hay productos cargados aún.</p>
+        <div className="rounded-xl border border-white/[0.08] bg-[#131419] py-16 text-center">
+          <p className="text-[#6e6e6e] text-sm">No hay productos cargados aún.</p>
           <Link
             href="/catalogo"
             className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline"
@@ -103,7 +103,7 @@ export default async function StockPage() {
             return (
               <div
                 key={`${group.brand}-${group.model}-${group.color}-${group.gender}`}
-                className={`rounded-xl border bg-[#111] p-5 transition-colors ${
+                className={`rounded-xl border bg-[#15161c] p-5 transition-colors ${
                   hasCritical
                     ? 'border-red-500/20'
                     : hasLow
@@ -116,12 +116,12 @@ export default async function StockPage() {
                     <h3 className="font-semibold text-white">
                       {group.brand} {group.model}
                     </h3>
-                    <p className="text-xs text-[#555] mt-0.5 capitalize">
+                    <p className="text-xs text-[#828282] mt-0.5 capitalize">
                       {group.color} · {group.gender}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-[#444]">Stock total</p>
+                    <p className="text-xs text-[#6e6e6e]">Stock total</p>
                     <p className={`text-lg font-bold ${hasCritical ? 'text-red-400' : hasLow ? 'text-amber-400' : 'text-emerald-400'}`}>
                       {group.totalStock}
                     </p>
@@ -140,7 +140,7 @@ export default async function StockPage() {
                           size={size}
                           qty={qty}
                         />
-                        <span className="text-[10px] text-[#444]">T{size}</span>
+                        <span className="text-[10px] text-[#6e6e6e]">T{size}</span>
                       </div>
                     ))}
                 </div>

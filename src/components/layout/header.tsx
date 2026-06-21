@@ -55,7 +55,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
 
         <div
           title={userEmail}
-          className="w-7 h-7 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center text-[10px] font-bold text-[#888] select-none"
+          className="w-7 h-7 rounded-full bg-[#1f2026] border border-white/10 flex items-center justify-center text-[10px] font-bold text-[#a8a8a8] select-none"
         >
           {initials}
         </div>
@@ -63,7 +63,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
         <button
           onClick={handleSignOut}
           title="Cerrar sesión"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-[#444] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="w-7 h-7 rounded-md flex items-center justify-center text-[#6e6e6e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <LogOut size={13} />
         </button>

@@ -33,7 +33,7 @@ export default async function VentasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Ventas</h1>
-          <p className="text-sm text-[#555] mt-0.5">Este mes: {formatCurrency(totalMes)}</p>
+          <p className="text-sm text-[#828282] mt-0.5">Este mes: {formatCurrency(totalMes)}</p>
         </div>
         <Link
           href="/ventas/nueva"
@@ -43,28 +43,28 @@ export default async function VentasPage() {
         </Link>
       </div>
 
-      <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
+      <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
         {sales && sales.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Canal</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Pago</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Total</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider font-medium">Estado</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Fecha</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Canal</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Pago</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Total</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Estado</th>
               </tr>
             </thead>
             <tbody>
               {sales.map(sale => (
                 <tr key={sale.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
-                  <td className="px-4 py-3 text-[#ccc]">{formatDate(sale.sale_date)}</td>
+                  <td className="px-4 py-3 text-[#dcdcdc]">{formatDate(sale.sale_date)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border capitalize ${channelStyle[sale.channel] ?? ''}`}>
                       {sale.channel}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#888] capitalize">{sale.payment_method}</td>
+                  <td className="px-4 py-3 text-[#a8a8a8] capitalize">{sale.payment_method}</td>
                   <td className="px-4 py-3 font-semibold text-white">{formatCurrency(sale.total_amount)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${statusStyle[sale.status] ?? ''}`}>
@@ -77,7 +77,7 @@ export default async function VentasPage() {
           </table>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-[#444] text-sm">No hay ventas registradas aún.</p>
+            <p className="text-[#6e6e6e] text-sm">No hay ventas registradas aún.</p>
             <Link href="/ventas/nueva" className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline">
               Registrar primera venta →
             </Link>

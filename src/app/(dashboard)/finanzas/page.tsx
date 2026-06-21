@@ -44,56 +44,56 @@ export default async function FinanzasPage() {
     <div className="space-y-7 max-w-5xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white">Finanzas</h1>
-        <p className="text-sm text-[#555] mt-0.5">Resumen financiero acumulado</p>
+        <p className="text-sm text-[#828282] mt-0.5">Resumen financiero acumulado</p>
       </div>
 
       {/* Main KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
+        <div className="bg-[#15161c] border border-white/[0.08] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-[#555] uppercase tracking-wider">Ingresos totales</p>
+            <p className="text-xs text-[#828282] uppercase tracking-wider">Ingresos totales</p>
             <TrendingUp size={16} className="text-emerald-400" />
           </div>
           <p className="text-3xl font-bold text-emerald-400">{formatCurrency(totalIncome)}</p>
-          <p className="text-xs text-[#444] mt-1">Este mes: {formatCurrency(monthIncome)}</p>
+          <p className="text-xs text-[#6e6e6e] mt-1">Este mes: {formatCurrency(monthIncome)}</p>
         </div>
 
-        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
+        <div className="bg-[#15161c] border border-white/[0.08] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-[#555] uppercase tracking-wider">Costos totales</p>
+            <p className="text-xs text-[#828282] uppercase tracking-wider">Costos totales</p>
             <TrendingDown size={16} className="text-red-400" />
           </div>
           <p className="text-3xl font-bold text-red-400">{formatCurrency(totalCOGS + totalExpenses)}</p>
-          <p className="text-xs text-[#444] mt-1">
+          <p className="text-xs text-[#6e6e6e] mt-1">
             Mercadería: {formatCurrency(totalCOGS)} · Gastos: {formatCurrency(totalExpenses)}
           </p>
         </div>
 
         <div className={`border rounded-xl p-6 ${netProfit >= 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-[#555] uppercase tracking-wider">Ganancia neta</p>
+            <p className="text-xs text-[#828282] uppercase tracking-wider">Ganancia neta</p>
             <DollarSign size={16} className={netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'} />
           </div>
           <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             {formatCurrency(netProfit)}
           </p>
-          <p className="text-xs text-[#444] mt-1">Este mes: {formatCurrency(monthNetProfit)}</p>
+          <p className="text-xs text-[#6e6e6e] mt-1">Este mes: {formatCurrency(monthNetProfit)}</p>
         </div>
       </div>
 
       {/* Secondary metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
-          <p className="text-xs text-[#555] uppercase tracking-wider mb-3">Ganancia bruta</p>
+        <div className="bg-[#15161c] border border-white/[0.08] rounded-xl p-6">
+          <p className="text-xs text-[#828282] uppercase tracking-wider mb-3">Ganancia bruta</p>
           <p className="text-2xl font-bold text-white">{formatCurrency(grossProfit)}</p>
-          <p className="text-xs text-[#444] mt-1">Ventas − Costo de mercadería</p>
+          <p className="text-xs text-[#6e6e6e] mt-1">Ventas − Costo de mercadería</p>
           {totalIncome > 0 && (
             <div className="mt-4">
-              <div className="flex justify-between text-xs text-[#555] mb-1">
+              <div className="flex justify-between text-xs text-[#828282] mb-1">
                 <span>Margen bruto</span>
                 <span>{((grossProfit / totalIncome) * 100).toFixed(1)}%</span>
               </div>
-              <div className="h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[#1f2026] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-indigo-400 rounded-full"
                   style={{ width: `${Math.max(0, Math.min(100, (grossProfit / totalIncome) * 100))}%` }}
@@ -107,31 +107,31 @@ export default async function FinanzasPage() {
           <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <AlertCircle size={14} className="text-amber-400" />
-              <p className="text-xs text-[#555] uppercase tracking-wider">Pagos pendientes a proveedores</p>
+              <p className="text-xs text-[#828282] uppercase tracking-wider">Pagos pendientes a proveedores</p>
             </div>
             <p className="text-2xl font-bold text-amber-400">{formatCurrency(pendingPayments)}</p>
-            <p className="text-xs text-[#444] mt-1">No incluido en los egresos hasta que se pague</p>
+            <p className="text-xs text-[#6e6e6e] mt-1">No incluido en los egresos hasta que se pague</p>
           </div>
         )}
       </div>
 
       {/* Expenses by category */}
       {Object.keys(expenseByCategory).length > 0 && (
-        <div className="bg-[#111] border border-white/[0.08] rounded-xl p-6">
+        <div className="bg-[#15161c] border border-white/[0.08] rounded-xl p-6">
           <h2 className="text-sm font-semibold text-white mb-4">Egresos por categoría</h2>
           <div className="space-y-3">
             {Object.entries(expenseByCategory)
               .sort(([, a], [, b]) => b - a)
               .map(([cat, amount]) => (
                 <div key={cat} className="flex items-center gap-3">
-                  <div className="w-24 text-xs text-[#666] capitalize">{cat}</div>
-                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                  <div className="w-24 text-xs text-[#969696] capitalize">{cat}</div>
+                  <div className="flex-1 h-1.5 bg-[#1f2026] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-violet-400 rounded-full"
                       style={{ width: `${(amount / totalExpenses) * 100}%` }}
                     />
                   </div>
-                  <div className="w-20 text-xs text-right text-[#888]">{formatCurrency(amount)}</div>
+                  <div className="w-20 text-xs text-right text-[#a8a8a8]">{formatCurrency(amount)}</div>
                 </div>
               ))}
           </div>

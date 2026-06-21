@@ -170,15 +170,22 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
-  /* Linear-style aurora — soft gradient glow behind content */
+  /* Linear-style aurora — living gradient glow that slowly drifts behind content */
   .aurora {
     position: absolute;
-    inset: 0;
+    inset: -15%;
     pointer-events: none;
     background:
-      radial-gradient(58% 44% at 78% -4%, rgba(99, 102, 241, 0.13), transparent 72%),
-      radial-gradient(42% 38% at 8% 0%, rgba(167, 139, 250, 0.08), transparent 70%),
-      radial-gradient(50% 50% at 50% 120%, rgba(99, 102, 241, 0.05), transparent 70%);
+      radial-gradient(58% 44% at 78% -4%, rgba(99, 102, 241, 0.18), transparent 72%),
+      radial-gradient(42% 38% at 8% 0%, rgba(167, 139, 250, 0.11), transparent 70%),
+      radial-gradient(50% 50% at 50% 120%, rgba(99, 102, 241, 0.07), transparent 70%);
+    animation: aurora-drift 26s ease-in-out infinite alternate;
+    will-change: transform, filter, opacity;
+  }
+  @keyframes aurora-drift {
+    0%   { transform: translate3d(0, 0, 0) scale(1);       filter: hue-rotate(0deg);   opacity: 0.85; }
+    50%  { transform: translate3d(-2.5%, 1.5%, 0) scale(1.1); filter: hue-rotate(-14deg); opacity: 1; }
+    100% { transform: translate3d(2.5%, -1.5%, 0) scale(1.05); filter: hue-rotate(12deg);  opacity: 0.9; }
   }
   .gradient-text {
     background: linear-gradient(135deg, #6366f1, #a78bfa);
@@ -280,4 +287,28 @@
 }
 .pulse-glow {
   animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* ─── Cinematic load reveal — sections develop in, blur clearing, staggered ─── */
+@keyframes cine-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); filter: blur(8px); }
+  to   { opacity: 1; transform: none;                          filter: blur(0); }
+}
+.cine-stagger > * {
+  animation: cine-in 0.65s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.cine-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.cine-stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.cine-stagger > *:nth-child(3) { animation-delay: 0.20s; }
+.cine-stagger > *:nth-child(4) { animation-delay: 0.28s; }
+.cine-stagger > *:nth-child(5) { animation-delay: 0.36s; }
+.cine-stagger > *:nth-child(6) { animation-delay: 0.44s; }
+.cine-stagger > *:nth-child(7) { animation-delay: 0.52s; }
+.cine-stagger > *:nth-child(8) { animation-delay: 0.60s; }
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  .aurora { animation: none; }
+  .cine-stagger > * { animation: none; }
+  .float-anim, .pulse-glow { animation: none; }
 }

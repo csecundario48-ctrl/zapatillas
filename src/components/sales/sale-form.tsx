@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
 import type { Product } from '@/types/database'
 
-const sel = 'w-full bg-[#0f0f0f] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
+const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface SaleItem {
   product: Product
@@ -105,37 +105,37 @@ export function SaleForm({ products }: { products: Product[] }) {
       {/* Meta */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#666] uppercase tracking-wider">Fecha</Label>
+          <Label className="text-xs text-[#969696] uppercase tracking-wider">Fecha</Label>
           <Input type="date" value={saleDate} onChange={e => setSaleDate(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#666] uppercase tracking-wider">Canal</Label>
+          <Label className="text-xs text-[#969696] uppercase tracking-wider">Canal</Label>
           <select value={channel} onChange={e => setChannel(e.target.value)} className={sel}>
-            <option value="fisica" className="bg-[#111]">Física</option>
-            <option value="online" className="bg-[#111]">Online</option>
+            <option value="fisica" className="bg-[#15161c]">Física</option>
+            <option value="online" className="bg-[#15161c]">Online</option>
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#666] uppercase tracking-wider">Medio de pago</Label>
+          <Label className="text-xs text-[#969696] uppercase tracking-wider">Medio de pago</Label>
           <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={sel}>
-            <option value="efectivo" className="bg-[#111]">Efectivo</option>
-            <option value="transferencia" className="bg-[#111]">Transferencia</option>
-            <option value="tarjeta" className="bg-[#111]">Tarjeta</option>
-            <option value="mercadopago" className="bg-[#111]">MercadoPago</option>
+            <option value="efectivo" className="bg-[#15161c]">Efectivo</option>
+            <option value="transferencia" className="bg-[#15161c]">Transferencia</option>
+            <option value="tarjeta" className="bg-[#15161c]">Tarjeta</option>
+            <option value="mercadopago" className="bg-[#15161c]">MercadoPago</option>
           </select>
         </div>
       </div>
 
       {/* Product search */}
       <div className="space-y-2">
-        <Label className="text-xs text-[#666] uppercase tracking-wider">Buscar producto</Label>
+        <Label className="text-xs text-[#969696] uppercase tracking-wider">Buscar producto</Label>
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Nike Air Force 1 Blanco T42..."
         />
         {search && (
-          <div className="rounded-xl border border-white/10 bg-[#0f0f0f] divide-y divide-white/[0.06] max-h-52 overflow-y-auto shadow-xl">
+          <div className="rounded-xl border border-white/10 bg-[#131419] divide-y divide-white/[0.06] max-h-52 overflow-y-auto shadow-xl">
             {filteredProducts.slice(0, 8).map(p => (
               <button
                 key={p.id}
@@ -145,16 +145,16 @@ export function SaleForm({ products }: { products: Product[] }) {
               >
                 <span className="text-white">
                   {p.brand} {p.model}
-                  <span className="text-[#666] ml-1">— {p.color} T{p.size}</span>
+                  <span className="text-[#969696] ml-1">— {p.color} T{p.size}</span>
                 </span>
-                <span className="text-[#555] text-xs ml-3 shrink-0">
+                <span className="text-[#828282] text-xs ml-3 shrink-0">
                   Stock: <span className={p.stock_quantity <= 2 ? 'text-amber-400' : 'text-emerald-400'}>{p.stock_quantity}</span>
                   {' · '}{formatCurrency(p.sale_price)}
                 </span>
               </button>
             ))}
             {filteredProducts.length === 0 && (
-              <p className="px-4 py-3 text-sm text-[#444]">Sin resultados con stock disponible</p>
+              <p className="px-4 py-3 text-sm text-[#6e6e6e]">Sin resultados con stock disponible</p>
             )}
           </div>
         )}
@@ -162,14 +162,14 @@ export function SaleForm({ products }: { products: Product[] }) {
 
       {/* Items table */}
       {items.length > 0 && (
-        <div className="rounded-xl border border-white/[0.08] bg-[#111] overflow-hidden">
+        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Producto</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Cant.</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Precio</th>
-                <th className="text-left px-4 py-3 text-xs text-[#444] uppercase tracking-wider">Subtotal</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Producto</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Cant.</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Precio</th>
+                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Subtotal</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -178,7 +178,7 @@ export function SaleForm({ products }: { products: Product[] }) {
                 <tr key={item.product.id} className="border-b border-white/[0.06]">
                   <td className="px-4 py-3 text-white">
                     {item.product.brand} {item.product.model} T{item.product.size}
-                    <span className="text-[#555] text-xs ml-1">({item.product.color})</span>
+                    <span className="text-[#828282] text-xs ml-1">({item.product.color})</span>
                   </td>
                   <td className="px-4 py-3">
                     <Input
@@ -196,7 +196,7 @@ export function SaleForm({ products }: { products: Product[] }) {
                       }
                     />
                   </td>
-                  <td className="px-4 py-3 text-[#888]">{formatCurrency(item.unit_price)}</td>
+                  <td className="px-4 py-3 text-[#a8a8a8]">{formatCurrency(item.unit_price)}</td>
                   <td className="px-4 py-3 font-semibold text-white">
                     {formatCurrency((item.unit_price - item.discount) * item.quantity)}
                   </td>
@@ -204,7 +204,7 @@ export function SaleForm({ products }: { products: Product[] }) {
                     <button
                       type="button"
                       onClick={() => removeItem(item.product.id)}
-                      className="text-[#444] hover:text-red-400 text-xs transition-colors"
+                      className="text-[#6e6e6e] hover:text-red-400 text-xs transition-colors"
                     >
                       Quitar
                     </button>
@@ -214,7 +214,7 @@ export function SaleForm({ products }: { products: Product[] }) {
             </tbody>
             <tfoot>
               <tr className="border-t border-white/10 bg-[#0a0a0a]">
-                <td colSpan={3} className="px-4 py-3 text-right text-[#666] font-medium">Total:</td>
+                <td colSpan={3} className="px-4 py-3 text-right text-[#969696] font-medium">Total:</td>
                 <td className="px-4 py-3 font-bold text-xl text-white">{formatCurrency(total)}</td>
                 <td></td>
               </tr>

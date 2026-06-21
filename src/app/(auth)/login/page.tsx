@@ -39,12 +39,12 @@ export default function LoginPage() {
               👟
             </div>
             <h1 className="text-xl font-semibold text-white">Bienvenido de nuevo</h1>
-            <p className="text-sm text-[#555] mt-1">Ingresá a tu cuenta para continuar</p>
+            <p className="text-sm text-[#828282] mt-1">Ingresá a tu cuenta para continuar</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-medium text-[#666] uppercase tracking-wider">
+              <label htmlFor="email" className="text-xs font-medium text-[#969696] uppercase tracking-wider">
                 Email
               </label>
               <input
@@ -55,12 +55,12 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 placeholder="tu@email.com"
-                className="w-full px-4 py-2.5 rounded-lg bg-[#0f0f0f] border border-white/10 text-white text-sm placeholder:text-[#444] focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-colors"
+                className="w-full px-4 py-2.5 rounded-lg bg-[#131419] border border-white/10 text-white text-sm placeholder:text-[#6e6e6e] focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="text-xs font-medium text-[#666] uppercase tracking-wider">
+              <label htmlFor="password" className="text-xs font-medium text-[#969696] uppercase tracking-wider">
                 Contraseña
               </label>
               <input
@@ -71,7 +71,7 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-lg bg-[#0f0f0f] border border-white/10 text-white text-sm placeholder:text-[#444] focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-colors"
+                className="w-full px-4 py-2.5 rounded-lg bg-[#131419] border border-white/10 text-white text-sm placeholder:text-[#6e6e6e] focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-colors"
               />
             </div>
 
@@ -104,18 +104,18 @@ export default function LoginPage() {
           <h2 className="text-3xl font-semibold text-white leading-[1.2] tracking-tight">
             Todo tu negocio de zapatillas, en un solo lugar.
           </h2>
-          <p className="text-[#888] mt-5 leading-relaxed">
+          <p className="text-[#a8a8a8] mt-5 leading-relaxed">
             Ventas, stock, compras y finanzas — claros y al instante.
           </p>
 
           <div className="flex gap-8 mt-10 pt-8 border-t border-white/[0.06]">
             <div>
               <p className="text-2xl font-semibold text-white tracking-tight">8</p>
-              <p className="text-xs text-[#555] mt-1">secciones</p>
+              <p className="text-xs text-[#828282] mt-1">secciones</p>
             </div>
             <div>
               <p className="text-2xl font-semibold text-white tracking-tight">Tiempo real</p>
-              <p className="text-xs text-[#555] mt-1">sin recargar</p>
+              <p className="text-xs text-[#828282] mt-1">sin recargar</p>
             </div>
           </div>
         </div>

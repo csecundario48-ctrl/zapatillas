@@ -96,14 +96,14 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 cine-stagger">
       {/* ─── Hero ─── */}
-      <div className="relative rounded-2xl border border-white/[0.06] bg-[#0c0c0c] overflow-hidden">
+      <div className="relative rounded-2xl border border-white/[0.06] bg-[#101116] overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_50%,rgba(99,102,241,0.05)_0%,rgba(167,139,250,0.03)_40%,transparent_70%)]" />
         <div className="relative flex flex-col md:flex-row items-center gap-0">
           {/* Stats */}
           <div className="flex-1 px-7 py-7 z-10">
-            <p className="text-[10px] text-[#2e2e2e] uppercase tracking-[0.18em] font-semibold mb-2">
+            <p className="text-[10px] text-[#505050] uppercase tracking-[0.18em] font-semibold mb-2">
               {monthName}
             </p>
             <p className="text-2xl font-semibold tracking-tight text-white mb-5">
@@ -112,24 +112,24 @@ export default async function HomePage() {
             <div className="flex flex-wrap gap-5">
               <div>
                 <p className="text-xl font-bold text-indigo-400 tracking-tight">{formatCurrency(totalIncome)}</p>
-                <p className="text-[10px] text-[#333] uppercase tracking-wider mt-0.5">Ventas mes</p>
+                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas mes</p>
               </div>
-              <div className="w-px bg-[#161616] self-stretch" />
+              <div className="w-px bg-[#1b1c22] self-stretch" />
               <div>
                 <p className={`text-xl font-bold tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {formatCurrency(netProfit)}
                 </p>
-                <p className="text-[10px] text-[#333] uppercase tracking-wider mt-0.5">Ganancia neta</p>
+                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ganancia neta</p>
               </div>
-              <div className="w-px bg-[#161616] self-stretch" />
+              <div className="w-px bg-[#1b1c22] self-stretch" />
               <div>
                 <p className="text-xl font-bold text-violet-400 tracking-tight">{margin}%</p>
-                <p className="text-[10px] text-[#333] uppercase tracking-wider mt-0.5">Margen</p>
+                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Margen</p>
               </div>
-              <div className="w-px bg-[#161616] self-stretch" />
+              <div className="w-px bg-[#1b1c22] self-stretch" />
               <div>
                 <p className="text-xl font-bold text-amber-400 tracking-tight">{formatCurrency(todayIncome)}</p>
-                <p className="text-[10px] text-[#333] uppercase tracking-wider mt-0.5">Ventas hoy</p>
+                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas hoy</p>
               </div>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default async function HomePage() {
             <p className="text-[13px] font-medium text-red-300">
               {overduePurchases!.length} pago{overduePurchases!.length > 1 ? 's' : ''} vencido{overduePurchases!.length > 1 ? 's' : ''} a proveedores
             </p>
-            <p className="text-[11px] text-[#444] mt-0.5 truncate">
+            <p className="text-[11px] text-[#6e6e6e] mt-0.5 truncate">
               {overduePurchases!.map(p => (p.suppliers as any)?.name).filter(Boolean).join(', ')}
             </p>
           </div>
@@ -183,16 +183,16 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Ventas recientes */}
-        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-[#0c0c0c] overflow-hidden">
+        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
             <h2 className="text-[13px] font-semibold text-white">Ventas recientes</h2>
-            <Link href="/ventas" className="text-[11px] text-[#444] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+            <Link href="/ventas" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
               Ver todas <ArrowUpRight size={11} />
             </Link>
           </div>
           {(recentSales?.length ?? 0) === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-[13px] text-[#333]">Sin ventas registradas</p>
+              <p className="text-[13px] text-[#5c5c5c]">Sin ventas registradas</p>
               <Link href="/ventas/nueva" className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors">
                 <Plus size={12} /> Registrar primera venta
               </Link>
@@ -201,20 +201,20 @@ export default async function HomePage() {
             <table className="w-full text-[12px]">
               <thead>
                 <tr className="border-b border-white/[0.05]">
-                  <th className="text-left px-5 py-2.5 text-[10px] text-[#2e2e2e] uppercase tracking-wider font-semibold">Fecha</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#2e2e2e] uppercase tracking-wider font-semibold">Cliente</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#2e2e2e] uppercase tracking-wider font-semibold">Canal</th>
-                  <th className="text-right px-5 py-2.5 text-[10px] text-[#2e2e2e] uppercase tracking-wider font-semibold">Total</th>
+                  <th className="text-left px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Fecha</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Cliente</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Canal</th>
+                  <th className="text-right px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recentSales!.map((sale) => (
                   <tr key={sale.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-5 py-3 text-[#666]">
+                    <td className="px-5 py-3 text-[#969696]">
                       {new Date(sale.sale_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                     </td>
-                    <td className="px-3 py-3 text-[#888]">
-                      {(sale.customers as any)?.name ?? <span className="text-[#3a3a3a]">—</span>}
+                    <td className="px-3 py-3 text-[#a8a8a8]">
+                      {(sale.customers as any)?.name ?? <span className="text-[#606060]">—</span>}
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
@@ -238,24 +238,24 @@ export default async function HomePage() {
         {/* Right column */}
         <div className="space-y-4">
           {/* Stock crítico */}
-          <div className="rounded-xl border border-white/[0.06] bg-[#0c0c0c] overflow-hidden">
+          <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <h2 className="text-[13px] font-semibold text-white">Stock crítico</h2>
-              <Link href="/stock" className="text-[11px] text-[#444] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+              <Link href="/stock" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
                 Ver <ArrowUpRight size={11} />
               </Link>
             </div>
             {(stockAlerts?.length ?? 0) === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[11px] text-[#2e2e2e]">Todo el stock en orden ✓</p>
+                <p className="text-[11px] text-[#505050]">Todo el stock en orden ✓</p>
               </div>
             ) : (
               <div className="divide-y divide-white/[0.05]">
                 {stockAlerts!.slice(0, 6).map(p => (
                   <div key={p.id} className="flex items-center justify-between px-5 py-2.5">
                     <div className="min-w-0">
-                      <p className="text-[12px] text-[#888] truncate">{p.brand} {p.model}</p>
-                      <p className="text-[10px] text-[#3a3a3a]">{p.color} · T{p.size}</p>
+                      <p className="text-[12px] text-[#a8a8a8] truncate">{p.brand} {p.model}</p>
+                      <p className="text-[10px] text-[#606060]">{p.color} · T{p.size}</p>
                     </div>
                     <span className={`text-[11px] font-bold ml-3 shrink-0 ${
                       p.stock_quantity === 0 ? 'text-red-400' : 'text-amber-400'
@@ -266,7 +266,7 @@ export default async function HomePage() {
                 ))}
                 {(stockAlerts!.length ?? 0) > 6 && (
                   <div className="px-5 py-2.5">
-                    <Link href="/stock" className="text-[11px] text-[#444] hover:text-indigo-400 transition-colors">
+                    <Link href="/stock" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 transition-colors">
                       +{stockAlerts!.length - 6} más...
                     </Link>
                   </div>
@@ -276,22 +276,22 @@ export default async function HomePage() {
           </div>
 
           {/* Top productos */}
-          <div className="rounded-xl border border-white/[0.06] bg-[#0c0c0c] overflow-hidden">
+          <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
             <div className="px-5 py-4 border-b border-white/[0.06]">
               <h2 className="text-[13px] font-semibold text-white">Más vendidos este mes</h2>
             </div>
             {topList.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[11px] text-[#2e2e2e]">Sin datos de ventas</p>
+                <p className="text-[11px] text-[#505050]">Sin datos de ventas</p>
               </div>
             ) : (
               <div className="divide-y divide-white/[0.05]">
                 {topList.map((p, i) => (
                   <div key={p.name} className="flex items-center gap-3 px-5 py-2.5">
-                    <span className="text-[10px] text-[#2a2a2a] font-mono w-4 shrink-0">{i + 1}</span>
+                    <span className="text-[10px] text-[#4a4a4a] font-mono w-4 shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-[#888] truncate">{p.name}</p>
-                      <p className="text-[10px] text-[#3a3a3a]">{p.units} unidades</p>
+                      <p className="text-[12px] text-[#a8a8a8] truncate">{p.name}</p>
+                      <p className="text-[10px] text-[#606060]">{p.units} unidades</p>
                     </div>
                     <p className="text-[11px] font-semibold text-white shrink-0">
                       {formatCurrency(p.revenue)}
@@ -315,7 +315,7 @@ export default async function HomePage() {
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-[#0c0c0c] px-4 py-2.5 text-[12px] text-[#555] transition-all duration-150 ${accent}`}
+            className={`flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-[#101116] px-4 py-2.5 text-[12px] text-[#828282] transition-all duration-150 ${accent}`}
           >
             <span className="text-sm">{icon}</span>
             {label}
