@@ -13,6 +13,11 @@ export default async function HomePage() {
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
   const monthName = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
 
+  const dayMs = 86_400_000
+  const dayStr = (offset: number) => new Date(now.getTime() - offset * dayMs).toISOString().split('T')[0]
+  const last7Start = dayStr(6)   // last 7 days (incl. today)
+  const prev7Start = dayStr(13)  // the 7 days before that
+
   const [
     { data: monthlySales },
     { data: todaySalesRaw },
@@ -22,6 +27,10 @@ export default async function HomePage() {
     { data: recentSales },
     { data: topProducts },
     { count: totalActiveProducts },
+    { data: stockValProducts },
+    { data: monthlyPurchasesData },
+    { data: recentExpensesData },
+    { data: weekSales },
   ] = await Promise.all([
     supabase
       .from('sales')
@@ -56,6 +65,18 @@ export default async function HomePage() {
       .gte('created_at', new Date(now.getFullYear(), now.getMonth(), 1).toISOString())
       .limit(50),
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('active', true),
+    supabase.from('products').select('cost_price, stock_quantity').eq('active', true),
+    supabase.from('purchases').select('total_amount').gte('purchase_date', monthStart),
+    supabase
+      .from('expenses')
+      .select('category, description, amount, expense_date')
+      .order('expense_date', { ascending: false })
+      .limit(5),
+    supabase
+      .from('sales')
+      .select('sale_date, total_amount')
+      .eq('status', 'completada')
+      .gte('sale_date', prev7Start),
   ])
 
   // KPI calculations
@@ -79,6 +100,30 @@ export default async function HomePage() {
 
   const criticalStock = stockAlerts?.filter(p => p.stock_quantity === 0) ?? []
   const lowStock = stockAlerts?.filter(p => p.stock_quantity > 0) ?? []
+
+  // Stock valorizado (costo del inventario actual)
+  const stockValue = (stockValProducts ?? []).reduce(
+    (s, p) => s + (p.cost_price ?? 0) * (p.stock_quantity ?? 0), 0
+  )
+
+  // Flujo de caja del mes: ingresos (ventas) vs egresos (compras + gastos)
+  const monthPurchases = monthlyPurchasesData?.reduce((s, p) => s + p.total_amount, 0) ?? 0
+  const cashOut = monthPurchases + totalExpenses
+  const cashNet = totalIncome - cashOut
+
+  // Alerta de caída de ventas: últimos 7 días vs los 7 anteriores
+  let thisWeek = 0, lastWeek = 0
+  for (const s of weekSales ?? []) {
+    if (s.sale_date >= last7Start) thisWeek += s.total_amount
+    else lastWeek += s.total_amount
+  }
+  const salesDropPct = lastWeek > 0 ? Math.round(((lastWeek - thisWeek) / lastWeek) * 100) : 0
+  const showSalesDrop = lastWeek > 0 && thisWeek < lastWeek && salesDropPct >= 15
+
+  const expenseCatLabel: Record<string, string> = {
+    alquiler: 'Alquiler', servicios: 'Servicios', marketing: 'Marketing', delivery: 'Envíos',
+    salarios: 'Sueldos', packaging: 'Packaging', otros: 'Otros',
+  }
 
   // Top products from sale_items
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {}
@@ -161,7 +206,55 @@ export default async function HomePage() {
           subtitle={`${criticalStock.length} sin stock · ${lowStock.length} bajo`} />
       </div>
 
+      {/* ─── Flujo de caja del mes ─── */}
+      <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
+          <h2 className="text-[13px] font-semibold text-white">Flujo de caja · {monthName}</h2>
+          <Link href="/finanzas" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+            Finanzas <ArrowUpRight size={11} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
+          <div className="px-5 py-4">
+            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Ingresos</p>
+            <p className="text-lg font-bold text-emerald-400 tracking-tight">{formatCurrency(totalIncome)}</p>
+            <p className="text-[10px] text-[#606060] mt-0.5">Ventas del mes</p>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Egresos</p>
+            <p className="text-lg font-bold text-red-400 tracking-tight">{formatCurrency(cashOut)}</p>
+            <p className="text-[10px] text-[#606060] mt-0.5">Compras + gastos</p>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Caja neta</p>
+            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-white' : 'text-red-400'}`}>
+              {formatCurrency(cashNet)}
+            </p>
+            <p className="text-[10px] text-[#606060] mt-0.5">Ingresos − egresos</p>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Stock valorizado</p>
+            <p className="text-lg font-bold text-indigo-400 tracking-tight">{formatCurrency(stockValue)}</p>
+            <p className="text-[10px] text-[#606060] mt-0.5">Costo del inventario</p>
+          </div>
+        </div>
+      </div>
+
       {/* ─── Alerts ─── */}
+      {showSalesDrop && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04]">
+          <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-medium text-amber-300">
+              Las ventas bajaron {salesDropPct}% respecto a la semana pasada
+            </p>
+            <p className="text-[11px] text-[#6e6e6e] mt-0.5">
+              Últimos 7 días: {formatCurrency(thisWeek)} · semana anterior: {formatCurrency(lastWeek)}
+            </p>
+          </div>
+        </div>
+      )}
+
       {(overduePurchases?.length ?? 0) > 0 && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/[0.04]">
           <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />
@@ -302,6 +395,42 @@ export default async function HomePage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ─── Últimos gastos ─── */}
+      <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+          <h2 className="text-[13px] font-semibold text-white">Últimos gastos</h2>
+          <Link href="/egresos" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+            Ver todos <ArrowUpRight size={11} />
+          </Link>
+        </div>
+        {(recentExpensesData?.length ?? 0) === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-[11px] text-[#505050]">Sin gastos registrados</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/[0.05]">
+            {recentExpensesData!.map((e, i) => (
+              <div key={i} className="flex items-center justify-between px-5 py-2.5">
+                <div className="min-w-0 flex items-center gap-3">
+                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-white/[0.04] text-[#a8a8a8] border border-white/10 shrink-0">
+                    {expenseCatLabel[e.category] ?? e.category}
+                  </span>
+                  <p className="text-[12px] text-[#a8a8a8] truncate">
+                    {e.description ?? <span className="text-[#606060]">—</span>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 shrink-0">
+                  <span className="text-[10px] text-[#606060]">
+                    {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                  </span>
+                  <span className="text-[12px] font-semibold text-red-400">−{formatCurrency(e.amount)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ─── Quick actions ─── */}
