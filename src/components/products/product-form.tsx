@@ -12,18 +12,20 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Gender, Supplier } from '@/types/database'
+import type { Gender, Product, Supplier } from '@/types/database'
 
 const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50'
 const lbl = 'text-xs text-[#969696] uppercase tracking-wider'
 
 interface ProductFormProps {
   suppliers: Pick<Supplier, 'id' | 'name'>[]
+  product?: Product
   onSuccess?: () => void
 }
 
-export function ProductForm({ suppliers, onSuccess }: ProductFormProps) {
+export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps) {
   const router = useRouter()
+  const editing = !!product
   const [error, setError] = useState<string | null>(null)
   const {
     register,
@@ -31,7 +33,17 @@ export function ProductForm({ suppliers, onSuccess }: ProductFormProps) {
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<ProductFormData>({ resolver: zodResolver(productSchema), defaultValues: { active: true } })
+  } = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+    defaultValues: product
+      ? {
+          brand: product.brand, model: product.model, color: product.color,
+          gender: product.gender, size: product.size,
+          cost_price: product.cost_price, sale_price: product.sale_price,
+          supplier_id: product.supplier_id ?? undefined, active: product.active,
+        }
+      : { active: true },
+  })
 
   const gender = watch('gender') as Gender | undefined
   const sizes = gender ? getSizesForGender(gender) : []
@@ -39,8 +51,11 @@ export function ProductForm({ suppliers, onSuccess }: ProductFormProps) {
   async function onSubmit(data: ProductFormData) {
     setError(null)
     const sku = generateSku(data.brand, data.model, data.color, data.size)
+    const payload = { ...data, sku, supplier_id: data.supplier_id || null }
     const supabase = createClient()
-    const { error } = await supabase.from('products').insert({ ...data, sku })
+    const { error } = editing
+      ? await supabase.from('products').update(payload).eq('id', product!.id)
+      : await supabase.from('products').insert(payload)
     if (error) {
       setError(
         error.code === '23505'
@@ -49,7 +64,7 @@ export function ProductForm({ suppliers, onSuccess }: ProductFormProps) {
       )
       return
     }
-    toast.success('Producto agregado')
+    toast.success(editing ? 'Producto actualizado' : 'Producto agregado')
     router.refresh()
     onSuccess?.()
   }
@@ -119,9 +134,15 @@ export function ProductForm({ suppliers, onSuccess }: ProductFormProps) {
           {errors.sale_price && <p className="text-xs text-red-400">{errors.sale_price.message}</p>}
         </div>
       </div>
+      {editing && (
+        <label className="flex items-center gap-2 text-sm text-[#a8a8a8] cursor-pointer hover:text-white transition-colors">
+          <input type="checkbox" {...register('active')} className="rounded" />
+          Producto activo (desactivalo para ocultarlo sin borrarlo)
+        </label>
+      )}
       {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Guardando...' : 'Guardar producto'}
+        {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar producto'}
       </Button>
     </form>
   )

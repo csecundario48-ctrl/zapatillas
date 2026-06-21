@@ -10,33 +10,46 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { Supplier } from '@/types/database'
 
 const nn = (v?: string) => (v && v.trim() ? v.trim() : null)
 
-export function SupplierForm({ onSuccess }: { onSuccess?: () => void }) {
+export function SupplierForm({ supplier, onSuccess }: { supplier?: Supplier; onSuccess?: () => void }) {
   const router = useRouter()
+  const editing = !!supplier
   const [error, setError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<SupplierFormData>({ resolver: zodResolver(supplierSchema) })
+  } = useForm<SupplierFormData>({
+    resolver: zodResolver(supplierSchema),
+    defaultValues: supplier
+      ? {
+          name: supplier.name, contact_name: supplier.contact_name ?? '', phone: supplier.phone ?? '',
+          email: supplier.email ?? '', address: supplier.address ?? '', notes: supplier.notes ?? '',
+        }
+      : undefined,
+  })
 
   async function onSubmit(data: SupplierFormData) {
     setError(null)
     const supabase = createClient()
-    const { error } = await supabase.from('suppliers').insert({
+    const payload = {
       name: data.name.trim(),
       contact_name: nn(data.contact_name),
       phone: nn(data.phone),
       email: nn(data.email),
       address: nn(data.address),
       notes: nn(data.notes),
-    })
+    }
+    const { error } = editing
+      ? await supabase.from('suppliers').update(payload).eq('id', supplier!.id)
+      : await supabase.from('suppliers').insert(payload)
     if (error) { setError(error.message); return }
-    toast.success('Proveedor agregado')
-    reset()
+    toast.success(editing ? 'Proveedor actualizado' : 'Proveedor agregado')
+    if (!editing) reset()
     router.refresh()
     onSuccess?.()
   }
@@ -73,7 +86,7 @@ export function SupplierForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
       {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Guardando...' : 'Guardar proveedor'}
+        {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar proveedor'}
       </Button>
     </form>
   )

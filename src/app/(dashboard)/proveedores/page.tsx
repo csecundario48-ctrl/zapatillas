@@ -33,6 +33,7 @@ export default async function ProveedoresPage() {
       phone: s.phone,
       email: s.email,
       address: s.address,
+      notes: s.notes,
       purchases: a.count,
       totalBought: a.total,
       debt: a.debt,

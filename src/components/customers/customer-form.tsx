@@ -10,32 +10,45 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { Customer } from '@/types/database'
 
 const nn = (v?: string) => (v && v.trim() ? v.trim() : null)
 
-export function CustomerForm({ onSuccess }: { onSuccess?: () => void }) {
+export function CustomerForm({ customer, onSuccess }: { customer?: Customer; onSuccess?: () => void }) {
   const router = useRouter()
+  const editing = !!customer
   const [error, setError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CustomerFormData>({ resolver: zodResolver(customerSchema) })
+  } = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
+    defaultValues: customer
+      ? {
+          name: customer.name, phone: customer.phone ?? '', email: customer.email ?? '',
+          instagram: customer.instagram ?? '', address: customer.address ?? '',
+        }
+      : undefined,
+  })
 
   async function onSubmit(data: CustomerFormData) {
     setError(null)
     const supabase = createClient()
-    const { error } = await supabase.from('customers').insert({
+    const payload = {
       name: data.name.trim(),
       phone: nn(data.phone),
       email: nn(data.email),
       instagram: nn(data.instagram),
       address: nn(data.address),
-    })
+    }
+    const { error } = editing
+      ? await supabase.from('customers').update(payload).eq('id', customer!.id)
+      : await supabase.from('customers').insert(payload)
     if (error) { setError(error.message); return }
-    toast.success('Cliente agregado')
-    reset()
+    toast.success(editing ? 'Cliente actualizado' : 'Cliente agregado')
+    if (!editing) reset()
     router.refresh()
     onSuccess?.()
   }
@@ -68,7 +81,7 @@ export function CustomerForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
       {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Guardando...' : 'Guardar cliente'}
+        {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar cliente'}
       </Button>
     </form>
   )

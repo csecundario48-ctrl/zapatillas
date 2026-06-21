@@ -48,6 +48,7 @@ export default async function ClientesPage() {
       phone: c.phone,
       email: c.email,
       instagram: c.instagram,
+      address: c.address,
       purchases: a.count,
       totalSpent: a.total,
       lastPurchase: a.last,

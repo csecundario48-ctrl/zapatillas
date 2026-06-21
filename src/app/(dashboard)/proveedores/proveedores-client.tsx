@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Pencil } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +13,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { SupplierForm } from '@/components/suppliers/supplier-form'
 import { WhatsAppButton } from '@/components/contact/whatsapp-button'
+import { ConfirmDelete, deleteErrorMessage } from '@/components/common/confirm-delete'
+import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils/format'
+import type { Supplier } from '@/types/database'
 
 export interface SupplierRow {
   id: string
@@ -20,11 +25,54 @@ export interface SupplierRow {
   phone: string | null
   email: string | null
   address: string | null
+  notes: string | null
   purchases: number
   totalBought: number
   debt: number
   lastPurchase: string | null
   daysSince: number | null
+}
+
+function SupplierRowActions({ row }: { row: SupplierRow }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const supplier = {
+    id: row.id, name: row.name, contact_name: row.contactName, phone: row.phone,
+    email: row.email, address: row.address, notes: row.notes,
+  } as Supplier
+
+  async function del() {
+    const supabase = createClient()
+    const { error } = await supabase.from('suppliers').delete().eq('id', row.id)
+    if (error) return { error: deleteErrorMessage(error) }
+    router.refresh()
+    return {}
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger
+          render={
+            <button
+              type="button"
+              title="Editar"
+              className="p-1.5 rounded-md text-[#6e6e6e] hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+            />
+          }
+        >
+          <Pencil size={14} />
+        </DialogTrigger>
+        <DialogContent className="max-w-lg bg-[#15161c] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Editar proveedor</DialogTitle>
+          </DialogHeader>
+          <SupplierForm supplier={supplier} onSuccess={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+      <ConfirmDelete onConfirm={del} title="Eliminar proveedor" />
+    </div>
+  )
 }
 
 function lastLabel(days: number | null) {
@@ -122,8 +170,9 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
                     </td>
                     <td className="px-4 py-3 text-[#828282]">{lastLabel(r.daysSince)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-end gap-1">
                         <WhatsAppButton phone={r.phone} name={r.contactName ?? r.name} />
+                        <SupplierRowActions row={r} />
                       </div>
                     </td>
                   </tr>

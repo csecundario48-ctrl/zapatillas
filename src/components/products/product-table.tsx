@@ -1,12 +1,14 @@
-import type { Product } from '@/types/database'
+import type { Product, Supplier } from '@/types/database'
 import { formatCurrency } from '@/lib/utils/format'
+import { ProductRowActions } from './product-row-actions'
 
 interface ProductTableProps {
   products: Product[]
   isAdmin: boolean
+  suppliers?: Pick<Supplier, 'id' | 'name'>[]
 }
 
-export function ProductTable({ products, isAdmin }: ProductTableProps) {
+export function ProductTable({ products, isAdmin, suppliers = [] }: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -29,6 +31,9 @@ export function ProductTable({ products, isAdmin }: ProductTableProps) {
             <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Precio</th>
             <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Stock</th>
             <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Estado</th>
+            {isAdmin && (
+              <th className="text-right px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Acciones</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -69,6 +74,11 @@ export function ProductTable({ products, isAdmin }: ProductTableProps) {
                   {p.active ? 'Activo' : 'Inactivo'}
                 </span>
               </td>
+              {isAdmin && (
+                <td className="px-4 py-3">
+                  <ProductRowActions product={p} suppliers={suppliers} />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

@@ -69,7 +69,7 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
         </div>
       ) : (
         <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
-          <ProductTable products={filtered} isAdmin={isAdmin} />
+          <ProductTable products={filtered} isAdmin={isAdmin} suppliers={suppliers} />
         </div>
       )}
     </div>
