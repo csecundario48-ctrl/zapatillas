@@ -49,7 +49,7 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
               <option key={c} value={c} className="capitalize bg-card">{c}</option>
             ))}
           </select>
-          {errors.category && <p className="text-xs text-red-400">{errors.category.message}</p>}
+          {errors.category && <p className="text-xs text-red-600 dark:text-red-400">{errors.category.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Tipo</Label>
@@ -65,12 +65,12 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Monto ($)</Label>
           <Input {...register('amount', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
-          {errors.amount && <p className="text-xs text-red-400">{errors.amount.message}</p>}
+          {errors.amount && <p className="text-xs text-red-600 dark:text-red-400">{errors.amount.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Fecha</Label>
           <Input {...register('expense_date')} type="date" />
-          {errors.expense_date && <p className="text-xs text-red-400">{errors.expense_date.message}</p>}
+          {errors.expense_date && <p className="text-xs text-red-600 dark:text-red-400">{errors.expense_date.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Medio de pago</Label>
@@ -86,7 +86,7 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
         <input type="checkbox" {...register('recurring')} className="rounded" />
         Gasto recurrente mensual
       </label>
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Guardando...' : 'Registrar egreso'}
       </Button>

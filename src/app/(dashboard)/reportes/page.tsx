@@ -74,12 +74,12 @@ export default async function ReportesPage() {
   }
 
   const kpis = [
-    { label: 'Total vendido', value: formatCurrency(totalRevenue), color: 'text-emerald-400' },
-    { label: 'Costo mercadería', value: formatCurrency(totalCOGS), color: 'text-red-400' },
+    { label: 'Total vendido', value: formatCurrency(totalRevenue), color: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Costo mercadería', value: formatCurrency(totalCOGS), color: 'text-red-600 dark:text-red-400' },
     { label: 'Ganancia bruta', value: formatCurrency(grossProfit), color: 'text-indigo-400', sub: `Margen ${margin.toFixed(1)}%` },
     { label: 'Unidades vendidas', value: String(unitsSold), color: 'text-foreground', sub: `${salesCount} ventas` },
     { label: 'Ticket promedio', value: formatCurrency(avgTicket), color: 'text-violet-400' },
-    { label: 'Rotación inventario', value: `${rotation.toFixed(1)}×`, color: 'text-amber-400', sub: 'Veces que rotó el stock' },
+    { label: 'Rotación inventario', value: `${rotation.toFixed(1)}×`, color: 'text-amber-600 dark:text-amber-400', sub: 'Veces que rotó el stock' },
   ]
 
   return (
@@ -182,7 +182,7 @@ export default async function ReportesPage() {
         <div className={`${card} overflow-hidden`}>
           <div className="px-5 py-4 border-b border-foreground/[0.06] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">Stock sin movimiento</h2>
-            <span className="text-xs text-amber-400 font-medium">{formatCurrency(deadMoney)} parados</span>
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">{formatCurrency(deadMoney)} parados</span>
           </div>
           <p className="px-5 pt-3 text-[11px] text-foreground/45">Productos con stock que todavía no registraron ninguna venta.</p>
           <div className="divide-y divide-foreground/[0.05] mt-1">
@@ -192,7 +192,7 @@ export default async function ReportesPage() {
                   <p className="text-[13px] text-foreground/85 truncate">{p.brand} {p.model}</p>
                   <p className="text-[10px] text-foreground/45">{p.color} · T{p.size} · {p.stock_quantity} ud.</p>
                 </div>
-                <span className="text-[12px] font-semibold text-amber-400 shrink-0">{formatCurrency(p.frozen)}</span>
+                <span className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 shrink-0">{formatCurrency(p.frozen)}</span>
               </div>
             ))}
             {deadStock.length > 12 && (

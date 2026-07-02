@@ -57,9 +57,9 @@ export default async function StockPage() {
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: 'Total SKUs', value: totalSKUs, color: 'text-foreground' },
-          { label: 'OK', value: stockOk, color: 'text-emerald-400' },
-          { label: 'Stock bajo', value: stockBajo, color: 'text-amber-400' },
-          { label: 'Sin stock', value: sinStock, color: 'text-red-400' },
+          { label: 'OK', value: stockOk, color: 'text-emerald-600 dark:text-emerald-400' },
+          { label: 'Stock bajo', value: stockBajo, color: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Sin stock', value: sinStock, color: 'text-red-600 dark:text-red-400' },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-card border border-foreground/[0.08] rounded-xl p-4 text-center">
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -122,7 +122,7 @@ export default async function StockPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-foreground/45">Stock total</p>
-                    <p className={`text-lg font-bold ${hasCritical ? 'text-red-400' : hasLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    <p className={`text-lg font-bold ${hasCritical ? 'text-red-600 dark:text-red-400' : hasLow ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                       {group.totalStock}
                     </p>
                   </div>

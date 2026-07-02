@@ -8,8 +8,8 @@ const categoryColors: Record<string, string> = {
   alquiler: 'text-violet-400',
   servicios: 'text-blue-400',
   marketing: 'text-indigo-400',
-  delivery: 'text-emerald-400',
-  salarios: 'text-amber-400',
+  delivery: 'text-emerald-600 dark:text-emerald-400',
+  salarios: 'text-amber-600 dark:text-amber-400',
   packaging: 'text-orange-400',
   otros: 'text-foreground/60',
 }

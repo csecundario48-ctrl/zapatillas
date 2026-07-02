@@ -60,7 +60,7 @@ export function SupplierForm({ supplier, onSuccess }: { supplier?: Supplier; onS
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Nombre</Label>
           <Input {...register('name')} placeholder="Distribuidora Sur" />
-          {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
+          {errors.name && <p className="text-xs text-red-600 dark:text-red-400">{errors.name.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Contacto</Label>
@@ -73,7 +73,7 @@ export function SupplierForm({ supplier, onSuccess }: { supplier?: Supplier; onS
         <div className="space-y-1.5">
           <Label className="text-xs text-foreground/60 uppercase tracking-wider">Email</Label>
           <Input {...register('email')} placeholder="ventas@proveedor.com" />
-          {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-red-600 dark:text-red-400">{errors.email.message}</p>}
         </div>
       </div>
       <div className="space-y-1.5">
@@ -84,7 +84,7 @@ export function SupplierForm({ supplier, onSuccess }: { supplier?: Supplier; onS
         <Label className="text-xs text-foreground/60 uppercase tracking-wider">Notas</Label>
         <Input {...register('notes')} placeholder="Entrega los martes..." />
       </div>
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar proveedor'}
       </Button>

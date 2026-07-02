@@ -54,10 +54,10 @@ export function ProductTable({ products, isAdmin, suppliers = [] }: ProductTable
                 <span
                   className={
                     p.stock_quantity === 0
-                      ? 'font-bold text-red-400'
+                      ? 'font-bold text-red-600 dark:text-red-400'
                       : p.stock_quantity <= 2
-                      ? 'font-bold text-amber-400'
-                      : 'text-emerald-400'
+                      ? 'font-bold text-amber-600 dark:text-amber-400'
+                      : 'text-emerald-600 dark:text-emerald-400'
                   }
                 >
                   {p.stock_quantity}
@@ -67,7 +67,7 @@ export function ProductTable({ products, isAdmin, suppliers = [] }: ProductTable
                 <span
                   className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${
                     p.active
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                       : 'bg-muted border-foreground/10 text-foreground/55'
                   }`}
                 >

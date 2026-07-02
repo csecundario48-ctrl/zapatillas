@@ -70,7 +70,7 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
         />
         <p className="text-xs text-foreground/55">
           Stock resultante:{' '}
-          <span className={`font-semibold ${resultingStock < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+          <span className={`font-semibold ${resultingStock < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {resultingStock}
           </span>
         </p>
@@ -92,7 +92,7 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
       )}
 
       <div className="flex gap-2">

@@ -172,7 +172,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
                     <button
                       type="button"
                       onClick={() => setItems(items.filter(i => i.product.id !== item.product.id))}
-                      className="text-foreground/45 hover:text-red-400 text-xs transition-colors"
+                      className="text-foreground/45 hover:text-red-600 dark:hover:text-red-400 text-xs transition-colors"
                     >
                       Quitar
                     </button>
@@ -191,7 +191,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
         </div>
       )}
 
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? 'Guardando...' : 'Registrar compra'}
       </Button>

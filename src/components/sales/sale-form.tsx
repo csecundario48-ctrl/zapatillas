@@ -145,7 +145,7 @@ export function SaleForm({ products, customers }: { products: Product[]; custome
                   <span className="text-foreground/60 ml-1">— {p.color} T{p.size}</span>
                 </span>
                 <span className="text-foreground/55 text-xs ml-3 shrink-0">
-                  Stock: <span className={p.stock_quantity <= 2 ? 'text-amber-400' : 'text-emerald-400'}>{p.stock_quantity}</span>
+                  Stock: <span className={p.stock_quantity <= 2 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{p.stock_quantity}</span>
                   {' · '}{formatCurrency(p.sale_price)}
                 </span>
               </button>
@@ -201,7 +201,7 @@ export function SaleForm({ products, customers }: { products: Product[]; custome
                     <button
                       type="button"
                       onClick={() => removeItem(item.product.id)}
-                      className="text-foreground/45 hover:text-red-400 text-xs transition-colors"
+                      className="text-foreground/45 hover:text-red-600 dark:hover:text-red-400 text-xs transition-colors"
                     >
                       Quitar
                     </button>
@@ -221,7 +221,7 @@ export function SaleForm({ products, customers }: { products: Product[]; custome
       )}
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
       )}
 
       <Button

@@ -76,7 +76,7 @@ export default function LoginPage() {
 
             {error && (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
-                <p className="text-xs text-red-400">{error}</p>
+                <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 

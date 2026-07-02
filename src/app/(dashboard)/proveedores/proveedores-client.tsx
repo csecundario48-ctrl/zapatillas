@@ -106,7 +106,7 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proveedores</h1>
           <p className="text-foreground/55 text-sm mt-0.5">
             {rows.length} proveedores
-            {totalDebt > 0 && <span className="text-red-400"> · {formatCurrency(totalDebt)} en deuda</span>}
+            {totalDebt > 0 && <span className="text-red-600 dark:text-red-400"> · {formatCurrency(totalDebt)} en deuda</span>}
           </p>
         </div>
         <div className="flex gap-3">
@@ -165,8 +165,8 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
                     <td className="px-4 py-3 text-right text-foreground/85">{formatCurrency(r.totalBought)}</td>
                     <td className="px-4 py-3 text-right font-semibold">
                       {r.debt > 0
-                        ? <span className="text-red-400">{formatCurrency(r.debt)}</span>
-                        : <span className="text-emerald-400">$0</span>}
+                        ? <span className="text-red-600 dark:text-red-400">{formatCurrency(r.debt)}</span>
+                        : <span className="text-emerald-600 dark:text-emerald-400">$0</span>}
                     </td>
                     <td className="px-4 py-3 text-foreground/55">{lastLabel(r.daysSince)}</td>
                     <td className="px-4 py-3">

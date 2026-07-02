@@ -78,17 +78,17 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
             <option value="" className="bg-card">Seleccionar</option>
             {BRANDS.map(b => <option key={b} value={b} className="bg-card">{b}</option>)}
           </select>
-          {errors.brand && <p className="text-xs text-red-400">{errors.brand.message}</p>}
+          {errors.brand && <p className="text-xs text-red-600 dark:text-red-400">{errors.brand.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Modelo</Label>
           <Input {...register('model')} placeholder="Air Force 1" />
-          {errors.model && <p className="text-xs text-red-400">{errors.model.message}</p>}
+          {errors.model && <p className="text-xs text-red-600 dark:text-red-400">{errors.model.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Color</Label>
           <Input {...register('color')} placeholder="Blanco/Negro" />
-          {errors.color && <p className="text-xs text-red-400">{errors.color.message}</p>}
+          {errors.color && <p className="text-xs text-red-600 dark:text-red-400">{errors.color.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Género</Label>
@@ -106,7 +106,7 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
             <option value="nino" className="bg-card">Niño</option>
             <option value="unisex" className="bg-card">Unisex</option>
           </select>
-          {errors.gender && <p className="text-xs text-red-400">{errors.gender.message}</p>}
+          {errors.gender && <p className="text-xs text-red-600 dark:text-red-400">{errors.gender.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Talle</Label>
@@ -114,7 +114,7 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
             <option value="" className="bg-card">{gender ? 'Seleccionar' : 'Elegí género primero'}</option>
             {sizes.map(s => <option key={s} value={s} className="bg-card">{s}</option>)}
           </select>
-          {errors.size && <p className="text-xs text-red-400">{errors.size.message}</p>}
+          {errors.size && <p className="text-xs text-red-600 dark:text-red-400">{errors.size.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Proveedor</Label>
@@ -126,12 +126,12 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
         <div className="space-y-1.5">
           <Label className={lbl}>Costo ($)</Label>
           <Input {...register('cost_price', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
-          {errors.cost_price && <p className="text-xs text-red-400">{errors.cost_price.message}</p>}
+          {errors.cost_price && <p className="text-xs text-red-600 dark:text-red-400">{errors.cost_price.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Precio de venta ($)</Label>
           <Input {...register('sale_price', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
-          {errors.sale_price && <p className="text-xs text-red-400">{errors.sale_price.message}</p>}
+          {errors.sale_price && <p className="text-xs text-red-600 dark:text-red-400">{errors.sale_price.message}</p>}
         </div>
       </div>
       {editing && (
@@ -140,7 +140,7 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
           Producto activo (desactivalo para ocultarlo sin borrarlo)
         </label>
       )}
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar producto'}
       </Button>

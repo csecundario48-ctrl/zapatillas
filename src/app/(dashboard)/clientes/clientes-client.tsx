@@ -75,9 +75,9 @@ function CustomerRowActions({ row }: { row: CustomerRow }) {
 }
 
 const badgeStyle: Record<CustomerRow['badges'][number], { label: string; cls: string }> = {
-  vip:       { label: 'VIP',       cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  vip:       { label: 'VIP',       cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
   frecuente: { label: 'Frecuente', cls: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
-  inactivo:  { label: 'Inactivo',  cls: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  inactivo:  { label: 'Inactivo',  cls: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
   nuevo:     { label: 'Nuevo',     cls: 'bg-foreground/[0.04] text-foreground/60 border-foreground/10' },
 }
 

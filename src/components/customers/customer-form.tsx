@@ -58,7 +58,7 @@ export function CustomerForm({ customer, onSuccess }: { customer?: Customer; onS
       <div className="space-y-1.5">
         <Label className="text-xs text-foreground/60 uppercase tracking-wider">Nombre</Label>
         <Input {...register('name')} placeholder="Juan Pérez" />
-        {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
+        {errors.name && <p className="text-xs text-red-600 dark:text-red-400">{errors.name.message}</p>}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
@@ -73,13 +73,13 @@ export function CustomerForm({ customer, onSuccess }: { customer?: Customer; onS
       <div className="space-y-1.5">
         <Label className="text-xs text-foreground/60 uppercase tracking-wider">Email</Label>
         <Input {...register('email')} placeholder="juan@email.com" />
-        {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
+        {errors.email && <p className="text-xs text-red-600 dark:text-red-400">{errors.email.message}</p>}
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs text-foreground/60 uppercase tracking-wider">Dirección</Label>
         <Input {...register('address')} placeholder="Av. Siempre Viva 742" />
       </div>
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar cliente'}
       </Button>

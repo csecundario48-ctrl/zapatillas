@@ -160,7 +160,7 @@ export default async function HomePage() {
               </div>
               <div className="w-px bg-border self-stretch" />
               <div>
-                <p className={`text-xl font-bold tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className={`text-xl font-bold tracking-tight ${netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   {formatCurrency(netProfit)}
                 </p>
                 <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">Ganancia neta</p>
@@ -172,7 +172,7 @@ export default async function HomePage() {
               </div>
               <div className="w-px bg-border self-stretch" />
               <div>
-                <p className="text-xl font-bold text-amber-400 tracking-tight">{formatCurrency(todayIncome)}</p>
+                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">{formatCurrency(todayIncome)}</p>
                 <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">Ventas hoy</p>
               </div>
             </div>
@@ -211,17 +211,17 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-foreground/[0.06]">
           <div className="px-5 py-4">
             <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Ingresos</p>
-            <p className="text-lg font-bold text-emerald-400 tracking-tight">{formatCurrency(totalIncome)}</p>
+            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{formatCurrency(totalIncome)}</p>
             <p className="text-[10px] text-foreground/40 mt-0.5">Ventas del mes</p>
           </div>
           <div className="px-5 py-4">
             <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Egresos</p>
-            <p className="text-lg font-bold text-red-400 tracking-tight">{formatCurrency(cashOut)}</p>
+            <p className="text-lg font-bold text-red-600 dark:text-red-400 tracking-tight">{formatCurrency(cashOut)}</p>
             <p className="text-[10px] text-foreground/40 mt-0.5">Compras + gastos</p>
           </div>
           <div className="px-5 py-4">
             <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Caja neta</p>
-            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-foreground' : 'text-red-400'}`}>
+            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-foreground' : 'text-red-600 dark:text-red-400'}`}>
               {formatCurrency(cashNet)}
             </p>
             <p className="text-[10px] text-foreground/40 mt-0.5">Ingresos − egresos</p>
@@ -237,7 +237,7 @@ export default async function HomePage() {
       {/* ─── Alerts ─── */}
       {showSalesDrop && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04]">
-          <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
+          <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-amber-300">
               Las ventas bajaron {salesDropPct}% respecto a la semana pasada
@@ -251,7 +251,7 @@ export default async function HomePage() {
 
       {(overduePurchases?.length ?? 0) > 0 && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/[0.04]">
-          <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />
+          <AlertTriangle size={14} className="text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-red-300">
               {overduePurchases!.length} pago{overduePurchases!.length > 1 ? 's' : ''} vencido{overduePurchases!.length > 1 ? 's' : ''} a proveedores
@@ -260,7 +260,7 @@ export default async function HomePage() {
               {overduePurchases!.map(p => (p.suppliers as any)?.name).filter(Boolean).join(', ')}
             </p>
           </div>
-          <Link href="/compras" className="text-[11px] text-red-400 hover:text-red-300 font-medium shrink-0 flex items-center gap-1 transition-colors">
+          <Link href="/compras" className="text-[11px] text-red-600 dark:text-red-400 hover:text-red-300 font-medium shrink-0 flex items-center gap-1 transition-colors">
             Ver <ArrowUpRight size={11} />
           </Link>
         </div>
@@ -345,7 +345,7 @@ export default async function HomePage() {
                       <p className="text-[10px] text-foreground/40">{p.color} · T{p.size}</p>
                     </div>
                     <span className={`text-[11px] font-bold ml-3 shrink-0 ${
-                      p.stock_quantity === 0 ? 'text-red-400' : 'text-amber-400'
+                      p.stock_quantity === 0 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'
                     }`}>
                       {p.stock_quantity === 0 ? 'AGOTADO' : `${p.stock_quantity} ud.`}
                     </span>
@@ -419,7 +419,7 @@ export default async function HomePage() {
                   <span className="text-[10px] text-foreground/40">
                     {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                   </span>
-                  <span className="text-[12px] font-semibold text-red-400">−{formatCurrency(e.amount)}</span>
+                  <span className="text-[12px] font-semibold text-red-600 dark:text-red-400">−{formatCurrency(e.amount)}</span>
                 </div>
               </div>
             ))}
@@ -432,8 +432,8 @@ export default async function HomePage() {
         {[
           { href: '/ventas/nueva', label: 'Nueva venta',      Icon: ShoppingCart, accent: 'hover:border-indigo-500/25 hover:text-foreground',  iconCls: 'text-indigo-400' },
           { href: '/catalogo',     label: 'Agregar producto', Icon: Package,      accent: 'hover:border-violet-500/25 hover:text-foreground',  iconCls: 'text-violet-400' },
-          { href: '/stock',        label: 'Ajustar stock',    Icon: Boxes,        accent: 'hover:border-emerald-500/25 hover:text-foreground', iconCls: 'text-emerald-400' },
-          { href: '/reportes',     label: 'Ver reportes',     Icon: BarChart3,    accent: 'hover:border-amber-500/25 hover:text-foreground',   iconCls: 'text-amber-400' },
+          { href: '/stock',        label: 'Ajustar stock',    Icon: Boxes,        accent: 'hover:border-emerald-500/25 hover:text-foreground', iconCls: 'text-emerald-600 dark:text-emerald-400' },
+          { href: '/reportes',     label: 'Ver reportes',     Icon: BarChart3,    accent: 'hover:border-amber-500/25 hover:text-foreground',   iconCls: 'text-amber-600 dark:text-amber-400' },
         ].map(({ href, label, Icon, accent, iconCls }) => (
           <Link
             key={href}

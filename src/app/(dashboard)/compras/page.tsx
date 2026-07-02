@@ -6,8 +6,8 @@ import type { Purchase, Supplier } from '@/types/database'
 type PurchaseWithSupplier = Purchase & { suppliers: Pick<Supplier, 'name'> | null }
 
 const paymentStyle: Record<string, string> = {
-  pagado: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-  pendiente: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+  pagado: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+  pendiente: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
   parcial: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
 }
 
@@ -65,7 +65,7 @@ export default async function ComprasPage() {
                     </td>
                     <td className="px-4 py-3">
                       {p.payment_due_date ? (
-                        <span className={isOverdue ? 'text-red-400 font-medium' : 'text-foreground/70'}>
+                        <span className={isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : 'text-foreground/70'}>
                           {formatDate(p.payment_due_date)}
                           {isOverdue && ' ⚠'}
                         </span>

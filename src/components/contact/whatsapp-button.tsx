@@ -35,7 +35,7 @@ export function WhatsAppButton({ phone, name, withTemplates = false, label }: Wh
       <button
         type="button"
         onClick={() => open_()}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors"
       >
         <MessageCircle size={13} /> {label ?? 'WhatsApp'}
       </button>
@@ -47,7 +47,7 @@ export function WhatsAppButton({ phone, name, withTemplates = false, label }: Wh
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors"
       >
         <MessageCircle size={13} /> {label ?? 'WhatsApp'}
       </button>

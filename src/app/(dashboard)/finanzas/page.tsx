@@ -52,18 +52,18 @@ export default async function FinanzasPage() {
         <div className="bg-card border border-foreground/[0.08] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-foreground/55 uppercase tracking-wider">Ingresos totales</p>
-            <TrendingUp size={16} className="text-emerald-400" />
+            <TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="text-3xl font-bold text-emerald-400">{formatCurrency(totalIncome)}</p>
+          <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalIncome)}</p>
           <p className="text-xs text-foreground/45 mt-1">Este mes: {formatCurrency(monthIncome)}</p>
         </div>
 
         <div className="bg-card border border-foreground/[0.08] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-foreground/55 uppercase tracking-wider">Costos totales</p>
-            <TrendingDown size={16} className="text-red-400" />
+            <TrendingDown size={16} className="text-red-600 dark:text-red-400" />
           </div>
-          <p className="text-3xl font-bold text-red-400">{formatCurrency(totalCOGS + totalExpenses)}</p>
+          <p className="text-3xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totalCOGS + totalExpenses)}</p>
           <p className="text-xs text-foreground/45 mt-1">
             Mercadería: {formatCurrency(totalCOGS)} · Gastos: {formatCurrency(totalExpenses)}
           </p>
@@ -72,9 +72,9 @@ export default async function FinanzasPage() {
         <div className={`border rounded-xl p-6 ${netProfit >= 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-foreground/55 uppercase tracking-wider">Ganancia neta</p>
-            <DollarSign size={16} className={netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'} />
+            <DollarSign size={16} className={netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} />
           </div>
-          <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+          <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrency(netProfit)}
           </p>
           <p className="text-xs text-foreground/45 mt-1">Este mes: {formatCurrency(monthNetProfit)}</p>
@@ -106,10 +106,10 @@ export default async function FinanzasPage() {
         {pendingPayments > 0 && (
           <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
-              <AlertCircle size={14} className="text-amber-400" />
+              <AlertCircle size={14} className="text-amber-600 dark:text-amber-400" />
               <p className="text-xs text-foreground/55 uppercase tracking-wider">Pagos pendientes a proveedores</p>
             </div>
-            <p className="text-2xl font-bold text-amber-400">{formatCurrency(pendingPayments)}</p>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{formatCurrency(pendingPayments)}</p>
             <p className="text-xs text-foreground/45 mt-1">No incluido en los egresos hasta que se pague</p>
           </div>
         )}

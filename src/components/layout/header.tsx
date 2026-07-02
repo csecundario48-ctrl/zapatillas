@@ -50,7 +50,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
         {criticalCount > 0 && (
           <button
             onClick={() => router.push('/stock')}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-medium hover:bg-red-500/15 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-[11px] font-medium hover:bg-red-500/15 transition-colors"
           >
             <AlertTriangle size={11} />
             {criticalCount} sin stock
@@ -69,7 +69,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
         <button
           onClick={handleSignOut}
           title="Cerrar sesión"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-foreground/45 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="w-7 h-7 rounded-md flex items-center justify-center text-foreground/45 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <LogOut size={13} />
         </button>

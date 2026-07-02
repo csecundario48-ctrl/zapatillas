@@ -14,10 +14,10 @@ interface KpiCardProps {
 
 const colorMap = {
   cyan:   { bar: 'bg-indigo-400',    glow: 'rgba(99,102,241,0.12)',    text: 'text-indigo-400' },
-  green:  { bar: 'bg-emerald-400', glow: 'rgba(52,211,153,0.12)',    text: 'text-emerald-400' },
+  green:  { bar: 'bg-emerald-500 dark:bg-emerald-400', glow: 'rgba(52,211,153,0.12)',    text: 'text-emerald-600 dark:text-emerald-400' },
   violet: { bar: 'bg-violet-400',  glow: 'rgba(167,139,250,0.12)',   text: 'text-violet-400' },
-  red:    { bar: 'bg-red-400',     glow: 'rgba(248,113,113,0.12)',   text: 'text-red-400' },
-  amber:  { bar: 'bg-amber-400',   glow: 'rgba(251,191,36,0.12)',    text: 'text-amber-400' },
+  red:    { bar: 'bg-red-500 dark:bg-red-400',     glow: 'rgba(248,113,113,0.12)',   text: 'text-red-600 dark:text-red-400' },
+  amber:  { bar: 'bg-amber-400',   glow: 'rgba(251,191,36,0.12)',    text: 'text-amber-600 dark:text-amber-400' },
 }
 
 function useAnimatedNumber(target: number, duration = 1200) {
