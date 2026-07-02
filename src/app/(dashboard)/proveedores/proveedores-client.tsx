@@ -57,15 +57,15 @@ function SupplierRowActions({ row }: { row: SupplierRow }) {
             <button
               type="button"
               title="Editar"
-              className="p-1.5 rounded-md text-[#6e6e6e] hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+              className="p-1.5 rounded-md text-foreground/45 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
             />
           }
         >
           <Pencil size={14} />
         </DialogTrigger>
-        <DialogContent className="max-w-lg bg-[#15161c] border-white/10">
+        <DialogContent className="max-w-lg bg-card border-foreground/10">
           <DialogHeader>
-            <DialogTitle className="text-white">Editar proveedor</DialogTitle>
+            <DialogTitle className="text-foreground">Editar proveedor</DialogTitle>
           </DialogHeader>
           <SupplierForm supplier={supplier} onSuccess={() => setOpen(false)} />
         </DialogContent>
@@ -103,8 +103,8 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Proveedores</h1>
-          <p className="text-[#828282] text-sm mt-0.5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Proveedores</h1>
+          <p className="text-foreground/55 text-sm mt-0.5">
             {rows.length} proveedores
             {totalDebt > 0 && <span className="text-red-400"> · {formatCurrency(totalDebt)} en deuda</span>}
           </p>
@@ -115,13 +115,13 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar proveedor..."
-            className="w-64 bg-[#131419] border border-white/10 text-white placeholder-[#6e6e6e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
+            className="w-64 bg-card border border-foreground/10 text-foreground placeholder-foreground/45 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={<Button />}>+ Nuevo proveedor</DialogTrigger>
-            <DialogContent className="max-w-lg bg-[#15161c] border-white/10">
+            <DialogContent className="max-w-lg bg-card border-foreground/10">
               <DialogHeader>
-                <DialogTitle className="text-white">Agregar proveedor</DialogTitle>
+                <DialogTitle className="text-foreground">Agregar proveedor</DialogTitle>
               </DialogHeader>
               <SupplierForm onSuccess={() => setOpen(false)} />
             </DialogContent>
@@ -130,45 +130,45 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] py-16 text-center">
-          <p className="text-[#6e6e6e] text-sm">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card py-16 text-center">
+          <p className="text-foreground/45 text-sm">
             {search ? `Sin resultados para "${search}"` : 'No hay proveedores cargados aún.'}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] bg-[#101116]">
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Proveedor</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Contacto</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Compras</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Total</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Deuda</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Último pedido</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Acción</th>
+                <tr className="border-b border-foreground/[0.06] bg-card">
+                  <th className="text-left px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Proveedor</th>
+                  <th className="text-left px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Contacto</th>
+                  <th className="text-right px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Compras</th>
+                  <th className="text-right px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Total</th>
+                  <th className="text-right px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Deuda</th>
+                  <th className="text-left px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Último pedido</th>
+                  <th className="text-right px-4 py-3 text-xs text-foreground/55 uppercase tracking-wider font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(r => (
-                  <tr key={r.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3 font-medium text-white">{r.name}</td>
-                    <td className="px-4 py-3 text-[#a8a8a8]">
+                  <tr key={r.id} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02] transition-colors">
+                    <td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
+                    <td className="px-4 py-3 text-foreground/70">
                       <div className="flex flex-col gap-0.5">
-                        {r.contactName && <span className="text-[12px] text-[#cfcfcf]">{r.contactName}</span>}
-                        {r.email && <span className="text-[12px] text-[#828282]">{r.email}</span>}
-                        {!r.contactName && !r.email && <span className="text-[12px] text-[#5c5c5c]">—</span>}
+                        {r.contactName && <span className="text-[12px] text-foreground/85">{r.contactName}</span>}
+                        {r.email && <span className="text-[12px] text-foreground/55">{r.email}</span>}
+                        {!r.contactName && !r.email && <span className="text-[12px] text-foreground/40">—</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-[#cfcfcf] font-mono">{r.purchases}</td>
-                    <td className="px-4 py-3 text-right text-[#cfcfcf]">{formatCurrency(r.totalBought)}</td>
+                    <td className="px-4 py-3 text-right text-foreground/85 font-mono">{r.purchases}</td>
+                    <td className="px-4 py-3 text-right text-foreground/85">{formatCurrency(r.totalBought)}</td>
                     <td className="px-4 py-3 text-right font-semibold">
                       {r.debt > 0
                         ? <span className="text-red-400">{formatCurrency(r.debt)}</span>
                         : <span className="text-emerald-400">$0</span>}
                     </td>
-                    <td className="px-4 py-3 text-[#828282]">{lastLabel(r.daysSince)}</td>
+                    <td className="px-4 py-3 text-foreground/55">{lastLabel(r.daysSince)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <WhatsAppButton phone={r.phone} name={r.contactName ?? r.name} />

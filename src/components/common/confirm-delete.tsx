@@ -31,7 +31,7 @@ export function ConfirmDelete({ onConfirm, title = 'Eliminar' }: ConfirmDeletePr
         type="button"
         onClick={() => setConfirming(true)}
         title={title}
-        className="p-1.5 rounded-md text-[#6e6e6e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+        className="p-1.5 rounded-md text-foreground/45 hover:text-red-400 hover:bg-red-500/10 transition-colors"
       >
         <Trash2 size={14} />
       </button>
@@ -51,7 +51,7 @@ export function ConfirmDelete({ onConfirm, title = 'Eliminar' }: ConfirmDeletePr
       <button
         type="button"
         onClick={() => setConfirming(false)}
-        className="px-2 py-1 rounded-md text-[11px] text-[#969696] hover:text-white transition-colors"
+        className="px-2 py-1 rounded-md text-[11px] text-foreground/60 hover:text-foreground transition-colors"
       >
         Cancelar
       </button>

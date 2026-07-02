@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { KpiCard } from '@/components/kpis/kpi-card'
 import { formatCurrency } from '@/lib/utils/format'
 import Link from 'next/link'
-import { HeroOrbClient } from '@/components/3d/hero-orb-client'
 import { AlertTriangle, ArrowUpRight, Plus, ShoppingCart, Package, Boxes, BarChart3 } from 'lucide-react'
 
 export default async function HomePage() {
@@ -143,45 +142,40 @@ export default async function HomePage() {
   return (
     <div className="space-y-6 cine-stagger">
       {/* ─── Hero ─── */}
-      <div className="relative rounded-2xl border border-white/[0.06] bg-[#101116] overflow-hidden">
+      <div className="relative rounded-2xl border border-foreground/[0.06] bg-card overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_50%,rgba(99,102,241,0.05)_0%,rgba(167,139,250,0.03)_40%,transparent_70%)]" />
-        <div className="relative flex flex-col md:flex-row items-center gap-0">
+        <div className="relative">
           {/* Stats */}
-          <div className="flex-1 px-7 py-7 z-10">
-            <p className="text-[10px] text-[#505050] uppercase tracking-[0.18em] font-semibold mb-2">
+          <div className="px-7 py-7">
+            <p className="text-[10px] text-foreground/35 uppercase tracking-[0.18em] font-semibold mb-2">
               {monthName}
             </p>
-            <p className="text-2xl font-semibold tracking-tight text-white mb-5">
+            <p className="text-2xl font-semibold tracking-tight text-foreground mb-5">
               Resumen del negocio
             </p>
             <div className="flex flex-wrap gap-5">
               <div>
                 <p className="text-xl font-bold text-indigo-400 tracking-tight">{formatCurrency(totalIncome)}</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas mes</p>
+                <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">Ventas mes</p>
               </div>
-              <div className="w-px bg-[#1b1c22] self-stretch" />
+              <div className="w-px bg-border self-stretch" />
               <div>
                 <p className={`text-xl font-bold tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {formatCurrency(netProfit)}
                 </p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ganancia neta</p>
+                <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">Ganancia neta</p>
               </div>
-              <div className="w-px bg-[#1b1c22] self-stretch" />
+              <div className="w-px bg-border self-stretch" />
               <div>
                 <p className="text-xl font-bold text-violet-400 tracking-tight">{margin}%</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Margen</p>
+                <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">Margen</p>
               </div>
-              <div className="w-px bg-[#1b1c22] self-stretch" />
+              <div className="w-px bg-border self-stretch" />
               <div>
                 <p className="text-xl font-bold text-amber-400 tracking-tight">{formatCurrency(todayIncome)}</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas hoy</p>
+                <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">Ventas hoy</p>
               </div>
             </div>
-          </div>
-          {/* 3D orb */}
-          <div className="relative w-full md:w-56 h-48 md:h-56 shrink-0">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.06),transparent_70%)] pulse-glow" />
-            <HeroOrbClient />
           </div>
         </div>
       </div>
@@ -207,35 +201,35 @@ export default async function HomePage() {
       </div>
 
       {/* ─── Flujo de caja del mes ─── */}
-      <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
-          <h2 className="text-[13px] font-semibold text-white">Flujo de caja · {monthName}</h2>
-          <Link href="/finanzas" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+      <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-foreground/[0.06] flex items-center justify-between">
+          <h2 className="text-[13px] font-semibold text-foreground">Flujo de caja · {monthName}</h2>
+          <Link href="/finanzas" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
             Finanzas <ArrowUpRight size={11} />
           </Link>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-foreground/[0.06]">
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Ingresos</p>
+            <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Ingresos</p>
             <p className="text-lg font-bold text-emerald-400 tracking-tight">{formatCurrency(totalIncome)}</p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Ventas del mes</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Ventas del mes</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Egresos</p>
+            <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Egresos</p>
             <p className="text-lg font-bold text-red-400 tracking-tight">{formatCurrency(cashOut)}</p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Compras + gastos</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Compras + gastos</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Caja neta</p>
-            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-white' : 'text-red-400'}`}>
+            <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Caja neta</p>
+            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-foreground' : 'text-red-400'}`}>
               {formatCurrency(cashNet)}
             </p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Ingresos − egresos</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Ingresos − egresos</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Stock valorizado</p>
+            <p className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Stock valorizado</p>
             <p className="text-lg font-bold text-indigo-400 tracking-tight">{formatCurrency(stockValue)}</p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Costo del inventario</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Costo del inventario</p>
           </div>
         </div>
       </div>
@@ -248,7 +242,7 @@ export default async function HomePage() {
             <p className="text-[13px] font-medium text-amber-300">
               Las ventas bajaron {salesDropPct}% respecto a la semana pasada
             </p>
-            <p className="text-[11px] text-[#6e6e6e] mt-0.5">
+            <p className="text-[11px] text-foreground/45 mt-0.5">
               Últimos 7 días: {formatCurrency(thisWeek)} · semana anterior: {formatCurrency(lastWeek)}
             </p>
           </div>
@@ -262,7 +256,7 @@ export default async function HomePage() {
             <p className="text-[13px] font-medium text-red-300">
               {overduePurchases!.length} pago{overduePurchases!.length > 1 ? 's' : ''} vencido{overduePurchases!.length > 1 ? 's' : ''} a proveedores
             </p>
-            <p className="text-[11px] text-[#6e6e6e] mt-0.5 truncate">
+            <p className="text-[11px] text-foreground/45 mt-0.5 truncate">
               {overduePurchases!.map(p => (p.suppliers as any)?.name).filter(Boolean).join(', ')}
             </p>
           </div>
@@ -276,16 +270,16 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Ventas recientes */}
-        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-            <h2 className="text-[13px] font-semibold text-white">Ventas recientes</h2>
-            <Link href="/ventas" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+        <div className="lg:col-span-2 rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
+            <h2 className="text-[13px] font-semibold text-foreground">Ventas recientes</h2>
+            <Link href="/ventas" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
               Ver todas <ArrowUpRight size={11} />
             </Link>
           </div>
           {(recentSales?.length ?? 0) === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-[13px] text-[#5c5c5c]">Sin ventas registradas</p>
+              <p className="text-[13px] text-foreground/40">Sin ventas registradas</p>
               <Link href="/ventas/nueva" className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors">
                 <Plus size={12} /> Registrar primera venta
               </Link>
@@ -293,21 +287,21 @@ export default async function HomePage() {
           ) : (
             <table className="w-full text-[12px]">
               <thead>
-                <tr className="border-b border-white/[0.05]">
-                  <th className="text-left px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Fecha</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Cliente</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Canal</th>
-                  <th className="text-right px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Total</th>
+                <tr className="border-b border-foreground/[0.05]">
+                  <th className="text-left px-5 py-2.5 text-[10px] text-foreground/35 uppercase tracking-wider font-semibold">Fecha</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] text-foreground/35 uppercase tracking-wider font-semibold">Cliente</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] text-foreground/35 uppercase tracking-wider font-semibold">Canal</th>
+                  <th className="text-right px-5 py-2.5 text-[10px] text-foreground/35 uppercase tracking-wider font-semibold">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recentSales!.map((sale) => (
-                  <tr key={sale.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-5 py-3 text-[#969696]">
+                  <tr key={sale.id} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02] transition-colors">
+                    <td className="px-5 py-3 text-foreground/60">
                       {new Date(sale.sale_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                     </td>
-                    <td className="px-3 py-3 text-[#a8a8a8]">
-                      {(sale.customers as any)?.name ?? <span className="text-[#606060]">—</span>}
+                    <td className="px-3 py-3 text-foreground/70">
+                      {(sale.customers as any)?.name ?? <span className="text-foreground/40">—</span>}
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
@@ -318,7 +312,7 @@ export default async function HomePage() {
                         {channelLabel[sale.channel] ?? sale.channel}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-semibold text-white">
+                    <td className="px-5 py-3 text-right font-semibold text-foreground">
                       {formatCurrency(sale.total_amount)}
                     </td>
                   </tr>
@@ -331,24 +325,24 @@ export default async function HomePage() {
         {/* Right column */}
         <div className="space-y-4">
           {/* Stock crítico */}
-          <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-              <h2 className="text-[13px] font-semibold text-white">Stock crítico</h2>
-              <Link href="/stock" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+          <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
+              <h2 className="text-[13px] font-semibold text-foreground">Stock crítico</h2>
+              <Link href="/stock" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
                 Ver <ArrowUpRight size={11} />
               </Link>
             </div>
             {(stockAlerts?.length ?? 0) === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[11px] text-[#505050]">Todo el stock en orden ✓</p>
+                <p className="text-[11px] text-foreground/35">Todo el stock en orden ✓</p>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.05]">
+              <div className="divide-y divide-foreground/[0.05]">
                 {stockAlerts!.slice(0, 6).map(p => (
                   <div key={p.id} className="flex items-center justify-between px-5 py-2.5">
                     <div className="min-w-0">
-                      <p className="text-[12px] text-[#a8a8a8] truncate">{p.brand} {p.model}</p>
-                      <p className="text-[10px] text-[#606060]">{p.color} · T{p.size}</p>
+                      <p className="text-[12px] text-foreground/70 truncate">{p.brand} {p.model}</p>
+                      <p className="text-[10px] text-foreground/40">{p.color} · T{p.size}</p>
                     </div>
                     <span className={`text-[11px] font-bold ml-3 shrink-0 ${
                       p.stock_quantity === 0 ? 'text-red-400' : 'text-amber-400'
@@ -359,7 +353,7 @@ export default async function HomePage() {
                 ))}
                 {(stockAlerts!.length ?? 0) > 6 && (
                   <div className="px-5 py-2.5">
-                    <Link href="/stock" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 transition-colors">
+                    <Link href="/stock" className="text-[11px] text-foreground/45 hover:text-indigo-400 transition-colors">
                       +{stockAlerts!.length - 6} más...
                     </Link>
                   </div>
@@ -369,24 +363,24 @@ export default async function HomePage() {
           </div>
 
           {/* Top productos */}
-          <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/[0.06]">
-              <h2 className="text-[13px] font-semibold text-white">Más vendidos este mes</h2>
+          <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+            <div className="px-5 py-4 border-b border-foreground/[0.06]">
+              <h2 className="text-[13px] font-semibold text-foreground">Más vendidos este mes</h2>
             </div>
             {topList.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[11px] text-[#505050]">Sin datos de ventas</p>
+                <p className="text-[11px] text-foreground/35">Sin datos de ventas</p>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.05]">
+              <div className="divide-y divide-foreground/[0.05]">
                 {topList.map((p, i) => (
                   <div key={p.name} className="flex items-center gap-3 px-5 py-2.5">
-                    <span className="text-[10px] text-[#4a4a4a] font-mono w-4 shrink-0">{i + 1}</span>
+                    <span className="text-[10px] text-foreground/30 font-mono w-4 shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-[#a8a8a8] truncate">{p.name}</p>
-                      <p className="text-[10px] text-[#606060]">{p.units} unidades</p>
+                      <p className="text-[12px] text-foreground/70 truncate">{p.name}</p>
+                      <p className="text-[10px] text-foreground/40">{p.units} unidades</p>
                     </div>
-                    <p className="text-[11px] font-semibold text-white shrink-0">
+                    <p className="text-[11px] font-semibold text-foreground shrink-0">
                       {formatCurrency(p.revenue)}
                     </p>
                   </div>
@@ -398,31 +392,31 @@ export default async function HomePage() {
       </div>
 
       {/* ─── Últimos gastos ─── */}
-      <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <h2 className="text-[13px] font-semibold text-white">Últimos gastos</h2>
-          <Link href="/egresos" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+      <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
+          <h2 className="text-[13px] font-semibold text-foreground">Últimos gastos</h2>
+          <Link href="/egresos" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
             Ver todos <ArrowUpRight size={11} />
           </Link>
         </div>
         {(recentExpensesData?.length ?? 0) === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-[11px] text-[#505050]">Sin gastos registrados</p>
+            <p className="text-[11px] text-foreground/35">Sin gastos registrados</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.05]">
+          <div className="divide-y divide-foreground/[0.05]">
             {recentExpensesData!.map((e, i) => (
               <div key={i} className="flex items-center justify-between px-5 py-2.5">
                 <div className="min-w-0 flex items-center gap-3">
-                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-white/[0.04] text-[#a8a8a8] border border-white/10 shrink-0">
+                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-foreground/[0.04] text-foreground/70 border border-foreground/10 shrink-0">
                     {expenseCatLabel[e.category] ?? e.category}
                   </span>
-                  <p className="text-[12px] text-[#a8a8a8] truncate">
-                    {e.description ?? <span className="text-[#606060]">—</span>}
+                  <p className="text-[12px] text-foreground/70 truncate">
+                    {e.description ?? <span className="text-foreground/40">—</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-[10px] text-[#606060]">
+                  <span className="text-[10px] text-foreground/40">
                     {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                   </span>
                   <span className="text-[12px] font-semibold text-red-400">−{formatCurrency(e.amount)}</span>
@@ -436,15 +430,15 @@ export default async function HomePage() {
       {/* ─── Quick actions ─── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { href: '/ventas/nueva', label: 'Nueva venta',      Icon: ShoppingCart, accent: 'hover:border-indigo-500/25 hover:text-white',  iconCls: 'text-indigo-400' },
-          { href: '/catalogo',     label: 'Agregar producto', Icon: Package,      accent: 'hover:border-violet-500/25 hover:text-white',  iconCls: 'text-violet-400' },
-          { href: '/stock',        label: 'Ajustar stock',    Icon: Boxes,        accent: 'hover:border-emerald-500/25 hover:text-white', iconCls: 'text-emerald-400' },
-          { href: '/reportes',     label: 'Ver reportes',     Icon: BarChart3,    accent: 'hover:border-amber-500/25 hover:text-white',   iconCls: 'text-amber-400' },
+          { href: '/ventas/nueva', label: 'Nueva venta',      Icon: ShoppingCart, accent: 'hover:border-indigo-500/25 hover:text-foreground',  iconCls: 'text-indigo-400' },
+          { href: '/catalogo',     label: 'Agregar producto', Icon: Package,      accent: 'hover:border-violet-500/25 hover:text-foreground',  iconCls: 'text-violet-400' },
+          { href: '/stock',        label: 'Ajustar stock',    Icon: Boxes,        accent: 'hover:border-emerald-500/25 hover:text-foreground', iconCls: 'text-emerald-400' },
+          { href: '/reportes',     label: 'Ver reportes',     Icon: BarChart3,    accent: 'hover:border-amber-500/25 hover:text-foreground',   iconCls: 'text-amber-400' },
         ].map(({ href, label, Icon, accent, iconCls }) => (
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-[#101116] px-4 py-2.5 text-[12px] text-[#9a9a9a] transition-all duration-150 ${accent}`}
+            className={`flex items-center gap-2.5 rounded-lg border border-foreground/[0.06] bg-card px-4 py-2.5 text-[12px] text-foreground/65 transition-all duration-150 ${accent}`}
           >
             <Icon size={15} className={iconCls} />
             {label}

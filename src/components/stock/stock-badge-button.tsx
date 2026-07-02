@@ -39,9 +39,9 @@ export function StockBadgeButton({ productId, productName, size, qty }: StockBad
       >
         {qty}
       </DialogTrigger>
-      <DialogContent className="max-w-sm bg-[#15161c] border-white/10">
+      <DialogContent className="max-w-sm bg-card border-foreground/10">
         <DialogHeader>
-          <DialogTitle className="text-white">Ajustar stock · T{size}</DialogTitle>
+          <DialogTitle className="text-foreground">Ajustar stock · T{size}</DialogTitle>
         </DialogHeader>
         <AdjustmentForm
           productId={productId}

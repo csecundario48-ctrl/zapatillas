@@ -75,7 +75,7 @@ export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix =
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative overflow-hidden rounded-xl bg-[#15161c] border border-white/[0.08] p-6 cursor-default"
+      className="relative overflow-hidden rounded-xl bg-card border border-foreground/[0.08] p-6 cursor-default"
       style={{ transition: 'transform 0.12s ease-out, box-shadow 0.12s ease-out', transformStyle: 'preserve-3d' }}
     >
       {/* Top accent bar */}
@@ -89,11 +89,11 @@ export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix =
 
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
-          <p className="text-xs font-medium text-[#828282] uppercase tracking-widest">{title}</p>
-          {icon && <div className="text-[#5c5c5c] mt-0.5">{icon}</div>}
+          <p className="text-xs font-medium text-foreground/55 uppercase tracking-widest">{title}</p>
+          {icon && <div className="text-foreground/40 mt-0.5">{icon}</div>}
         </div>
         <p className={`text-3xl font-bold tracking-tight ${text}`}>{displayValue}</p>
-        {subtitle && <p className="text-xs text-[#828282] mt-2">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-foreground/55 mt-2">{subtitle}</p>}
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AlertTriangle, LogOut } from 'lucide-react'
 import { MobileNav } from './mobile-nav'
+import { ThemeToggle } from './theme-toggle'
 
 const pathLabels: Record<string, string> = {
   '/': 'Inicio',
@@ -38,12 +39,11 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-10 flex items-center justify-between h-14 px-5 border-b border-white/[0.06] shrink-0"
-      style={{ backgroundColor: 'rgba(8,8,8,0.92)', backdropFilter: 'blur(12px)' }}
+      className="sticky top-0 z-10 flex items-center justify-between h-14 px-5 border-b border-foreground/[0.06] shrink-0 bg-background/90 backdrop-blur-md"
     >
       <div className="flex items-center gap-2">
         <MobileNav />
-        <h1 className="text-[13px] font-semibold text-white tracking-tight">{pageTitle}</h1>
+        <h1 className="text-[13px] font-semibold text-foreground tracking-tight">{pageTitle}</h1>
       </div>
 
       <div className="flex items-center gap-2">
@@ -57,9 +57,11 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
           </button>
         )}
 
+        <ThemeToggle />
+
         <div
           title={userEmail}
-          className="w-7 h-7 rounded-full bg-[#1f2026] border border-white/10 flex items-center justify-center text-[10px] font-bold text-[#a8a8a8] select-none"
+          className="w-7 h-7 rounded-full bg-muted border border-foreground/10 flex items-center justify-center text-[10px] font-bold text-foreground/70 select-none"
         >
           {initials}
         </div>
@@ -67,7 +69,7 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
         <button
           onClick={handleSignOut}
           title="Cerrar sesión"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-[#6e6e6e] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="w-7 h-7 rounded-md flex items-center justify-center text-foreground/45 hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <LogOut size={13} />
         </button>

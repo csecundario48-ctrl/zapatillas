@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('stock_quantity', 0)
 
   return (
-    <div className="relative isolate flex h-screen overflow-hidden bg-[#08090a]">
+    <div className="relative isolate flex h-screen overflow-hidden bg-background">
       {/* Aurora glow backdrop (Linear-style) */}
       <div className="aurora" />
 
@@ -33,7 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* Giant faint KALA watermark behind every section */}
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/kala-logo.png" alt="" className="w-[62%] max-w-4xl opacity-[0.03] select-none" />
+          <img src="/kala-logo.png" alt="" className="w-[62%] max-w-4xl opacity-[0.05] dark:opacity-[0.03] invert dark:invert-0 select-none" />
         </div>
 
         {/* Header — frozen during page transitions */}
