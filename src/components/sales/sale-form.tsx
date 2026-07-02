@@ -60,6 +60,18 @@ export function SaleForm({ products, customers }: { products: Product[]; custome
     setItems(items.filter(i => i.product.id !== productId))
   }
 
+  // Enter en el buscador: agrega el match exacto de SKU (lector de barras
+  // tipea el código + Enter) o el único resultado, en vez de enviar el form.
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    const term = search.trim().toLowerCase()
+    if (!term) return
+    const exact = filteredProducts.find(p => p.sku.toLowerCase() === term)
+    const target = exact ?? (filteredProducts.length === 1 ? filteredProducts[0] : null)
+    if (target) addItem(target)
+  }
+
   const total = items.reduce((sum, i) => sum + (i.unit_price - i.discount) * i.quantity, 0)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -129,7 +141,8 @@ export function SaleForm({ products, customers }: { products: Product[]; custome
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Nike Air Force 1 Blanco T42..."
+          onKeyDown={handleSearchKeyDown}
+          placeholder="Nombre o SKU (lector de barras: escaneá y listo)..."
         />
         {search && (
           <div className="rounded-xl border border-foreground/10 bg-card divide-y divide-foreground/[0.06] max-h-52 overflow-y-auto shadow-xl">

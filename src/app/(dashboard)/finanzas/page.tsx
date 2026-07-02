@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/utils/format'
 import { TrendingUp, TrendingDown, DollarSign, AlertCircle } from 'lucide-react'
+import { CashflowBarChart } from '@/components/charts/cashflow-bar-chart'
+
+const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 export default async function FinanzasPage() {
   const supabase = await createClient()
@@ -39,6 +42,22 @@ export default async function FinanzasPage() {
     acc[e.category] = (acc[e.category] ?? 0) + e.amount
     return acc
   }, {} as Record<string, number>) ?? {}
+
+  // Flujo de caja: ingresos vs egresos de los últimos 6 meses calendario
+  const cashflow = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    return { key, month: `${MONTH_LABELS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, ingresos: 0, egresos: 0 }
+  })
+  const cashflowByKey = new Map(cashflow.map(m => [m.key, m]))
+  for (const s of sales ?? []) {
+    const m = cashflowByKey.get(s.sale_date.slice(0, 7))
+    if (m) m.ingresos += s.total_amount
+  }
+  for (const e of expenses ?? []) {
+    const m = cashflowByKey.get(e.expense_date.slice(0, 7))
+    if (m) m.egresos += e.amount
+  }
 
   return (
     <div className="space-y-7 max-w-5xl">
@@ -113,6 +132,12 @@ export default async function FinanzasPage() {
             <p className="text-xs text-foreground/45 mt-1">No incluido en los egresos hasta que se pague</p>
           </div>
         )}
+      </div>
+
+      {/* Cashflow por mes */}
+      <div className="bg-card border border-foreground/[0.08] rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-foreground mb-4">Flujo de caja — últimos 6 meses</h2>
+        <CashflowBarChart data={cashflow.map(({ month, ingresos, egresos }) => ({ month, ingresos, egresos }))} />
       </div>
 
       {/* Expenses by category */}

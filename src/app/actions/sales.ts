@@ -112,3 +112,61 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
   revalidatePath('/')
   return { }
 }
+
+/**
+ * Marca una venta completada como devolución y repone el stock de sus items.
+ * El update condicionado por status evita reponer dos veces si se dispara
+ * en simultáneo (solo una transición completada→devolucion puede ganar).
+ */
+export async function returnSale(saleId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: sale, error: saleErr } = await supabase
+    .from('sales')
+    .select('id, status, sale_items(product_id, quantity)')
+    .eq('id', saleId)
+    .single()
+  if (saleErr || !sale) return { error: saleErr?.message ?? 'Venta no encontrada' }
+  if (sale.status !== 'completada') return { error: 'Solo se pueden devolver ventas completadas' }
+
+  const { data: updated, error: updErr } = await supabase
+    .from('sales')
+    .update({ status: 'devolucion' })
+    .eq('id', saleId)
+    .eq('status', 'completada')
+    .select('id')
+  if (updErr) return { error: updErr.message }
+  if (!updated?.length) return { error: 'La venta ya fue devuelta o cancelada' }
+
+  const qtyById = new Map<string, number>()
+  for (const item of sale.sale_items ?? []) {
+    qtyById.set(item.product_id, (qtyById.get(item.product_id) ?? 0) + item.quantity)
+  }
+
+  const { data: products, error: prodErr } = await supabase
+    .from('products')
+    .select('id, stock_quantity')
+    .in('id', [...qtyById.keys()])
+  if (prodErr) {
+    return { error: `Venta marcada como devolución, pero falló leer el stock: ${prodErr.message}` }
+  }
+
+  for (const p of products ?? []) {
+    const { error: stockErr } = await supabase
+      .from('products')
+      .update({ stock_quantity: p.stock_quantity + (qtyById.get(p.id) ?? 0) })
+      .eq('id', p.id)
+    if (stockErr) {
+      return { error: `Venta devuelta, pero falló reponer el stock de un producto: ${stockErr.message}` }
+    }
+  }
+
+  revalidatePath('/ventas')
+  revalidatePath('/stock')
+  revalidatePath('/finanzas')
+  revalidatePath('/')
+  return { }
+}

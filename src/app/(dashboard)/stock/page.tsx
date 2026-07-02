@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Product } from '@/types/database'
 import { StockBadgeButton } from '@/components/stock/stock-badge-button'
+import { ExportCsvButton } from '@/components/common/export-csv-button'
 
 type ProductGroup = {
   brand: string
@@ -51,6 +52,14 @@ export default async function StockPage() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Stock</h1>
           <p className="text-sm text-foreground/55 mt-0.5">Vista por modelo y talle</p>
         </div>
+        <ExportCsvButton
+          filename="stock.csv"
+          headers={['SKU', 'Marca', 'Modelo', 'Color', 'Género', 'Talle', 'Stock', 'Costo', 'Precio venta']}
+          rows={((products as Product[]) ?? []).map(p => [
+            p.sku, p.brand, p.model, p.color, p.gender, p.size,
+            p.stock_quantity, p.cost_price, p.sale_price,
+          ])}
+        />
       </div>
 
       {/* Summary bar */}

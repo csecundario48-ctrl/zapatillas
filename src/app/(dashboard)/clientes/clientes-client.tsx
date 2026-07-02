@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button'
 import { CustomerForm } from '@/components/customers/customer-form'
 import { WhatsAppButton } from '@/components/contact/whatsapp-button'
 import { ConfirmDelete, deleteErrorMessage } from '@/components/common/confirm-delete'
+import { ExportCsvButton } from '@/components/common/export-csv-button'
+import { CustomerHistoryButton } from '@/components/customers/customer-history'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils/format'
 import type { Customer } from '@/types/database'
@@ -116,6 +118,14 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
           </p>
         </div>
         <div className="flex gap-3">
+          <ExportCsvButton
+            filename="clientes.csv"
+            headers={['Nombre', 'Teléfono', 'Email', 'Instagram', 'Compras', 'Total gastado', 'Última compra']}
+            rows={rows.map(r => [
+              r.name, r.phone, r.email, r.instagram,
+              r.purchases, r.totalSpent, r.lastPurchase,
+            ])}
+          />
           <input
             type="text"
             value={search}
@@ -188,6 +198,7 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
                     <td className="px-4 py-3 text-foreground/55">{lastLabel(r)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <CustomerHistoryButton customerId={r.id} customerName={r.name} />
                         <WhatsAppButton phone={r.phone} name={r.name} withTemplates />
                         <CustomerRowActions row={r} />
                       </div>
