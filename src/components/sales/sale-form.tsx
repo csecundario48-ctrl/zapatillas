@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+import { createSale } from '@/app/actions/sales'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
-import type { Product } from '@/types/database'
+import type { Product, Customer } from '@/types/database'
 
 const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
@@ -19,9 +19,10 @@ interface SaleItem {
   discount: number
 }
 
-export function SaleForm({ products }: { products: Product[] }) {
+export function SaleForm({ products, customers }: { products: Product[]; customers: Customer[] }) {
   const router = useRouter()
   const [items, setItems] = useState<SaleItem[]>([])
+  const [customerId, setCustomerId] = useState('')
   const [channel, setChannel] = useState('fisica')
   const [paymentMethod, setPaymentMethod] = useState('efectivo')
   const [saleDate, setSaleDate] = useState(formatDateForInput())
@@ -66,34 +67,21 @@ export function SaleForm({ products }: { products: Product[] }) {
     if (items.length === 0) { setError('Agregá al menos un producto'); return }
     setLoading(true)
     setError(null)
-    const supabase = createClient()
 
-    const { data: sale, error: saleError } = await supabase
-      .from('sales')
-      .insert({
-        sale_date: saleDate,
-        channel: channel as 'fisica' | 'online',
-        payment_method: paymentMethod as 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago',
-        total_amount: total,
-        status: 'completada',
-      })
-      .select()
-      .single()
-
-    if (saleError) { setError(saleError.message); setLoading(false); return }
-
-    const { error: itemsError } = await supabase.from('sale_items').insert(
-      items.map(i => ({
-        sale_id: sale.id,
+    const { error: saleError } = await createSale({
+      sale_date: saleDate,
+      channel: channel as 'fisica' | 'online',
+      payment_method: paymentMethod as 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago',
+      customer_id: customerId || null,
+      items: items.map(i => ({
         product_id: i.product.id,
         quantity: i.quantity,
         unit_price: i.unit_price,
         discount: i.discount,
-        subtotal: (i.unit_price - i.discount) * i.quantity,
-      }))
-    )
+      })),
+    })
 
-    if (itemsError) { setError(itemsError.message); setLoading(false); return }
+    if (saleError) { setError(saleError); setLoading(false); return }
 
     toast.success(`Venta registrada — ${formatCurrency(total)}`)
     router.push('/ventas')
@@ -103,7 +91,16 @@ export function SaleForm({ products }: { products: Product[] }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       {/* Meta */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-[#969696] uppercase tracking-wider">Cliente <span className="text-[#5c5c5c] normal-case tracking-normal">(opcional)</span></Label>
+          <select value={customerId} onChange={e => setCustomerId(e.target.value)} className={sel}>
+            <option value="" className="bg-[#15161c]">Sin cliente / mostrador</option>
+            {customers.map(c => (
+              <option key={c.id} value={c.id} className="bg-[#15161c]">{c.name}</option>
+            ))}
+          </select>
+        </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-[#969696] uppercase tracking-wider">Fecha</Label>
           <Input type="date" value={saleDate} onChange={e => setSaleDate(e.target.value)} />

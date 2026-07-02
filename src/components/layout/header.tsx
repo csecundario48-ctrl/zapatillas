@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AlertTriangle, LogOut } from 'lucide-react'
+import { MobileNav } from './mobile-nav'
 
 const pathLabels: Record<string, string> = {
   '/': 'Inicio',
@@ -40,7 +41,10 @@ export function Header({ userEmail, criticalCount }: HeaderProps) {
       className="sticky top-0 z-10 flex items-center justify-between h-14 px-5 border-b border-white/[0.06] shrink-0"
       style={{ backgroundColor: 'rgba(8,8,8,0.92)', backdropFilter: 'blur(12px)' }}
     >
-      <h1 className="text-[13px] font-semibold text-white tracking-tight">{pageTitle}</h1>
+      <div className="flex items-center gap-2">
+        <MobileNav />
+        <h1 className="text-[13px] font-semibold text-white tracking-tight">{pageTitle}</h1>
+      </div>
 
       <div className="flex items-center gap-2">
         {criticalCount > 0 && (

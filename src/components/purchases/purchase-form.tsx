@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+import { createPurchase } from '@/app/actions/purchases'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -48,36 +48,23 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
     if (items.length === 0) { setError('Agregá al menos un producto'); return }
     setLoading(true)
     setError(null)
-    const supabase = createClient()
 
-    const { data: purchase, error: pErr } = await supabase
-      .from('purchases')
-      .insert({
-        supplier_id: supplierId,
-        purchase_date: purchaseDate,
-        total_amount: total,
-        payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
-        payment_due_date: paymentDueDate || null,
-        notes: notes || null,
-      })
-      .select()
-      .single()
-
-    if (pErr) { setError(pErr.message); setLoading(false); return }
-
-    const { error: iErr } = await supabase.from('purchase_items').insert(
-      items.map(i => ({
-        purchase_id: purchase.id,
+    const { error: pErr } = await createPurchase({
+      supplier_id: supplierId,
+      purchase_date: purchaseDate,
+      payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
+      payment_due_date: paymentDueDate || null,
+      notes: notes || null,
+      items: items.map(i => ({
         product_id: i.product.id,
         quantity: i.quantity,
         unit_cost: i.unit_cost,
-        subtotal: i.unit_cost * i.quantity,
-      }))
-    )
+      })),
+    })
 
-    if (iErr) { setError(iErr.message); setLoading(false); return }
+    if (pErr) { setError(pErr); setLoading(false); return }
 
-    toast.success('Compra registrada')
+    toast.success('Compra registrada — stock actualizado')
     router.push('/compras')
     router.refresh()
   }

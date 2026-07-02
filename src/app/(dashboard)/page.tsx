@@ -3,7 +3,7 @@ import { KpiCard } from '@/components/kpis/kpi-card'
 import { formatCurrency } from '@/lib/utils/format'
 import Link from 'next/link'
 import { HeroOrbClient } from '@/components/3d/hero-orb-client'
-import { AlertTriangle, ArrowUpRight, Plus } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, Plus, ShoppingCart, Package, Boxes, BarChart3 } from 'lucide-react'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -436,17 +436,17 @@ export default async function HomePage() {
       {/* ─── Quick actions ─── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { href: '/ventas/nueva', label: 'Nueva venta',   icon: '💰', accent: 'hover:border-indigo-500/25 hover:text-white' },
-          { href: '/catalogo',     label: 'Agregar producto', icon: '📦', accent: 'hover:border-violet-500/25 hover:text-white' },
-          { href: '/stock',        label: 'Ajustar stock', icon: '📊', accent: 'hover:border-emerald-500/25 hover:text-white' },
-          { href: '/reportes',     label: 'Ver reportes',  icon: '📈', accent: 'hover:border-amber-500/25 hover:text-white' },
-        ].map(({ href, label, icon, accent }) => (
+          { href: '/ventas/nueva', label: 'Nueva venta',      Icon: ShoppingCart, accent: 'hover:border-indigo-500/25 hover:text-white',  iconCls: 'text-indigo-400' },
+          { href: '/catalogo',     label: 'Agregar producto', Icon: Package,      accent: 'hover:border-violet-500/25 hover:text-white',  iconCls: 'text-violet-400' },
+          { href: '/stock',        label: 'Ajustar stock',    Icon: Boxes,        accent: 'hover:border-emerald-500/25 hover:text-white', iconCls: 'text-emerald-400' },
+          { href: '/reportes',     label: 'Ver reportes',     Icon: BarChart3,    accent: 'hover:border-amber-500/25 hover:text-white',   iconCls: 'text-amber-400' },
+        ].map(({ href, label, Icon, accent, iconCls }) => (
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-[#101116] px-4 py-2.5 text-[12px] text-[#828282] transition-all duration-150 ${accent}`}
+            className={`flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-[#101116] px-4 py-2.5 text-[12px] text-[#9a9a9a] transition-all duration-150 ${accent}`}
           >
-            <span className="text-sm">{icon}</span>
+            <Icon size={15} className={iconCls} />
             {label}
           </Link>
         ))}
