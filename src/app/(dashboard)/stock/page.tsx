@@ -54,7 +54,7 @@ export default async function StockPage() {
       </div>
 
       {/* Summary bar */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total SKUs', value: totalSKUs, color: 'text-white' },
           { label: 'OK', value: stockOk, color: 'text-emerald-400' },
@@ -62,8 +62,8 @@ export default async function StockPage() {
           { label: 'Sin stock', value: sinStock, color: 'text-red-400' },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-[#15161c] border border-white/[0.08] rounded-xl p-4 text-center">
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-[#828282] mt-1">{label}</p>
+            <p className={`font-mono text-2xl font-semibold tabular-nums ${color}`}>{value}</p>
+            <p className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em] mt-1.5">{label}</p>
           </div>
         ))}
       </div>
@@ -122,7 +122,7 @@ export default async function StockPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-[#6e6e6e]">Stock total</p>
-                    <p className={`text-lg font-bold ${hasCritical ? 'text-red-400' : hasLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    <p className={`font-mono text-lg font-semibold tabular-nums ${hasCritical ? 'text-red-400' : hasLow ? 'text-amber-400' : 'text-emerald-400'}`}>
                       {group.totalStock}
                     </p>
                   </div>

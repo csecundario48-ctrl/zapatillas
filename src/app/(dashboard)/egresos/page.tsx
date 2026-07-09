@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ExpenseForm } from '@/components/expenses/expense-form'
-import { formatCurrency, formatDate } from '@/lib/utils/format'
+import { argDateStr, formatCurrency, formatDate } from '@/lib/utils/format'
 
 const categoryColors: Record<string, string> = {
   alquiler: 'text-violet-400',
@@ -22,12 +22,9 @@ export default async function EgresosPage() {
     .order('expense_date', { ascending: false })
 
   const total = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
+  const monthStart = `${argDateStr().slice(0, 7)}-01`
   const thisMonth = expenses
-    ?.filter(e => {
-      const now = new Date()
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      return e.expense_date >= monthStart
-    })
+    ?.filter(e => e.expense_date >= monthStart)
     .reduce((sum, e) => sum + e.amount, 0) ?? 0
 
   return (
@@ -52,23 +49,23 @@ export default async function EgresosPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+      <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-x-auto">
         {expenses && expenses.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Categoría</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Descripción</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Tipo</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Monto</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Rec.</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Fecha</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Categoría</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Descripción</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Tipo</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Monto</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Rec.</th>
               </tr>
             </thead>
             <tbody>
               {expenses.map(e => (
                 <tr key={e.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
-                  <td className="px-4 py-3 text-[#a8a8a8]">{formatDate(e.expense_date)}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-[#8a8f98]">{formatDate(e.expense_date)}</td>
                   <td className="px-4 py-3">
                     <span className={`capitalize font-medium ${categoryColors[e.category] ?? 'text-[#dcdcdc]'}`}>
                       {e.category}
@@ -84,7 +81,7 @@ export default async function EgresosPage() {
                       {e.type}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-white">{formatCurrency(e.amount)}</td>
+                  <td className="px-4 py-3 font-mono font-medium text-white tabular-nums">{formatCurrency(e.amount)}</td>
                   <td className="px-4 py-3 text-center">
                     {e.recurring ? (
                       <span className="text-indigo-400 text-xs">✓</span>

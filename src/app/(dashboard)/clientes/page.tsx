@@ -5,20 +5,25 @@ const VIP_MIN_SPENT = 300_000
 const FRECUENTE_MIN_PURCHASES = 3
 const INACTIVE_DAYS = 60
 
-export default async function ClientesPage() {
-  const supabase = await createClient()
+interface CustomerRecord {
+  id: string
+  name: string
+  phone: string | null
+  email: string | null
+  instagram: string | null
+  address: string | null
+}
 
-  const [{ data: customers }, { data: sales }] = await Promise.all([
-    supabase.from('customers').select('*').order('name'),
-    supabase
-      .from('sales')
-      .select('customer_id, total_amount, sale_date')
-      .eq('status', 'completada'),
-  ])
+interface SaleRecord {
+  customer_id: string | null
+  total_amount: number
+  sale_date: string
+}
 
+function buildCustomerRows(customers: CustomerRecord[], sales: SaleRecord[]): CustomerRow[] {
   // Aggregate sales per customer
   const agg: Record<string, { count: number; total: number; last: string | null }> = {}
-  for (const s of sales ?? []) {
+  for (const s of sales) {
     if (!s.customer_id) continue
     const a = agg[s.customer_id] ?? { count: 0, total: 0, last: null }
     a.count += 1
@@ -28,7 +33,7 @@ export default async function ClientesPage() {
   }
 
   const now = Date.now()
-  const rows: CustomerRow[] = (customers ?? []).map(c => {
+  const rows: CustomerRow[] = customers.map(c => {
     const a = agg[c.id] ?? { count: 0, total: 0, last: null }
     const daysSince = a.last
       ? Math.floor((now - new Date(a.last).getTime()) / 86_400_000)
@@ -59,6 +64,20 @@ export default async function ClientesPage() {
 
   // Most valuable first
   rows.sort((a, b) => b.totalSpent - a.totalSpent || a.name.localeCompare(b.name))
+  return rows
+}
 
+export default async function ClientesPage() {
+  const supabase = await createClient()
+
+  const [{ data: customers }, { data: sales }] = await Promise.all([
+    supabase.from('customers').select('*').order('name'),
+    supabase
+      .from('sales')
+      .select('customer_id, total_amount, sale_date')
+      .eq('status', 'completada'),
+  ])
+
+  const rows = buildCustomerRows(customers ?? [], sales ?? [])
   return <ClientesClient rows={rows} />
 }

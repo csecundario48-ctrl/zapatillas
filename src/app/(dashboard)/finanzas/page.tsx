@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency } from '@/lib/utils/format'
+import { argDateStr, formatCurrency } from '@/lib/utils/format'
 import { TrendingUp, TrendingDown, DollarSign, AlertCircle } from 'lucide-react'
 
 export default async function FinanzasPage() {
@@ -14,16 +14,16 @@ export default async function FinanzasPage() {
     supabase.from('purchases').select('total_amount').neq('payment_status', 'pagado'),
   ])
 
-  const now = new Date()
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const monthStart = `${argDateStr().slice(0, 7)}-01`
 
   const totalIncome = sales?.reduce((s, sale) => s + sale.total_amount, 0) ?? 0
   const monthIncome = sales?.filter(s => s.sale_date >= monthStart).reduce((s, sale) => s + sale.total_amount, 0) ?? 0
 
+  type CogsItem = { quantity: number; products: { cost_price: number } | null }
   const totalCOGS = sales?.reduce(
     (s, sale) =>
-      s + ((sale.sale_items as any[]) ?? []).reduce(
-        (si: number, item: any) => si + (item.products?.cost_price ?? 0) * item.quantity, 0
+      s + ((sale.sale_items ?? []) as unknown as CogsItem[]).reduce(
+        (si, item) => si + (item.products?.cost_price ?? 0) * item.quantity, 0
       ), 0
   ) ?? 0
 
@@ -54,8 +54,8 @@ export default async function FinanzasPage() {
             <p className="text-xs text-[#828282] uppercase tracking-wider">Ingresos totales</p>
             <TrendingUp size={16} className="text-emerald-400" />
           </div>
-          <p className="text-3xl font-bold text-emerald-400">{formatCurrency(totalIncome)}</p>
-          <p className="text-xs text-[#6e6e6e] mt-1">Este mes: {formatCurrency(monthIncome)}</p>
+          <p className="font-mono text-[26px] font-semibold text-emerald-300 tabular-nums tracking-tight">{formatCurrency(totalIncome)}</p>
+          <p className="text-xs text-[#6e6e6e] mt-1.5">Este mes: <span className="font-mono tabular-nums">{formatCurrency(monthIncome)}</span></p>
         </div>
 
         <div className="bg-[#15161c] border border-white/[0.08] rounded-xl p-6">
@@ -63,9 +63,9 @@ export default async function FinanzasPage() {
             <p className="text-xs text-[#828282] uppercase tracking-wider">Costos totales</p>
             <TrendingDown size={16} className="text-red-400" />
           </div>
-          <p className="text-3xl font-bold text-red-400">{formatCurrency(totalCOGS + totalExpenses)}</p>
-          <p className="text-xs text-[#6e6e6e] mt-1">
-            Mercadería: {formatCurrency(totalCOGS)} · Gastos: {formatCurrency(totalExpenses)}
+          <p className="font-mono text-[26px] font-semibold text-red-300 tabular-nums tracking-tight">{formatCurrency(totalCOGS + totalExpenses)}</p>
+          <p className="text-xs text-[#6e6e6e] mt-1.5">
+            Mercadería: <span className="font-mono tabular-nums">{formatCurrency(totalCOGS)}</span> · Gastos: <span className="font-mono tabular-nums">{formatCurrency(totalExpenses)}</span>
           </p>
         </div>
 
@@ -74,10 +74,10 @@ export default async function FinanzasPage() {
             <p className="text-xs text-[#828282] uppercase tracking-wider">Ganancia neta</p>
             <DollarSign size={16} className={netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'} />
           </div>
-          <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+          <p className={`font-mono text-[26px] font-semibold tabular-nums tracking-tight ${netProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
             {formatCurrency(netProfit)}
           </p>
-          <p className="text-xs text-[#6e6e6e] mt-1">Este mes: {formatCurrency(monthNetProfit)}</p>
+          <p className="text-xs text-[#6e6e6e] mt-1.5">Este mes: <span className="font-mono tabular-nums">{formatCurrency(monthNetProfit)}</span></p>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ export default async function FinanzasPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-[#15161c] border border-white/[0.08] rounded-xl p-6">
           <p className="text-xs text-[#828282] uppercase tracking-wider mb-3">Ganancia bruta</p>
-          <p className="text-2xl font-bold text-white">{formatCurrency(grossProfit)}</p>
+          <p className="font-mono text-[22px] font-semibold text-white tabular-nums tracking-tight">{formatCurrency(grossProfit)}</p>
           <p className="text-xs text-[#6e6e6e] mt-1">Ventas − Costo de mercadería</p>
           {totalIncome > 0 && (
             <div className="mt-4">
@@ -109,7 +109,7 @@ export default async function FinanzasPage() {
               <AlertCircle size={14} className="text-amber-400" />
               <p className="text-xs text-[#828282] uppercase tracking-wider">Pagos pendientes a proveedores</p>
             </div>
-            <p className="text-2xl font-bold text-amber-400">{formatCurrency(pendingPayments)}</p>
+            <p className="font-mono text-[22px] font-semibold text-amber-300 tabular-nums tracking-tight">{formatCurrency(pendingPayments)}</p>
             <p className="text-xs text-[#6e6e6e] mt-1">No incluido en los egresos hasta que se pague</p>
           </div>
         )}
@@ -131,7 +131,7 @@ export default async function FinanzasPage() {
                       style={{ width: `${(amount / totalExpenses) * 100}%` }}
                     />
                   </div>
-                  <div className="w-20 text-xs text-right text-[#a8a8a8]">{formatCurrency(amount)}</div>
+                  <div className="w-24 font-mono text-[11px] text-right text-[#a8a8a8] tabular-nums">{formatCurrency(amount)}</div>
                 </div>
               ))}
           </div>

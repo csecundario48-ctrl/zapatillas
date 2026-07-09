@@ -11,7 +11,7 @@ export default async function NuevaCompraPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Nueva Compra</h1>
-      <PurchaseForm products={(products as any) ?? []} suppliers={(suppliers as any) ?? []} />
+      <PurchaseForm products={products ?? []} suppliers={suppliers ?? []} />
     </div>
   )
 }

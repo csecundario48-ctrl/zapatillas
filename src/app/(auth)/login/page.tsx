@@ -43,7 +43,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-medium text-[#969696] uppercase tracking-wider">
+              <label htmlFor="email" className="font-mono text-[10px] font-medium text-[#8a8f98] uppercase tracking-[0.14em]">
                 Email
               </label>
               <input
@@ -59,7 +59,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="text-xs font-medium text-[#969696] uppercase tracking-wider">
+              <label htmlFor="password" className="font-mono text-[10px] font-medium text-[#8a8f98] uppercase tracking-[0.14em]">
                 Contraseña
               </label>
               <input
@@ -106,14 +106,14 @@ export default function LoginPage() {
             Ventas, stock, compras y finanzas — claros y al instante.
           </p>
 
-          <div className="flex gap-8 mt-10 pt-8 border-t border-white/[0.06]">
+          <div className="flex gap-10 mt-10 pt-8 border-t border-white/[0.06]">
             <div>
-              <p className="text-2xl font-semibold text-white tracking-tight">8</p>
-              <p className="text-xs text-[#828282] mt-1">secciones</p>
+              <p className="font-mono text-2xl font-semibold text-white tracking-tight tabular-nums">8</p>
+              <p className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em] mt-1.5">secciones</p>
             </div>
             <div>
               <p className="text-2xl font-semibold text-white tracking-tight">Tiempo real</p>
-              <p className="text-xs text-[#828282] mt-1">sin recargar</p>
+              <p className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em] mt-1.5">sin recargar</p>
             </div>
           </div>
         </div>

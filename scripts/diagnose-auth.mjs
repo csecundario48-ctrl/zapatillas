@@ -13,8 +13,12 @@ const URL_ = env.NEXT_PUBLIC_SUPABASE_URL
 const ANON = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const SERVICE = env.SUPABASE_SERVICE_ROLE_KEY
 
-const EMAIL = process.argv[2] || 'csecundario48@gmail.com'
-const PASSWORD = process.argv[3] || 'Zapatillas1'
+const EMAIL = process.argv[2]
+const PASSWORD = process.argv[3]
+if (!EMAIL || !PASSWORD) {
+  console.error('Uso: node scripts/diagnose-auth.mjs <email> <password>')
+  process.exit(1)
+}
 
 console.log('URL:', URL_)
 console.log('Email a probar:', EMAIL)

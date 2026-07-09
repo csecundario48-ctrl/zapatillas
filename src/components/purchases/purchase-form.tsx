@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+import { createPurchase } from '@/app/actions/purchases'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
-import type { Product, Supplier } from '@/types/database'
+import type { PaymentStatus, Product, Supplier } from '@/types/database'
 
 const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
@@ -48,34 +48,21 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
     if (items.length === 0) { setError('Agregá al menos un producto'); return }
     setLoading(true)
     setError(null)
-    const supabase = createClient()
 
-    const { data: purchase, error: pErr } = await supabase
-      .from('purchases')
-      .insert({
-        supplier_id: supplierId,
-        purchase_date: purchaseDate,
-        total_amount: total,
-        payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
-        payment_due_date: paymentDueDate || null,
-        notes: notes || null,
-      })
-      .select()
-      .single()
-
-    if (pErr) { setError(pErr.message); setLoading(false); return }
-
-    const { error: iErr } = await supabase.from('purchase_items').insert(
-      items.map(i => ({
-        purchase_id: purchase.id,
+    const result = await createPurchase({
+      supplier_id: supplierId,
+      purchase_date: purchaseDate,
+      payment_status: paymentStatus as PaymentStatus,
+      payment_due_date: paymentDueDate || '',
+      notes: notes || undefined,
+      items: items.map(i => ({
         product_id: i.product.id,
         quantity: i.quantity,
         unit_cost: i.unit_cost,
-        subtotal: i.unit_cost * i.quantity,
-      }))
-    )
+      })),
+    })
 
-    if (iErr) { setError(iErr.message); setLoading(false); return }
+    if (result.error) { setError(result.error); setLoading(false); return }
 
     toast.success('Compra registrada')
     router.push('/compras')
@@ -86,18 +73,18 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Proveedor</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Proveedor</Label>
           <select value={supplierId} onChange={e => setSupplierId(e.target.value)} className={sel}>
             <option value="" className="bg-[#15161c]">Seleccionar proveedor</option>
             {suppliers.map(s => <option key={s.id} value={s.id} className="bg-[#15161c]">{s.name}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Fecha de compra</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Fecha de compra</Label>
           <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Estado de pago</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Estado de pago</Label>
           <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className={sel}>
             <option value="pendiente" className="bg-[#15161c]">Pendiente</option>
             <option value="pagado" className="bg-[#15161c]">Pagado</option>
@@ -105,17 +92,17 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Vencimiento pago</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Vencimiento pago</Label>
           <Input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)} />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Notas</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Notas</Label>
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas de la compra..." />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Buscar producto</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Buscar producto</Label>
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Nike Air Force 1..." />
         {search && (
           <div className="rounded-xl border border-white/10 bg-[#131419] divide-y divide-white/[0.06] max-h-44 overflow-y-auto shadow-xl">
@@ -138,14 +125,14 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
       </div>
 
       {items.length > 0 && (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Producto</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Cant.</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Costo unit.</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Subtotal</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Producto</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Cant.</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Costo unit.</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Subtotal</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -196,7 +183,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
             <tfoot>
               <tr className="border-t border-white/10 bg-[#0a0a0a]">
                 <td colSpan={3} className="px-4 py-3 text-right text-[#969696] font-medium">Total:</td>
-                <td className="px-4 py-3 font-bold text-white text-lg">{formatCurrency(total)}</td>
+                <td className="px-4 py-3 font-mono font-semibold text-white text-lg tabular-nums">{formatCurrency(total)}</td>
                 <td></td>
               </tr>
             </tfoot>

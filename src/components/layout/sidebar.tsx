@@ -3,56 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import {
-  LayoutDashboard,
-  Package,
-  Boxes,
-  ShoppingCart,
-  Truck,
-  Receipt,
-  TrendingUp,
-  BarChart3,
-  Users,
-  Contact,
-} from 'lucide-react'
-
-const navGroups = [
-  {
-    label: 'Principal',
-    items: [
-      { href: '/', label: 'Inicio', icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: 'Inventario',
-    items: [
-      { href: '/catalogo', label: 'Catálogo', icon: Package },
-      { href: '/stock', label: 'Stock', icon: Boxes },
-    ],
-  },
-  {
-    label: 'Operaciones',
-    items: [
-      { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
-      { href: '/compras', label: 'Compras', icon: Truck },
-      { href: '/egresos', label: 'Egresos', icon: Receipt },
-    ],
-  },
-  {
-    label: 'Relaciones',
-    items: [
-      { href: '/clientes', label: 'Clientes', icon: Users },
-      { href: '/proveedores', label: 'Proveedores', icon: Contact },
-    ],
-  },
-  {
-    label: 'Análisis',
-    items: [
-      { href: '/finanzas', label: 'Finanzas', icon: TrendingUp },
-      { href: '/reportes', label: 'Reportes', icon: BarChart3 },
-    ],
-  },
-]
+import { navGroups } from './nav-items'
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
@@ -74,7 +25,7 @@ export function Sidebar({ className }: { className?: string }) {
       <nav className="flex-1 px-2.5 py-3 space-y-4 overflow-y-auto">
         {navGroups.map(({ label, items }) => (
           <div key={label}>
-            <p className="px-2.5 mb-1 text-[10px] font-semibold text-[#505050] uppercase tracking-[0.12em]">
+            <p className="px-2.5 mb-1 font-mono text-[10px] font-medium text-[#54575e] uppercase tracking-[0.16em]">
               {label}
             </p>
             <div className="space-y-0.5">
@@ -112,7 +63,7 @@ export function Sidebar({ className }: { className?: string }) {
 
       {/* Footer */}
       <div className="px-5 py-3.5 border-t border-white/[0.06]">
-        <p className="text-[10px] text-[#4a4a4a] font-mono tracking-widest uppercase">v1.0</p>
+        <p className="font-mono text-[10px] text-[#4a4a4a] tracking-[0.16em] uppercase">KALA · v1.0</p>
       </div>
     </aside>
   )

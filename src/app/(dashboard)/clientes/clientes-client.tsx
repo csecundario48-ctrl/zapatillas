@@ -147,12 +147,12 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-[#101116]">
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Cliente</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Contacto</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Compras</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Gasto total</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Última</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Acción</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Cliente</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Contacto</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Compras</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Gasto total</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Última</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -184,7 +184,7 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-[#cfcfcf] font-mono">{r.purchases}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-white">{formatCurrency(r.totalSpent)}</td>
+                    <td className="px-4 py-3 text-right font-mono font-medium text-white tabular-nums">{formatCurrency(r.totalSpent)}</td>
                     <td className="px-4 py-3 text-[#828282]">{lastLabel(r)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">

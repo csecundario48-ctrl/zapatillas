@@ -43,7 +43,7 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Categoría</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Categoría</Label>
           <select {...register('category')} className={sel}>
             {EXPENSE_CATEGORIES.map(c => (
               <option key={c} value={c} className="capitalize bg-[#15161c]">{c}</option>
@@ -52,28 +52,28 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
           {errors.category && <p className="text-xs text-red-400">{errors.category.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Tipo</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Tipo</Label>
           <select {...register('type')} className={sel}>
             <option value="fijo" className="bg-[#15161c]">Fijo</option>
             <option value="variable" className="bg-[#15161c]">Variable</option>
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Descripción</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Descripción</Label>
           <Input {...register('description')} placeholder="Alquiler local enero" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Monto ($)</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Monto ($)</Label>
           <Input {...register('amount', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
           {errors.amount && <p className="text-xs text-red-400">{errors.amount.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Fecha</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Fecha</Label>
           <Input {...register('expense_date')} type="date" />
           {errors.expense_date && <p className="text-xs text-red-400">{errors.expense_date.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Medio de pago</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Medio de pago</Label>
           <select {...register('payment_method')} className={sel}>
             <option value="" className="bg-[#15161c]">—</option>
             <option value="efectivo" className="bg-[#15161c]">Efectivo</option>

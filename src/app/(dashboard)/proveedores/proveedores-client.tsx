@@ -141,13 +141,13 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-[#101116]">
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Proveedor</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Contacto</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Compras</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Total</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Deuda</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Último pedido</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Acción</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Proveedor</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Contacto</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Compras</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Total</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Deuda</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Último pedido</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,8 +162,8 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-[#cfcfcf] font-mono">{r.purchases}</td>
-                    <td className="px-4 py-3 text-right text-[#cfcfcf]">{formatCurrency(r.totalBought)}</td>
-                    <td className="px-4 py-3 text-right font-semibold">
+                    <td className="px-4 py-3 text-right font-mono text-[#cfcfcf] tabular-nums">{formatCurrency(r.totalBought)}</td>
+                    <td className="px-4 py-3 text-right font-mono font-medium tabular-nums">
                       {r.debt > 0
                         ? <span className="text-red-400">{formatCurrency(r.debt)}</span>
                         : <span className="text-emerald-400">$0</span>}

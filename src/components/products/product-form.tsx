@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import type { Gender, Product, Supplier } from '@/types/database'
 
 const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50'
-const lbl = 'text-xs text-[#969696] uppercase tracking-wider'
+const lbl = 'font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]'
 
 interface ProductFormProps {
   suppliers: Pick<Supplier, 'id' | 'name'>[]

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { formatCurrency, formatDate } from '@/lib/utils/format'
+import { argDateStr, formatCurrency, formatDate } from '@/lib/utils/format'
 
 const statusStyle: Record<string, string> = {
   completada: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
@@ -21,8 +21,7 @@ export default async function VentasPage() {
     .order('created_at', { ascending: false })
     .limit(100)
 
-  const now = new Date()
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const monthStart = `${argDateStr().slice(0, 7)}-01`
   const totalMes =
     sales
       ?.filter(s => s.status === 'completada' && s.sale_date >= monthStart)
@@ -33,7 +32,9 @@ export default async function VentasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Ventas</h1>
-          <p className="text-sm text-[#828282] mt-0.5">Este mes: {formatCurrency(totalMes)}</p>
+          <p className="text-sm text-[#828282] mt-0.5">
+            Este mes: <span className="font-mono text-[13px] text-indigo-300 tabular-nums">{formatCurrency(totalMes)}</span>
+          </p>
         </div>
         <Link
           href="/ventas/nueva"
@@ -43,29 +44,29 @@ export default async function VentasPage() {
         </Link>
       </div>
 
-      <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+      <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-x-auto">
         {sales && sales.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Canal</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Pago</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Total</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider font-medium">Estado</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Fecha</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Canal</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Pago</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Total</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Estado</th>
               </tr>
             </thead>
             <tbody>
               {sales.map(sale => (
                 <tr key={sale.id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
-                  <td className="px-4 py-3 text-[#dcdcdc]">{formatDate(sale.sale_date)}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-[#8a8f98]">{formatDate(sale.sale_date)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border capitalize ${channelStyle[sale.channel] ?? ''}`}>
                       {sale.channel}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[#a8a8a8] capitalize">{sale.payment_method}</td>
-                  <td className="px-4 py-3 font-semibold text-white">{formatCurrency(sale.total_amount)}</td>
+                  <td className="px-4 py-3 font-mono font-medium text-white tabular-nums">{formatCurrency(sale.total_amount)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${statusStyle[sale.status] ?? ''}`}>
                       {sale.status}

@@ -9,7 +9,11 @@ for (const line of readFileSync(new URL('../.env.local', import.meta.url), 'utf8
   if (m) env[m[1]] = m[2]
 }
 
-const EMAIL = process.argv[2] || 'csecundario48@gmail.com'
+const EMAIL = process.argv[2]
+if (!EMAIL) {
+  console.error('Uso: node scripts/fix-admin-profile.mjs <email>')
+  process.exit(1)
+}
 const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 })

@@ -36,7 +36,12 @@ export default async function ReportesPage() {
     totalRevenue += sale.total_amount
     byChannel[sale.channel] = (byChannel[sale.channel] ?? 0) + sale.total_amount
     if (sale.payment_method) byPayment[sale.payment_method] = (byPayment[sale.payment_method] ?? 0) + sale.total_amount
-    ;(sale.sale_items as any[])?.forEach((item: any) => {
+    type ReportItem = {
+      quantity: number
+      unit_price: number
+      products: { id: string; brand: string; model: string; cost_price: number } | null
+    }
+    ;((sale.sale_items ?? []) as unknown as ReportItem[]).forEach(item => {
       const p = item.products
       const brand = p?.brand ?? 'Otro'
       byBrand[brand] = (byBrand[brand] ?? 0) + item.quantity
@@ -93,9 +98,9 @@ export default async function ReportesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {kpis.map(k => (
           <div key={k.label} className={`${card} p-5`}>
-            <p className="text-xs text-[#828282] uppercase tracking-wider mb-2">{k.label}</p>
-            <p className={`text-2xl font-bold ${k.color}`}>{k.value}</p>
-            {k.sub && <p className="text-xs text-[#6e6e6e] mt-1">{k.sub}</p>}
+            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mb-2.5">{k.label}</p>
+            <p className={`font-mono text-[22px] font-semibold tabular-nums tracking-tight ${k.color}`}>{k.value}</p>
+            {k.sub && <p className="text-xs text-[#6e6e6e] mt-1.5">{k.sub}</p>}
           </div>
         ))}
       </div>
@@ -140,7 +145,7 @@ export default async function ReportesPage() {
                         <p className="text-[13px] text-[#cfcfcf] truncate">{p.name}</p>
                         <p className="text-[10px] text-[#6e6e6e]">{p.units} unidades</p>
                       </div>
-                      <p className="text-[12px] font-semibold text-white shrink-0">{formatCurrency(p.revenue)}</p>
+                      <p className="font-mono text-[12px] font-medium text-white shrink-0 tabular-nums">{formatCurrency(p.revenue)}</p>
                     </div>
                   ))}
                 </div>
@@ -154,6 +159,7 @@ export default async function ReportesPage() {
               <div className="px-5 py-4 border-b border-white/[0.06]">
                 <h2 className="text-sm font-semibold text-white">Ranking de marcas</h2>
               </div>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
@@ -172,6 +178,7 @@ export default async function ReportesPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </>

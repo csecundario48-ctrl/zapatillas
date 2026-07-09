@@ -15,7 +15,7 @@ import type { Product, Supplier } from '@/types/database'
 
 interface Props {
   products: Product[]
-  suppliers: Supplier[]
+  suppliers: Pick<Supplier, 'id' | 'name'>[]
   isAdmin: boolean
 }
 

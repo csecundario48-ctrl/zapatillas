@@ -58,30 +58,30 @@ export function SupplierForm({ supplier, onSuccess }: { supplier?: Supplier; onS
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Nombre</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Nombre</Label>
           <Input {...register('name')} placeholder="Distribuidora Sur" />
           {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Contacto</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Contacto</Label>
           <Input {...register('contact_name')} placeholder="María López" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Teléfono</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Teléfono</Label>
           <Input {...register('phone')} placeholder="11 2345 6789" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Email</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Email</Label>
           <Input {...register('email')} placeholder="ventas@proveedor.com" />
           {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Dirección</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Dirección</Label>
         <Input {...register('address')} placeholder="Calle 123, Ciudad" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Notas</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Notas</Label>
         <Input {...register('notes')} placeholder="Entrega los martes..." />
       </div>
       {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}

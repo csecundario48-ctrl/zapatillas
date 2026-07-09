@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+import { createSale } from '@/app/actions/sales'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
-import type { Product } from '@/types/database'
+import type { Customer, Product, PaymentMethod, SaleChannel } from '@/types/database'
 
 const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
@@ -19,11 +19,18 @@ interface SaleItem {
   discount: number
 }
 
-export function SaleForm({ products }: { products: Product[] }) {
+export function SaleForm({
+  products,
+  customers = [],
+}: {
+  products: Product[]
+  customers?: Pick<Customer, 'id' | 'name'>[]
+}) {
   const router = useRouter()
   const [items, setItems] = useState<SaleItem[]>([])
   const [channel, setChannel] = useState('fisica')
   const [paymentMethod, setPaymentMethod] = useState('efectivo')
+  const [customerId, setCustomerId] = useState('')
   const [saleDate, setSaleDate] = useState(formatDateForInput())
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -66,36 +73,18 @@ export function SaleForm({ products }: { products: Product[] }) {
     if (items.length === 0) { setError('Agregá al menos un producto'); return }
     setLoading(true)
     setError(null)
-    const supabase = createClient()
 
-    const { data: sale, error: saleError } = await supabase
-      .from('sales')
-      .insert({
-        sale_date: saleDate,
-        channel: channel as 'fisica' | 'online',
-        payment_method: paymentMethod as 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago',
-        total_amount: total,
-        status: 'completada',
-      })
-      .select()
-      .single()
+    const result = await createSale({
+      sale_date: saleDate,
+      channel: channel as SaleChannel,
+      payment_method: paymentMethod as PaymentMethod,
+      customer_id: customerId || null,
+      items: items.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
+    })
 
-    if (saleError) { setError(saleError.message); setLoading(false); return }
+    if (result.error) { setError(result.error); setLoading(false); return }
 
-    const { error: itemsError } = await supabase.from('sale_items').insert(
-      items.map(i => ({
-        sale_id: sale.id,
-        product_id: i.product.id,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-        discount: i.discount,
-        subtotal: (i.unit_price - i.discount) * i.quantity,
-      }))
-    )
-
-    if (itemsError) { setError(itemsError.message); setLoading(false); return }
-
-    toast.success(`Venta registrada — ${formatCurrency(total)}`)
+    toast.success(`Venta registrada — ${formatCurrency(result.total ?? total)}`)
     router.push('/ventas')
     router.refresh()
   }
@@ -105,18 +94,27 @@ export function SaleForm({ products }: { products: Product[] }) {
       {/* Meta */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Fecha</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Fecha</Label>
           <Input type="date" value={saleDate} onChange={e => setSaleDate(e.target.value)} />
         </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Cliente (opcional)</Label>
+          <select value={customerId} onChange={e => setCustomerId(e.target.value)} className={sel}>
+            <option value="" className="bg-[#15161c]">Consumidor final</option>
+            {customers.map(c => (
+              <option key={c.id} value={c.id} className="bg-[#15161c]">{c.name}</option>
+            ))}
+          </select>
+        </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Canal</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Canal</Label>
           <select value={channel} onChange={e => setChannel(e.target.value)} className={sel}>
             <option value="fisica" className="bg-[#15161c]">Física</option>
             <option value="online" className="bg-[#15161c]">Online</option>
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Medio de pago</Label>
+          <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Medio de pago</Label>
           <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={sel}>
             <option value="efectivo" className="bg-[#15161c]">Efectivo</option>
             <option value="transferencia" className="bg-[#15161c]">Transferencia</option>
@@ -128,7 +126,7 @@ export function SaleForm({ products }: { products: Product[] }) {
 
       {/* Product search */}
       <div className="space-y-2">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Buscar producto</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Buscar producto</Label>
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -162,14 +160,14 @@ export function SaleForm({ products }: { products: Product[] }) {
 
       {/* Items table */}
       {items.length > 0 && (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Producto</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Cant.</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Precio</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Subtotal</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Producto</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Cant.</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Precio</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em]">Subtotal</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -215,7 +213,7 @@ export function SaleForm({ products }: { products: Product[] }) {
             <tfoot>
               <tr className="border-t border-white/10 bg-[#0a0a0a]">
                 <td colSpan={3} className="px-4 py-3 text-right text-[#969696] font-medium">Total:</td>
-                <td className="px-4 py-3 font-bold text-xl text-white">{formatCurrency(total)}</td>
+                <td className="px-4 py-3 font-mono font-semibold text-lg text-white tabular-nums">{formatCurrency(total)}</td>
                 <td></td>
               </tr>
             </tfoot>

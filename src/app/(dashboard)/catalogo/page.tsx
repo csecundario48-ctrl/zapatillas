@@ -17,8 +17,8 @@ export default async function CatalogoPage() {
 
   return (
     <CatalogoClient
-      products={(products as any) ?? []}
-      suppliers={(suppliers as any) ?? []}
+      products={products ?? []}
+      suppliers={suppliers ?? []}
       isAdmin={isAdmin}
     />
   )

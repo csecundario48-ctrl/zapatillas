@@ -61,7 +61,7 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Cambio de cantidad</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Cambio de cantidad</Label>
         <Input
           type="number"
           value={quantityChange}
@@ -77,7 +77,7 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Motivo</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Motivo</Label>
         <select value={reason} onChange={e => setReason(e.target.value as AdjustmentReason)} className={sel}>
           <option value="ajuste_manual" className="bg-[#15161c]">Ajuste manual</option>
           <option value="rotura" className="bg-[#15161c]">Rotura</option>
@@ -87,7 +87,7 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Notas (opcional)</Label>
+        <Label className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em]">Notas (opcional)</Label>
         <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ej: conteo físico de cierre de mes" />
       </div>
 

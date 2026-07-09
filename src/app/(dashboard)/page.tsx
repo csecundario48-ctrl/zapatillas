@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { KpiCard } from '@/components/kpis/kpi-card'
-import { formatCurrency } from '@/lib/utils/format'
+import { argDateStr, formatCurrency } from '@/lib/utils/format'
 import Link from 'next/link'
 import { HeroOrbClient } from '@/components/3d/hero-orb-client'
 import { AlertTriangle, ArrowUpRight, Plus } from 'lucide-react'
@@ -9,12 +9,16 @@ export default async function HomePage() {
   const supabase = await createClient()
 
   const now = new Date()
-  const todayStr = now.toISOString().split('T')[0]
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-  const monthName = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+  const todayStr = argDateStr(now)
+  const monthStart = `${todayStr.slice(0, 7)}-01`
+  const monthName = now.toLocaleDateString('es-AR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  })
 
   const dayMs = 86_400_000
-  const dayStr = (offset: number) => new Date(now.getTime() - offset * dayMs).toISOString().split('T')[0]
+  const dayStr = (offset: number) => argDateStr(new Date(now.getTime() - offset * dayMs))
   const last7Start = dayStr(6)   // last 7 days (incl. today)
   const prev7Start = dayStr(13)  // the 7 days before that
 
@@ -61,9 +65,10 @@ export default async function HomePage() {
       .limit(6),
     supabase
       .from('sale_items')
-      .select('quantity, unit_price, products(brand, model)')
-      .gte('created_at', new Date(now.getFullYear(), now.getMonth(), 1).toISOString())
-      .limit(50),
+      .select('quantity, unit_price, products(brand, model), sales!inner(sale_date, status)')
+      .gte('sales.sale_date', monthStart)
+      .eq('sales.status', 'completada')
+      .limit(200),
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('active', true),
     supabase.from('products').select('cost_price, stock_quantity').eq('active', true),
     supabase.from('purchases').select('total_amount').gte('purchase_date', monthStart),
@@ -82,11 +87,12 @@ export default async function HomePage() {
   // KPI calculations
   const totalIncome = monthlySales?.reduce((s, x) => s + x.total_amount, 0) ?? 0
   const todayIncome = todaySalesRaw?.reduce((s, x) => s + x.total_amount, 0) ?? 0
+  type CogsItem = { quantity: number; products: { cost_price: number } | null }
   const totalCOGS = monthlySales?.reduce(
     (s, sale) =>
       s +
-      ((sale.sale_items as any[]) ?? []).reduce(
-        (si: number, item: any) => si + (item.products?.cost_price ?? 0) * item.quantity,
+      ((sale.sale_items ?? []) as unknown as CogsItem[]).reduce(
+        (si, item) => si + (item.products?.cost_price ?? 0) * item.quantity,
         0
       ),
     0
@@ -128,7 +134,9 @@ export default async function HomePage() {
   // Top products from sale_items
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {}
   for (const item of topProducts ?? []) {
-    const key = `${(item.products as any)?.brand} ${(item.products as any)?.model}`
+    const p = item.products as unknown as { brand: string; model: string } | null
+    if (!p) continue
+    const key = `${p.brand} ${p.model}`
     if (!productMap[key]) productMap[key] = { name: key, units: 0, revenue: 0 }
     productMap[key].units += item.quantity
     productMap[key].revenue += item.unit_price * item.quantity
@@ -136,9 +144,6 @@ export default async function HomePage() {
   const topList = Object.values(productMap).sort((a, b) => b.units - a.units).slice(0, 5)
 
   const channelLabel: Record<string, string> = { fisica: 'Física', online: 'Online' }
-  const payLabel: Record<string, string> = {
-    efectivo: 'Efectivo', transferencia: 'Transf.', tarjeta: 'Tarjeta', mercadopago: 'MP',
-  }
 
   return (
     <div className="space-y-6 cine-stagger">
@@ -148,33 +153,33 @@ export default async function HomePage() {
         <div className="relative flex flex-col md:flex-row items-center gap-0">
           {/* Stats */}
           <div className="flex-1 px-7 py-7 z-10">
-            <p className="text-[10px] text-[#505050] uppercase tracking-[0.18em] font-semibold mb-2">
-              {monthName}
+            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.2em] font-medium mb-2">
+              KALA · {monthName}
             </p>
             <p className="text-2xl font-semibold tracking-tight text-white mb-5">
               Resumen del negocio
             </p>
             <div className="flex flex-wrap gap-5">
               <div>
-                <p className="text-xl font-bold text-indigo-400 tracking-tight">{formatCurrency(totalIncome)}</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas mes</p>
+                <p className="font-mono text-xl font-semibold text-indigo-300 tracking-tight tabular-nums">{formatCurrency(totalIncome)}</p>
+                <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mt-1">Ventas mes</p>
               </div>
               <div className="w-px bg-[#1b1c22] self-stretch" />
               <div>
-                <p className={`text-xl font-bold tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className={`font-mono text-xl font-semibold tracking-tight tabular-nums ${netProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
                   {formatCurrency(netProfit)}
                 </p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ganancia neta</p>
+                <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mt-1">Ganancia neta</p>
               </div>
               <div className="w-px bg-[#1b1c22] self-stretch" />
               <div>
-                <p className="text-xl font-bold text-violet-400 tracking-tight">{margin}%</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Margen</p>
+                <p className="font-mono text-xl font-semibold text-violet-300 tracking-tight tabular-nums">{margin}%</p>
+                <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mt-1">Margen</p>
               </div>
               <div className="w-px bg-[#1b1c22] self-stretch" />
               <div>
-                <p className="text-xl font-bold text-amber-400 tracking-tight">{formatCurrency(todayIncome)}</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas hoy</p>
+                <p className="font-mono text-xl font-semibold text-amber-300 tracking-tight tabular-nums">{formatCurrency(todayIncome)}</p>
+                <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mt-1">Ventas hoy</p>
               </div>
             </div>
           </div>
@@ -216,25 +221,25 @@ export default async function HomePage() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Ingresos</p>
-            <p className="text-lg font-bold text-emerald-400 tracking-tight">{formatCurrency(totalIncome)}</p>
+            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mb-1.5">Ingresos</p>
+            <p className="font-mono text-lg font-semibold text-emerald-300 tracking-tight tabular-nums">{formatCurrency(totalIncome)}</p>
             <p className="text-[10px] text-[#606060] mt-0.5">Ventas del mes</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Egresos</p>
-            <p className="text-lg font-bold text-red-400 tracking-tight">{formatCurrency(cashOut)}</p>
+            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mb-1.5">Egresos</p>
+            <p className="font-mono text-lg font-semibold text-red-300 tracking-tight tabular-nums">{formatCurrency(cashOut)}</p>
             <p className="text-[10px] text-[#606060] mt-0.5">Compras + gastos</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Caja neta</p>
-            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-white' : 'text-red-400'}`}>
+            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mb-1.5">Caja neta</p>
+            <p className={`font-mono text-lg font-semibold tracking-tight tabular-nums ${cashNet >= 0 ? 'text-white' : 'text-red-300'}`}>
               {formatCurrency(cashNet)}
             </p>
             <p className="text-[10px] text-[#606060] mt-0.5">Ingresos − egresos</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Stock valorizado</p>
-            <p className="text-lg font-bold text-indigo-400 tracking-tight">{formatCurrency(stockValue)}</p>
+            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mb-1.5">Stock valorizado</p>
+            <p className="font-mono text-lg font-semibold text-indigo-300 tracking-tight tabular-nums">{formatCurrency(stockValue)}</p>
             <p className="text-[10px] text-[#606060] mt-0.5">Costo del inventario</p>
           </div>
         </div>
@@ -263,7 +268,7 @@ export default async function HomePage() {
               {overduePurchases!.length} pago{overduePurchases!.length > 1 ? 's' : ''} vencido{overduePurchases!.length > 1 ? 's' : ''} a proveedores
             </p>
             <p className="text-[11px] text-[#6e6e6e] mt-0.5 truncate">
-              {overduePurchases!.map(p => (p.suppliers as any)?.name).filter(Boolean).join(', ')}
+              {overduePurchases!.map(p => (p.suppliers as unknown as { name: string } | null)?.name).filter(Boolean).join(', ')}
             </p>
           </div>
           <Link href="/compras" className="text-[11px] text-red-400 hover:text-red-300 font-medium shrink-0 flex items-center gap-1 transition-colors">
@@ -291,23 +296,24 @@ export default async function HomePage() {
               </Link>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>
                 <tr className="border-b border-white/[0.05]">
-                  <th className="text-left px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Fecha</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Cliente</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Canal</th>
-                  <th className="text-right px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Total</th>
+                  <th className="text-left px-5 py-2.5 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Fecha</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Cliente</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Canal</th>
+                  <th className="text-right px-5 py-2.5 font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] font-medium">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recentSales!.map((sale) => (
                   <tr key={sale.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-5 py-3 text-[#969696]">
-                      {new Date(sale.sale_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                    <td className="px-5 py-3 font-mono text-[11px] text-[#8a8f98]">
+                      {new Date(sale.sale_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                     </td>
                     <td className="px-3 py-3 text-[#a8a8a8]">
-                      {(sale.customers as any)?.name ?? <span className="text-[#606060]">—</span>}
+                      {(sale.customers as unknown as { name: string } | null)?.name ?? <span className="text-[#606060]">—</span>}
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
@@ -318,13 +324,14 @@ export default async function HomePage() {
                         {channelLabel[sale.channel] ?? sale.channel}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-semibold text-white">
+                    <td className="px-5 py-3 text-right font-mono font-medium text-white tabular-nums">
                       {formatCurrency(sale.total_amount)}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 
@@ -350,7 +357,7 @@ export default async function HomePage() {
                       <p className="text-[12px] text-[#a8a8a8] truncate">{p.brand} {p.model}</p>
                       <p className="text-[10px] text-[#606060]">{p.color} · T{p.size}</p>
                     </div>
-                    <span className={`text-[11px] font-bold ml-3 shrink-0 ${
+                    <span className={`font-mono text-[11px] font-semibold ml-3 shrink-0 tabular-nums ${
                       p.stock_quantity === 0 ? 'text-red-400' : 'text-amber-400'
                     }`}>
                       {p.stock_quantity === 0 ? 'AGOTADO' : `${p.stock_quantity} ud.`}
@@ -386,7 +393,7 @@ export default async function HomePage() {
                       <p className="text-[12px] text-[#a8a8a8] truncate">{p.name}</p>
                       <p className="text-[10px] text-[#606060]">{p.units} unidades</p>
                     </div>
-                    <p className="text-[11px] font-semibold text-white shrink-0">
+                    <p className="font-mono text-[11px] font-medium text-white shrink-0 tabular-nums">
                       {formatCurrency(p.revenue)}
                     </p>
                   </div>
@@ -422,10 +429,10 @@ export default async function HomePage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-[10px] text-[#606060]">
-                    {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                  <span className="font-mono text-[10px] text-[#6e737c]">
+                    {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                   </span>
-                  <span className="text-[12px] font-semibold text-red-400">−{formatCurrency(e.amount)}</span>
+                  <span className="font-mono text-[12px] font-medium text-red-300 tabular-nums">−{formatCurrency(e.amount)}</span>
                 </div>
               </div>
             ))}
