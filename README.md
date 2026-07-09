@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KALA — Panel de gestión
 
-## Getting Started
+Sistema de gestión para tienda de zapatillas: ventas, compras, stock, catálogo,
+clientes, proveedores, egresos, finanzas y reportes. Next.js 16 (App Router) +
+Supabase.
 
-First, run the development server:
+## Requisitos
+
+- **Node.js >= 20.9** (Next 16 no funciona con Node 18)
+- Cuenta de Supabase
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local   # completá con tus claves de Supabase
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrí http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ver `.env.example`. Nunca commitees `.env.local` (está en `.gitignore`).
+La `SUPABASE_SERVICE_ROLE_KEY` bypassa RLS: es solo para servidor, nunca la
+expongas al cliente ni la subas al repo.
 
-## Learn More
+## Base de datos: aplicar RLS (importante)
 
-To learn more about Next.js, take a look at the following resources:
+La app escribe a Supabase desde el navegador con la anon key, que es pública.
+Sin Row Level Security, cualquiera puede leer/modificar la base sin loguearse.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Aplicá las políticas antes de usar en producción:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Supabase Dashboard → SQL Editor
+2. Pegá y ejecutá `supabase/migrations/0001_rls_policies.sql`
 
-## Deploy on Vercel
+## Arquitectura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `src/app/(dashboard)/` — páginas del panel (server components que leen de Supabase)
+- `src/app/(auth)/` — login
+- `src/app/actions/` — server actions para escrituras críticas:
+  - `sales.ts` — registra venta y **descuenta stock** de forma centralizada
+  - `purchases.ts` — registra compra y **suma stock**
+  - `stock.ts` — ajuste manual de stock
+- `src/proxy.ts` — protección de rutas (equivalente a middleware en Next 16)
+- `src/components/` — UI. `layout/nav-config.ts` centraliza el menú (sidebar + mobile)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+```bash
+npm run dev     # desarrollo
+npm run build   # build de producción
+npm run start   # servir el build
+npm run lint    # eslint
+```

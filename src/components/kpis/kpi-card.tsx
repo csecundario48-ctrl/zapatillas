@@ -13,11 +13,11 @@ interface KpiCardProps {
 }
 
 const colorMap = {
-  cyan:   { bar: 'bg-indigo-400',  glow: 'rgba(99,102,241,0.12)',  text: 'text-indigo-300' },
-  green:  { bar: 'bg-emerald-400', glow: 'rgba(52,211,153,0.12)',  text: 'text-emerald-300' },
-  violet: { bar: 'bg-violet-400',  glow: 'rgba(167,139,250,0.12)', text: 'text-violet-300' },
-  red:    { bar: 'bg-red-400',     glow: 'rgba(248,113,113,0.12)', text: 'text-red-300' },
-  amber:  { bar: 'bg-amber-400',   glow: 'rgba(251,191,36,0.12)',  text: 'text-amber-300' },
+  cyan:   { bar: 'bg-indigo-400',    glow: 'rgba(99,102,241,0.12)',    text: 'text-indigo-400' },
+  green:  { bar: 'bg-emerald-500 dark:bg-emerald-400', glow: 'rgba(52,211,153,0.12)',    text: 'text-emerald-600 dark:text-emerald-400' },
+  violet: { bar: 'bg-violet-400',  glow: 'rgba(167,139,250,0.12)',   text: 'text-violet-400' },
+  red:    { bar: 'bg-red-500 dark:bg-red-400',     glow: 'rgba(248,113,113,0.12)',   text: 'text-red-600 dark:text-red-400' },
+  amber:  { bar: 'bg-amber-400',   glow: 'rgba(251,191,36,0.12)',    text: 'text-amber-600 dark:text-amber-400' },
 }
 
 function useAnimatedNumber(target: number, duration = 1000) {
@@ -38,10 +38,6 @@ function useAnimatedNumber(target: number, duration = 1000) {
   return current
 }
 
-/**
- * KPI como "etiqueta de caja": eyebrow mono con tracking ancho,
- * cifra grande en mono tabular — la voz del dato en todo el panel.
- */
 export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix = '', suffix = '' }: KpiCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const { bar, glow, text } = colorMap[color]
@@ -65,13 +61,13 @@ export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix =
     const rotY = (x / cx) * 4
     const rotX = -(y / cy) * 2.5
     card.style.transform = `perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.015)`
-    card.style.boxShadow = `0 18px 48px rgba(0,0,0,0.45), 0 0 26px ${glow}`
+    card.style.boxShadow = `0 18px 48px rgba(0,0,0,0.35), 0 0 26px ${glow}`
   }
 
   function handleMouseLeave() {
     const card = cardRef.current
     if (!card) return
-    card.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale(1)'
+    card.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)'
     card.style.boxShadow = ''
   }
 
@@ -80,7 +76,7 @@ export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix =
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="group relative overflow-hidden rounded-xl bg-[#101116] border border-white/[0.07] p-5 cursor-default"
+      className="group relative overflow-hidden rounded-xl bg-card border border-foreground/[0.08] p-5 cursor-default"
       style={{ transition: 'transform 0.14s ease-out, box-shadow 0.14s ease-out', transformStyle: 'preserve-3d' }}
     >
       {/* Barra de acento — el "color de la etiqueta" */}
@@ -94,15 +90,11 @@ export function KpiCard({ title, value, subtitle, color = 'cyan', icon, prefix =
 
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3.5">
-          <p className="font-mono text-[10px] font-medium text-[#63666e] uppercase tracking-[0.16em]">
-            {title}
-          </p>
-          {icon && <div className="text-[#5c5c5c] -mt-0.5">{icon}</div>}
+          <p className="font-mono text-[10px] font-medium text-foreground/50 uppercase tracking-[0.16em]">{title}</p>
+          {icon && <div className="text-foreground/40 -mt-0.5">{icon}</div>}
         </div>
-        <p className={`font-mono text-[26px] leading-none font-semibold tracking-tight tabular-nums ${text}`}>
-          {displayValue}
-        </p>
-        {subtitle && <p className="text-[11px] text-[#787c85] mt-2.5">{subtitle}</p>}
+        <p className={`font-mono text-[26px] leading-none font-semibold tracking-tight tabular-nums ${text}`}>{displayValue}</p>
+        {subtitle && <p className="text-[11px] text-foreground/55 mt-2.5">{subtitle}</p>}
       </div>
     </div>
   )

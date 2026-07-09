@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { navGroups } from './nav-items'
+import { navGroups } from './nav-config'
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
@@ -11,21 +11,21 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'flex flex-col w-[220px] shrink-0 bg-[#080808] border-r border-white/[0.06] min-h-screen',
+        'flex flex-col w-[220px] shrink-0 bg-background border-r border-foreground/[0.06] min-h-screen',
         className
       )}
     >
       {/* Logo */}
-      <div className="px-5 h-14 flex items-center border-b border-white/[0.06]">
+      <div className="px-5 h-14 flex items-center border-b border-foreground/[0.06]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/kala-logo.png" alt="KALA" className="h-[18px] w-auto" />
+        <img src="/kala-logo.png" alt="KALA" className="h-[18px] w-auto invert dark:invert-0" />
       </div>
 
       {/* Nav groups */}
       <nav className="flex-1 px-2.5 py-3 space-y-4 overflow-y-auto">
         {navGroups.map(({ label, items }) => (
           <div key={label}>
-            <p className="px-2.5 mb-1 font-mono text-[10px] font-medium text-[#54575e] uppercase tracking-[0.16em]">
+            <p className="px-2.5 mb-1 font-mono text-[10px] font-medium text-foreground/40 uppercase tracking-[0.16em]">
               {label}
             </p>
             <div className="space-y-0.5">
@@ -38,15 +38,15 @@ export function Sidebar({ className }: { className?: string }) {
                     className={cn(
                       'group flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all duration-100',
                       isActive
-                        ? 'bg-white/[0.07] text-white'
-                        : 'text-[#828282] hover:text-[#cfcfcf] hover:bg-white/[0.04]'
+                        ? 'bg-foreground/[0.07] text-foreground'
+                        : 'text-foreground/55 hover:text-foreground/85 hover:bg-foreground/[0.04]'
                     )}
                   >
                     <Icon
                       size={14}
                       className={cn(
                         'shrink-0',
-                        isActive ? 'text-indigo-400' : 'text-[#6e6e6e] group-hover:text-[#a8a8a8]'
+                        isActive ? 'text-indigo-400' : 'text-foreground/45 group-hover:text-foreground/70'
                       )}
                     />
                     {itemLabel}
@@ -62,8 +62,8 @@ export function Sidebar({ className }: { className?: string }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-3.5 border-t border-white/[0.06]">
-        <p className="font-mono text-[10px] text-[#4a4a4a] tracking-[0.16em] uppercase">KALA · v1.0</p>
+      <div className="px-5 py-3.5 border-t border-foreground/[0.06]">
+        <p className="text-[10px] text-foreground/30 font-mono tracking-widest uppercase">KALA · v1.0</p>
       </div>
     </aside>
   )

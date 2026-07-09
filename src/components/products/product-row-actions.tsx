@@ -40,15 +40,15 @@ export function ProductRowActions({ product, suppliers }: Props) {
             <button
               type="button"
               title="Editar"
-              className="p-1.5 rounded-md text-[#6e6e6e] hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+              className="p-1.5 rounded-md text-foreground/45 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
             />
           }
         >
           <Pencil size={14} />
         </DialogTrigger>
-        <DialogContent className="max-w-2xl bg-[#15161c] border-white/10">
+        <DialogContent className="max-w-2xl bg-card border-foreground/10">
           <DialogHeader>
-            <DialogTitle className="text-white">Editar producto</DialogTitle>
+            <DialogTitle className="text-foreground">Editar producto</DialogTitle>
           </DialogHeader>
           <ProductForm suppliers={suppliers} product={product} onSuccess={() => setOpen(false)} />
         </DialogContent>

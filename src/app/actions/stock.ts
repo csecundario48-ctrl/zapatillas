@@ -11,6 +11,11 @@ const adjustmentSchema = z.object({
   notes: z.string().max(500),
 })
 
+/**
+ * Ajusta el stock de un producto y deja registro en stock_adjustments.
+ * El movimiento de stock se hace acá (la base en vivo no tiene triggers;
+ * ver supabase/migrations/0001_rls_policies.sql).
+ */
 export async function adjustStock(
   productId: string,
   change: number,
@@ -35,12 +40,16 @@ export async function adjustStock(
 
   if (fetchError || !product) return { error: 'Producto no encontrado' }
 
-  if (product.stock_quantity + parsed.data.change < 0) {
-    return { error: `Stock insuficiente. Actual: ${product.stock_quantity}` }
-  }
+  const newQty = product.stock_quantity + parsed.data.change
+  if (newQty < 0) return { error: `Stock insuficiente. Actual: ${product.stock_quantity}` }
 
-  // El trigger handle_stock_adjustment_insert aplica el cambio sobre products;
-  // no actualizar products acá o el ajuste se aplicaría dos veces.
+  const { error: updateError } = await supabase
+    .from('products')
+    .update({ stock_quantity: newQty })
+    .eq('id', parsed.data.productId)
+
+  if (updateError) return { error: updateError.message }
+
   const { error: insertError } = await supabase.from('stock_adjustments').insert({
     product_id: parsed.data.productId,
     quantity_change: parsed.data.change,
@@ -49,13 +58,7 @@ export async function adjustStock(
     created_by: user.id,
   })
 
-  if (insertError) {
-    // 23514: check stock_quantity >= 0 — otro usuario movió el stock a la vez.
-    if (insertError.code === '23514') {
-      return { error: 'Stock insuficiente: el stock cambió mientras ajustabas. Volvé a intentar.' }
-    }
-    return { error: insertError.message }
-  }
+  if (insertError) return { error: insertError.message }
 
   revalidatePath('/stock')
   revalidatePath('/catalogo')

@@ -11,9 +11,9 @@ import {
 import { AdjustmentForm } from './adjustment-form'
 
 function badgeClass(qty: number) {
-  if (qty === 0) return 'bg-red-500/15 border-red-500/25 text-red-400'
-  if (qty <= 2) return 'bg-amber-500/15 border-amber-500/25 text-amber-400'
-  return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+  if (qty === 0) return 'bg-red-500/15 border-red-500/25 text-red-600 dark:text-red-400'
+  if (qty <= 2) return 'bg-amber-500/15 border-amber-500/25 text-amber-600 dark:text-amber-400'
+  return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
 }
 
 interface StockBadgeButtonProps {
@@ -39,9 +39,9 @@ export function StockBadgeButton({ productId, productName, size, qty }: StockBad
       >
         {qty}
       </DialogTrigger>
-      <DialogContent className="max-w-sm bg-[#15161c] border-white/10">
+      <DialogContent className="max-w-sm bg-card border-foreground/10">
         <DialogHeader>
-          <DialogTitle className="text-white">Ajustar stock · T{size}</DialogTitle>
+          <DialogTitle className="text-foreground">Ajustar stock · T{size}</DialogTitle>
         </DialogHeader>
         <AdjustmentForm
           productId={productId}

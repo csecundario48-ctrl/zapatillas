@@ -3,7 +3,7 @@ import { SalesLineChart } from '@/components/charts/sales-line-chart'
 import { BrandPieChart } from '@/components/charts/brand-pie-chart'
 import { formatCurrency } from '@/lib/utils/format'
 
-const card = 'bg-[#15161c] border border-white/[0.08] rounded-xl'
+const card = 'bg-card border border-foreground/[0.08] rounded-xl'
 
 export default async function ReportesPage() {
   const supabase = await createClient()
@@ -79,42 +79,42 @@ export default async function ReportesPage() {
   }
 
   const kpis = [
-    { label: 'Total vendido', value: formatCurrency(totalRevenue), color: 'text-emerald-400' },
-    { label: 'Costo mercadería', value: formatCurrency(totalCOGS), color: 'text-red-400' },
+    { label: 'Total vendido', value: formatCurrency(totalRevenue), color: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Costo mercadería', value: formatCurrency(totalCOGS), color: 'text-red-600 dark:text-red-400' },
     { label: 'Ganancia bruta', value: formatCurrency(grossProfit), color: 'text-indigo-400', sub: `Margen ${margin.toFixed(1)}%` },
-    { label: 'Unidades vendidas', value: String(unitsSold), color: 'text-white', sub: `${salesCount} ventas` },
+    { label: 'Unidades vendidas', value: String(unitsSold), color: 'text-foreground', sub: `${salesCount} ventas` },
     { label: 'Ticket promedio', value: formatCurrency(avgTicket), color: 'text-violet-400' },
-    { label: 'Rotación inventario', value: `${rotation.toFixed(1)}×`, color: 'text-amber-400', sub: 'Veces que rotó el stock' },
+    { label: 'Rotación inventario', value: `${rotation.toFixed(1)}×`, color: 'text-amber-600 dark:text-amber-400', sub: 'Veces que rotó el stock' },
   ]
 
   return (
     <div className="space-y-7 max-w-5xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Reportes y Análisis</h1>
-        <p className="text-sm text-[#828282] mt-0.5">Estadísticas globales de ventas e inventario</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Reportes y Análisis</h1>
+        <p className="text-sm text-foreground/55 mt-0.5">Estadísticas globales de ventas e inventario</p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {kpis.map(k => (
           <div key={k.label} className={`${card} p-5`}>
-            <p className="font-mono text-[10px] text-[#5a5e66] uppercase tracking-[0.14em] mb-2.5">{k.label}</p>
+            <p className="font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] mb-2">{k.label}</p>
             <p className={`font-mono text-[22px] font-semibold tabular-nums tracking-tight ${k.color}`}>{k.value}</p>
-            {k.sub && <p className="text-xs text-[#6e6e6e] mt-1.5">{k.sub}</p>}
+            {k.sub && <p className="text-xs text-foreground/45 mt-1">{k.sub}</p>}
           </div>
         ))}
       </div>
 
       {monthData.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.08] bg-[#131419] py-20 text-center">
-          <p className="text-[#6e6e6e] text-sm">No hay datos de ventas aún.</p>
-          <p className="text-[#5c5c5c] text-xs mt-1">Los reportes aparecerán cuando registres tus primeras ventas.</p>
+        <div className="rounded-xl border border-foreground/[0.08] bg-card py-20 text-center">
+          <p className="text-foreground/45 text-sm">No hay datos de ventas aún.</p>
+          <p className="text-foreground/40 text-xs mt-1">Los reportes aparecerán cuando registres tus primeras ventas.</p>
         </div>
       ) : (
         <>
           {/* Line chart */}
           <div className={`${card} p-6`}>
-            <h2 className="text-sm font-semibold text-white mb-5">Ventas por mes</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-5">Ventas por mes</h2>
             <SalesLineChart data={monthData} />
           </div>
 
@@ -127,25 +127,25 @@ export default async function ReportesPage() {
           {/* Pie + top products */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className={`${card} p-6`}>
-              <h2 className="text-sm font-semibold text-white mb-5">Unidades por marca</h2>
+              <h2 className="text-sm font-semibold text-foreground mb-5">Unidades por marca</h2>
               <BrandPieChart data={brandData} />
             </div>
             <div className={`${card} overflow-hidden`}>
-              <div className="px-5 py-4 border-b border-white/[0.06]">
-                <h2 className="text-sm font-semibold text-white">Top productos</h2>
+              <div className="px-5 py-4 border-b border-foreground/[0.06]">
+                <h2 className="text-sm font-semibold text-foreground">Top productos</h2>
               </div>
               {topProducts.length === 0 ? (
-                <p className="py-10 text-center text-[#5c5c5c] text-xs">Sin datos</p>
+                <p className="py-10 text-center text-foreground/40 text-xs">Sin datos</p>
               ) : (
-                <div className="divide-y divide-white/[0.05]">
+                <div className="divide-y divide-foreground/[0.05]">
                   {topProducts.map((p, i) => (
                     <div key={p.name} className="flex items-center gap-3 px-5 py-2.5">
-                      <span className="text-[10px] text-[#5c5c5c] font-mono w-4 shrink-0">{i + 1}</span>
+                      <span className="text-[10px] text-foreground/40 font-mono w-4 shrink-0">{i + 1}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] text-[#cfcfcf] truncate">{p.name}</p>
-                        <p className="text-[10px] text-[#6e6e6e]">{p.units} unidades</p>
+                        <p className="text-[13px] text-foreground/85 truncate">{p.name}</p>
+                        <p className="text-[10px] text-foreground/45">{p.units} unidades</p>
                       </div>
-                      <p className="font-mono text-[12px] font-medium text-white shrink-0 tabular-nums">{formatCurrency(p.revenue)}</p>
+                      <p className="text-[12px] font-semibold text-foreground shrink-0">{formatCurrency(p.revenue)}</p>
                     </div>
                   ))}
                 </div>
@@ -156,29 +156,27 @@ export default async function ReportesPage() {
           {/* Brand ranking */}
           {brandData.length > 0 && (
             <div className={`${card} overflow-hidden`}>
-              <div className="px-5 py-4 border-b border-white/[0.06]">
-                <h2 className="text-sm font-semibold text-white">Ranking de marcas</h2>
+              <div className="px-5 py-4 border-b border-foreground/[0.06]">
+                <h2 className="text-sm font-semibold text-foreground">Ranking de marcas</h2>
               </div>
-              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                    <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">#</th>
-                    <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Marca</th>
-                    <th className="text-right px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Unidades</th>
+                  <tr className="border-b border-foreground/[0.06] bg-background">
+                    <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">#</th>
+                    <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">Marca</th>
+                    <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">Unidades</th>
                   </tr>
                 </thead>
                 <tbody>
                   {brandData.map((b, i) => (
-                    <tr key={b.name} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-3 text-[#6e6e6e] font-mono text-xs">{i + 1}</td>
-                      <td className="px-4 py-3 text-white font-medium">{b.name}</td>
+                    <tr key={b.name} className="border-b border-foreground/[0.06] hover:bg-foreground/[0.02] transition-colors">
+                      <td className="px-4 py-3 text-foreground/45 font-mono text-xs">{i + 1}</td>
+                      <td className="px-4 py-3 text-foreground font-medium">{b.name}</td>
                       <td className="px-4 py-3 text-right text-indigo-400 font-semibold">{b.value}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              </div>
             </div>
           )}
         </>
@@ -187,23 +185,23 @@ export default async function ReportesPage() {
       {/* Dead stock — works even without sales */}
       {deadStock.length > 0 && (
         <div className={`${card} overflow-hidden`}>
-          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Stock sin movimiento</h2>
-            <span className="text-xs text-amber-400 font-medium">{formatCurrency(deadMoney)} parados</span>
+          <div className="px-5 py-4 border-b border-foreground/[0.06] flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">Stock sin movimiento</h2>
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">{formatCurrency(deadMoney)} parados</span>
           </div>
-          <p className="px-5 pt-3 text-[11px] text-[#6e6e6e]">Productos con stock que todavía no registraron ninguna venta.</p>
-          <div className="divide-y divide-white/[0.05] mt-1">
+          <p className="px-5 pt-3 text-[11px] text-foreground/45">Productos con stock que todavía no registraron ninguna venta.</p>
+          <div className="divide-y divide-foreground/[0.05] mt-1">
             {deadStock.slice(0, 12).map(p => (
               <div key={p.id} className="flex items-center justify-between px-5 py-2.5">
                 <div className="min-w-0">
-                  <p className="text-[13px] text-[#cfcfcf] truncate">{p.brand} {p.model}</p>
-                  <p className="text-[10px] text-[#6e6e6e]">{p.color} · T{p.size} · {p.stock_quantity} ud.</p>
+                  <p className="text-[13px] text-foreground/85 truncate">{p.brand} {p.model}</p>
+                  <p className="text-[10px] text-foreground/45">{p.color} · T{p.size} · {p.stock_quantity} ud.</p>
                 </div>
-                <span className="text-[12px] font-semibold text-amber-400 shrink-0">{formatCurrency(p.frozen)}</span>
+                <span className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 shrink-0">{formatCurrency(p.frozen)}</span>
               </div>
             ))}
             {deadStock.length > 12 && (
-              <p className="px-5 py-2.5 text-[11px] text-[#6e6e6e]">+{deadStock.length - 12} productos más sin vender</p>
+              <p className="px-5 py-2.5 text-[11px] text-foreground/45">+{deadStock.length - 12} productos más sin vender</p>
             )}
           </div>
         </div>
@@ -223,9 +221,9 @@ function BreakdownCard({
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1])
   return (
     <div className={`${card} p-5`}>
-      <h2 className="text-sm font-semibold text-white mb-4">{title}</h2>
+      <h2 className="text-sm font-semibold text-foreground mb-4">{title}</h2>
       {entries.length === 0 ? (
-        <p className="text-xs text-[#5c5c5c]">Sin datos</p>
+        <p className="text-xs text-foreground/40">Sin datos</p>
       ) : (
         <div className="space-y-3">
           {entries.map(([key, value]) => {
@@ -233,10 +231,10 @@ function BreakdownCard({
             return (
               <div key={key}>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-[#a8a8a8]">{labels[key] ?? key}</span>
-                  <span className="text-white font-medium">{formatCurrency(value)} · {pct.toFixed(0)}%</span>
+                  <span className="text-foreground/70">{labels[key] ?? key}</span>
+                  <span className="text-foreground font-medium">{formatCurrency(value)} · {pct.toFixed(0)}%</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-1.5 rounded-full bg-foreground/[0.06] overflow-hidden">
                   <div className="h-full rounded-full bg-indigo-500/70" style={{ width: `${pct}%` }} />
                 </div>
               </div>

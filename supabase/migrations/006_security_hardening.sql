@@ -1,15 +1,28 @@
 -- Hardening de seguridad y performance.
--- Aplicar en el SQL Editor de Supabase (o con supabase db push).
+-- Aplicar en el SQL Editor de Supabase (después de 0001_rls_policies.sql).
+-- Idempotente: se puede correr varias veces y no falla si los triggers
+-- de 002_triggers.sql nunca se aplicaron en esta base.
 
--- 1. Las funciones SECURITY DEFINER deben fijar search_path:
+-- 1. Si existen funciones SECURITY DEFINER, fijarles search_path:
 --    sin esto, un search_path manipulado puede hacer que resuelvan
 --    tablas/operadores de otro esquema con privilegios elevados.
-alter function get_user_role() set search_path = public;
-alter function handle_sale_item_insert() set search_path = public;
-alter function handle_sale_item_delete() set search_path = public;
-alter function handle_purchase_item_insert() set search_path = public;
-alter function handle_stock_adjustment_insert() set search_path = public;
-alter function handle_new_user() set search_path = public;
+do $$
+declare
+  fn text;
+begin
+  foreach fn in array array[
+    'get_user_role', 'handle_sale_item_insert', 'handle_sale_item_delete',
+    'handle_purchase_item_insert', 'handle_stock_adjustment_insert', 'handle_new_user'
+  ] loop
+    if exists (
+      select 1 from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname = fn
+    ) then
+      execute format('alter function public.%I() set search_path = public', fn);
+    end if;
+  end loop;
+end $$;
 
 -- 2. Auditoría: created_by se completa solo con el usuario autenticado
 --    aunque el insert venga del cliente y no lo mande.

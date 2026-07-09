@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Product } from '@/types/database'
 import { StockBadgeButton } from '@/components/stock/stock-badge-button'
+import { ExportCsvButton } from '@/components/common/export-csv-button'
 
 type ProductGroup = {
   brand: string
@@ -48,28 +49,36 @@ export default async function StockPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Stock</h1>
-          <p className="text-sm text-[#828282] mt-0.5">Vista por modelo y talle</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Stock</h1>
+          <p className="text-sm text-foreground/55 mt-0.5">Vista por modelo y talle</p>
         </div>
+        <ExportCsvButton
+          filename="stock.csv"
+          headers={['SKU', 'Marca', 'Modelo', 'Color', 'Género', 'Talle', 'Stock', 'Costo', 'Precio venta']}
+          rows={((products as Product[]) ?? []).map(p => [
+            p.sku, p.brand, p.model, p.color, p.gender, p.size,
+            p.stock_quantity, p.cost_price, p.sale_price,
+          ])}
+        />
       </div>
 
       {/* Summary bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Total SKUs', value: totalSKUs, color: 'text-white' },
-          { label: 'OK', value: stockOk, color: 'text-emerald-400' },
-          { label: 'Stock bajo', value: stockBajo, color: 'text-amber-400' },
-          { label: 'Sin stock', value: sinStock, color: 'text-red-400' },
+          { label: 'Total SKUs', value: totalSKUs, color: 'text-foreground' },
+          { label: 'OK', value: stockOk, color: 'text-emerald-600 dark:text-emerald-400' },
+          { label: 'Stock bajo', value: stockBajo, color: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Sin stock', value: sinStock, color: 'text-red-600 dark:text-red-400' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#15161c] border border-white/[0.08] rounded-xl p-4 text-center">
+          <div key={label} className="bg-card border border-foreground/[0.08] rounded-xl p-4 text-center">
             <p className={`font-mono text-2xl font-semibold tabular-nums ${color}`}>{value}</p>
-            <p className="font-mono text-[10px] text-[#8a8f98] uppercase tracking-[0.14em] mt-1.5">{label}</p>
+            <p className="text-xs text-foreground/55 mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Leyenda */}
-      <div className="flex items-center gap-4 text-xs text-[#828282]">
+      <div className="flex items-center gap-4 text-xs text-foreground/55">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" />
           3+ unidades
@@ -86,8 +95,8 @@ export default async function StockPage() {
 
       {/* Product groups */}
       {groups.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.08] bg-[#131419] py-16 text-center">
-          <p className="text-[#6e6e6e] text-sm">No hay productos cargados aún.</p>
+        <div className="rounded-xl border border-foreground/[0.08] bg-card py-16 text-center">
+          <p className="text-foreground/45 text-sm">No hay productos cargados aún.</p>
           <Link
             href="/catalogo"
             className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline"
@@ -103,26 +112,26 @@ export default async function StockPage() {
             return (
               <div
                 key={`${group.brand}-${group.model}-${group.color}-${group.gender}`}
-                className={`rounded-xl border bg-[#15161c] p-5 transition-colors ${
+                className={`rounded-xl border bg-card p-5 transition-colors ${
                   hasCritical
                     ? 'border-red-500/20'
                     : hasLow
                     ? 'border-amber-500/20'
-                    : 'border-white/[0.08]'
+                    : 'border-foreground/[0.08]'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="font-semibold text-white">
+                    <h3 className="font-semibold text-foreground">
                       {group.brand} {group.model}
                     </h3>
-                    <p className="text-xs text-[#828282] mt-0.5 capitalize">
+                    <p className="text-xs text-foreground/55 mt-0.5 capitalize">
                       {group.color} · {group.gender}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-[#6e6e6e]">Stock total</p>
-                    <p className={`font-mono text-lg font-semibold tabular-nums ${hasCritical ? 'text-red-400' : hasLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    <p className="text-xs text-foreground/45">Stock total</p>
+                    <p className={`font-mono text-lg font-semibold tabular-nums ${hasCritical ? 'text-red-600 dark:text-red-400' : hasLow ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                       {group.totalStock}
                     </p>
                   </div>
@@ -140,7 +149,7 @@ export default async function StockPage() {
                           size={size}
                           qty={qty}
                         />
-                        <span className="text-[10px] text-[#6e6e6e]">T{size}</span>
+                        <span className="text-[10px] text-foreground/45">T{size}</span>
                       </div>
                     ))}
                 </div>
