@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import type { PaymentStatus } from '@/types/database'
 
 interface PurchaseItemInput {
-  product_id: string
+  variant_id: string
   quantity: number
   unit_cost: number
 }
@@ -20,9 +20,8 @@ interface CreatePurchaseInput {
 }
 
 /**
- * Registra una compra a proveedor: inserta la compra y sus items, y suma el
- * stock de cada producto. Si falla la carga de items, revierte la compra.
- * Setea created_by con el usuario autenticado.
+ * Registra una compra a proveedor: inserta la compra y sus items (con snapshot
+ * de nombre y talle) y suma el stock de cada variante.
  */
 export async function createPurchase(input: CreatePurchaseInput): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -33,22 +32,26 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
   if (!input.supplier_id) return { error: 'Seleccioná un proveedor' }
   if (!input.items?.length) return { error: 'Agregá al menos un producto' }
 
-  const ids = [...new Set(input.items.map(i => i.product_id))]
-  const { data: products, error: prodErr } = await supabase
-    .from('products')
-    .select('id, stock_quantity')
+  const ids = [...new Set(input.items.map(i => i.variant_id))]
+  const { data: variants, error: varErr } = await supabase
+    .from('product_variants')
+    .select('id, size, stock_quantity, products(brand, model, color)')
     .in('id', ids)
-  if (prodErr) return { error: prodErr.message }
+  if (varErr) return { error: varErr.message }
 
-  const byId = new Map((products ?? []).map(p => [p.id, p]))
+  type Row = {
+    id: string; size: string; stock_quantity: number
+    products: { brand: string; model: string; color: string } | null
+  }
+  const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
   const qtyById = new Map<string, number>()
   let total = 0
   for (const item of input.items) {
     if (item.quantity < 1) return { error: 'Cantidad inválida' }
     if (item.unit_cost < 0) return { error: 'Costo inválido' }
-    if (!byId.has(item.product_id)) return { error: 'Uno de los productos no existe' }
-    qtyById.set(item.product_id, (qtyById.get(item.product_id) ?? 0) + item.quantity)
+    if (!byId.has(item.variant_id)) return { error: 'Uno de los productos no existe' }
+    qtyById.set(item.variant_id, (qtyById.get(item.variant_id) ?? 0) + item.quantity)
     total += item.unit_cost * item.quantity
   }
 
@@ -68,32 +71,37 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
   if (pErr || !purchase) return { error: pErr?.message ?? 'No se pudo registrar la compra' }
 
   const { error: iErr } = await supabase.from('purchase_items').insert(
-    input.items.map(i => ({
-      purchase_id: purchase.id,
-      product_id: i.product_id,
-      quantity: i.quantity,
-      unit_cost: i.unit_cost,
-      subtotal: i.unit_cost * i.quantity,
-    }))
+    input.items.map(i => {
+      const v = byId.get(i.variant_id)!
+      return {
+        purchase_id: purchase.id,
+        variant_id: i.variant_id,
+        product_label: v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
+        size_label: v.size,
+        quantity: i.quantity,
+        unit_cost: i.unit_cost,
+        subtotal: i.unit_cost * i.quantity,
+      }
+    })
   )
   if (iErr) {
     await supabase.from('purchases').delete().eq('id', purchase.id)
     return { error: iErr.message }
   }
 
-  for (const [productId, qty] of qtyById) {
-    const p = byId.get(productId)!
+  for (const [variantId, qty] of qtyById) {
+    const v = byId.get(variantId)!
     const { error: stockErr } = await supabase
-      .from('products')
-      .update({ stock_quantity: p.stock_quantity + qty })
-      .eq('id', productId)
+      .from('product_variants')
+      .update({ stock_quantity: v.stock_quantity + qty })
+      .eq('id', variantId)
     if (stockErr) {
-      return { error: `Compra registrada, pero falló actualizar el stock de un producto: ${stockErr.message}` }
+      return { error: `Compra registrada, pero falló actualizar el stock: ${stockErr.message}` }
     }
   }
 
   revalidatePath('/compras')
   revalidatePath('/stock')
   revalidatePath('/')
-  return { }
+  return {}
 }
