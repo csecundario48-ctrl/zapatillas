@@ -8,17 +8,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
-import type { Product, Supplier } from '@/types/database'
+import { type VariantOption } from '@/components/sales/sale-form'
+import type { Supplier } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface PurchaseItem {
-  product: Product
+  variant: VariantOption
   quantity: number
   unit_cost: number
 }
 
-export function PurchaseForm({ products, suppliers }: { products: Product[]; suppliers: Supplier[] }) {
+export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[]; suppliers: Supplier[] }) {
   const router = useRouter()
   const [supplierId, setSupplierId] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(formatDateForInput())
@@ -30,13 +31,13 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const filteredProducts = products.filter(p =>
-    `${p.brand} ${p.model} ${p.color} ${p.size}`.toLowerCase().includes(search.toLowerCase())
+  const filteredVariants = variants.filter(v =>
+    `${v.brand} ${v.model} ${v.color} ${v.size}`.toLowerCase().includes(search.toLowerCase())
   )
 
-  function addItem(product: Product) {
-    if (items.find(i => i.product.id === product.id)) return
-    setItems([...items, { product, quantity: 1, unit_cost: product.cost_price }])
+  function addItem(variant: VariantOption) {
+    if (items.find(i => i.variant.id === variant.id)) return
+    setItems([...items, { variant, quantity: 1, unit_cost: variant.cost_price }])
     setSearch('')
   }
 
@@ -56,7 +57,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
       payment_due_date: paymentDueDate || null,
       notes: notes || null,
       items: items.map(i => ({
-        product_id: i.product.id,
+        variant_id: i.variant.id,
         quantity: i.quantity,
         unit_cost: i.unit_cost,
       })),
@@ -106,18 +107,18 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Nike Air Force 1..." />
         {search && (
           <div className="rounded-xl border border-foreground/10 bg-card divide-y divide-foreground/[0.06] max-h-44 overflow-y-auto shadow-xl">
-            {filteredProducts.slice(0, 8).map(p => (
+            {filteredVariants.slice(0, 8).map(v => (
               <button
-                key={p.id}
+                key={v.id}
                 type="button"
-                onClick={() => addItem(p)}
+                onClick={() => addItem(v)}
                 className="w-full text-left px-4 py-2.5 hover:bg-foreground/[0.03] text-sm flex justify-between transition-colors"
               >
-                <span className="text-foreground">{p.brand} {p.model} <span className="text-foreground/60">— {p.color} T{p.size}</span></span>
-                <span className="text-foreground/55 text-xs">Costo: {formatCurrency(p.cost_price)}</span>
+                <span className="text-foreground">{v.brand} {v.model} <span className="text-foreground/60">— {v.color} T{v.size}</span></span>
+                <span className="text-foreground/55 text-xs">Costo: {formatCurrency(v.cost_price)}</span>
               </button>
             ))}
-            {filteredProducts.length === 0 && (
+            {filteredVariants.length === 0 && (
               <p className="px-4 py-3 text-sm text-foreground/45">Sin resultados</p>
             )}
           </div>
@@ -138,8 +139,8 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
             </thead>
             <tbody>
               {items.map(item => (
-                <tr key={item.product.id} className="border-b border-foreground/[0.06]">
-                  <td className="px-4 py-3 text-foreground">{item.product.brand} {item.product.model} T{item.product.size}</td>
+                <tr key={item.variant.id} className="border-b border-foreground/[0.06]">
+                  <td className="px-4 py-3 text-foreground">{item.variant.brand} {item.variant.model} T{item.variant.size}</td>
                   <td className="px-4 py-3">
                     <Input
                       type="number"
@@ -148,7 +149,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
                       className="w-16"
                       onChange={e =>
                         setItems(items.map(i =>
-                          i.product.id === item.product.id ? { ...i, quantity: Math.max(1, Number(e.target.value)) } : i
+                          i.variant.id === item.variant.id ? { ...i, quantity: Math.max(1, Number(e.target.value)) } : i
                         ))
                       }
                     />
@@ -162,7 +163,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
                       className="w-28"
                       onChange={e =>
                         setItems(items.map(i =>
-                          i.product.id === item.product.id ? { ...i, unit_cost: Number(e.target.value) } : i
+                          i.variant.id === item.variant.id ? { ...i, unit_cost: Number(e.target.value) } : i
                         ))
                       }
                     />
@@ -171,7 +172,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
                   <td className="px-4 py-3">
                     <button
                       type="button"
-                      onClick={() => setItems(items.filter(i => i.product.id !== item.product.id))}
+                      onClick={() => setItems(items.filter(i => i.variant.id !== item.variant.id))}
                       className="text-foreground/45 hover:text-red-600 dark:hover:text-red-400 text-xs transition-colors"
                     >
                       Quitar
