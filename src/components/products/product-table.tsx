@@ -73,7 +73,7 @@ export function ProductTable({ products, isAdmin, suppliers = [] }: ProductTable
                 )}
                 <td className="px-4 py-3 font-mono font-medium text-foreground tabular-nums">{formatCurrency(p.sale_price)}</td>
                 <td className="px-4 py-3">
-                  <span className={total === 0 ? 'font-bold text-red-600 dark:text-red-400' : total <= 2 ? 'font-bold text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                  <span className={total === 0 ? 'font-bold text-red-600 dark:text-red-400' : total <= 1 ? 'font-bold text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                     {total}
                   </span>
                 </td>

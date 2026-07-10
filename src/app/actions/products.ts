@@ -60,9 +60,10 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
 }
 
 /**
- * Edita el producto y sincroniza sus talles: crea los que aparecen, borra los
- * que quedan en 0 sin historial, y ajusta el stock de los existentes dejando
- * registro (stock_adjustments) en vez de pisarlo.
+ * Edita el producto y sincroniza sus talles: crea los que aparecen y ajusta el
+ * stock de los existentes dejando registro (stock_adjustments) en vez de
+ * pisarlo. Los talles que quedan en 0 NO se borran (se conservan como variante
+ * con stock 0 para no perder su historial).
  */
 export async function updateProduct(productId: string, input: ProductInput): Promise<{ error?: string }> {
   const supabase = await createClient()

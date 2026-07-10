@@ -169,7 +169,7 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
                   <span className="text-foreground/60 ml-1">— {v.color} T{v.size}</span>
                 </span>
                 <span className="text-foreground/55 text-xs ml-3 shrink-0">
-                  Stock: <span className={v.stock_quantity <= 2 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{v.stock_quantity}</span>
+                  Stock: <span className={v.stock_quantity === 1 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{v.stock_quantity}</span>
                   {' · '}{formatCurrency(v.sale_price)}
                 </span>
               </button>
