@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { adjustStock } from '@/app/actions/stock'
+import { ensureVariant } from '@/app/actions/products'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,13 +13,15 @@ import type { AdjustmentReason } from '@/types/database'
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface AdjustmentFormProps {
+  variantId: string | null
   productId: string
+  size: string
   productName: string
   currentStock: number
   onClose: () => void
 }
 
-export function AdjustmentForm({ productId, productName, currentStock, onClose }: AdjustmentFormProps) {
+export function AdjustmentForm({ variantId, productId, size, productName, currentStock, onClose }: AdjustmentFormProps) {
   const router = useRouter()
   const [quantityChange, setQuantityChange] = useState(0)
   const [reason, setReason] = useState<AdjustmentReason>('ajuste_manual')
@@ -31,21 +34,20 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (quantityChange === 0) {
-      setError('El cambio debe ser distinto de 0')
-      return
-    }
-    if (resultingStock < 0) {
-      setError('El stock no puede quedar negativo')
-      return
-    }
+    if (quantityChange === 0) { setError('El cambio debe ser distinto de 0'); return }
+    if (resultingStock < 0) { setError('El stock no puede quedar negativo'); return }
     setLoading(true)
-    const { error } = await adjustStock(productId, quantityChange, reason, notes)
-    if (error) {
-      setError(error)
-      setLoading(false)
-      return
+
+    // Si el talle todavía no existe como variante, crearlo primero.
+    let vId = variantId
+    if (!vId) {
+      const { id, error: ensureErr } = await ensureVariant(productId, size)
+      if (ensureErr || !id) { setError(ensureErr ?? 'No se pudo crear el talle'); setLoading(false); return }
+      vId = id
     }
+
+    const { error: adjErr } = await adjustStock(vId, quantityChange, reason, notes)
+    if (adjErr) { setError(adjErr); setLoading(false); return }
     toast.success(`Stock ajustado a ${resultingStock} ud.`)
     router.refresh()
     onClose()

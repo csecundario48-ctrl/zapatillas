@@ -11,19 +11,20 @@ import {
 import { AdjustmentForm } from './adjustment-form'
 
 function badgeClass(qty: number) {
-  if (qty === 0) return 'bg-red-500/15 border-red-500/25 text-red-600 dark:text-red-400'
-  if (qty <= 2) return 'bg-amber-500/15 border-amber-500/25 text-amber-600 dark:text-amber-400'
+  if (qty === 0) return 'bg-transparent border-foreground/10 text-foreground/35 line-through'
+  if (qty === 1) return 'bg-amber-500/15 border-amber-500/25 text-amber-600 dark:text-amber-400'
   return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
 }
 
 interface StockBadgeButtonProps {
+  variantId: string | null
   productId: string
   productName: string
   size: string
   qty: number
 }
 
-export function StockBadgeButton({ productId, productName, size, qty }: StockBadgeButtonProps) {
+export function StockBadgeButton({ variantId, productId, productName, size, qty }: StockBadgeButtonProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -44,7 +45,9 @@ export function StockBadgeButton({ productId, productName, size, qty }: StockBad
           <DialogTitle className="text-foreground">Ajustar stock · T{size}</DialogTitle>
         </DialogHeader>
         <AdjustmentForm
+          variantId={variantId}
           productId={productId}
+          size={size}
           productName={`${productName} · T${size}`}
           currentStock={qty}
           onClose={() => setOpen(false)}

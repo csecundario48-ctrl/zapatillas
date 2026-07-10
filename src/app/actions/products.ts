@@ -131,3 +131,21 @@ export async function deleteProduct(productId: string): Promise<{ error?: string
   revalidatePath('/')
   return {}
 }
+
+/** Devuelve el id de la variante (talle) creándola con stock 0 si no existe. */
+export async function ensureVariant(productId: string, size: string): Promise<{ id?: string; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+  const { data: existing } = await supabase
+    .from('product_variants')
+    .select('id')
+    .eq('product_id', productId).eq('size', size).maybeSingle()
+  if (existing) return { id: existing.id }
+  const { data, error } = await supabase
+    .from('product_variants')
+    .insert({ product_id: productId, size, stock_quantity: 0 })
+    .select('id').single()
+  if (error || !data) return { error: error?.message ?? 'No se pudo crear el talle' }
+  return { id: data.id }
+}
