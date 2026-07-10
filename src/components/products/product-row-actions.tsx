@@ -11,8 +11,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { ProductForm } from './product-form'
-import { ConfirmDelete, deleteErrorMessage } from '@/components/common/confirm-delete'
-import { createClient } from '@/lib/supabase/client'
+import { ConfirmDelete } from '@/components/common/confirm-delete'
+import { deleteProduct } from '@/app/actions/products'
 import type { Product, Supplier } from '@/types/database'
 
 interface Props {
@@ -25,9 +25,8 @@ export function ProductRowActions({ product, suppliers }: Props) {
   const [open, setOpen] = useState(false)
 
   async function del() {
-    const supabase = createClient()
-    const { error } = await supabase.from('products').delete().eq('id', product.id)
-    if (error) return { error: deleteErrorMessage(error) }
+    const { error } = await deleteProduct(product.id)
+    if (error) return { error }
     router.refresh()
     return {}
   }

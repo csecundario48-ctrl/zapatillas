@@ -24,7 +24,7 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
 
   const filtered = search
     ? products.filter(p =>
-        `${p.brand} ${p.model} ${p.color} ${p.sku} ${p.size}`
+        `${p.brand} ${p.model} ${p.color}`
           .toLowerCase()
           .includes(search.toLowerCase())
       )
@@ -36,7 +36,7 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Catálogo</h1>
           <p className="text-foreground/55 text-sm mt-0.5">
-            {filtered.length} de {products.length} SKUs
+            {filtered.length} de {products.length} productos
           </p>
         </div>
         <div className="flex gap-3">
@@ -44,7 +44,7 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por marca, modelo, talle..."
+            placeholder="Buscar por marca, modelo o color..."
             className="w-64 bg-card border border-foreground/10 text-foreground placeholder-foreground/45 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
           {isAdmin && (
