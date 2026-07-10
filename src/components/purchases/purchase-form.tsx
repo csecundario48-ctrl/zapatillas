@@ -140,7 +140,10 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
             <tbody>
               {items.map(item => (
                 <tr key={item.variant.id} className="border-b border-foreground/[0.06]">
-                  <td className="px-4 py-3 text-foreground">{item.variant.brand} {item.variant.model} T{item.variant.size}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    {item.variant.brand} {item.variant.model} T{item.variant.size}
+                    <span className="text-foreground/55 text-xs ml-1">({item.variant.color})</span>
+                  </td>
                   <td className="px-4 py-3">
                     <Input
                       type="number"
