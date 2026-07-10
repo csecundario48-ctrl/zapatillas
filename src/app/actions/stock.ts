@@ -5,24 +5,23 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const adjustmentSchema = z.object({
-  productId: z.string().uuid(),
+  variantId: z.string().uuid(),
   change: z.number().int().refine(n => n !== 0, 'El cambio debe ser distinto de 0'),
   reason: z.enum(['ajuste_manual', 'rotura', 'perdida', 'devolucion_proveedor']),
   notes: z.string().max(500),
 })
 
 /**
- * Ajusta el stock de un producto y deja registro en stock_adjustments.
- * El movimiento de stock se hace acá (la base en vivo no tiene triggers;
- * ver supabase/migrations/0001_rls_policies.sql).
+ * Ajusta el stock de una variante (talle) y deja registro en stock_adjustments.
+ * El movimiento de stock se hace acá (la base en vivo no tiene triggers).
  */
 export async function adjustStock(
-  productId: string,
+  variantId: string,
   change: number,
   reason: string,
   notes: string
 ): Promise<{ error?: string }> {
-  const parsed = adjustmentSchema.safeParse({ productId, change, reason, notes })
+  const parsed = adjustmentSchema.safeParse({ variantId, change, reason, notes })
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
@@ -32,26 +31,26 @@ export async function adjustStock(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { data: product, error: fetchError } = await supabase
-    .from('products')
+  const { data: variant, error: fetchError } = await supabase
+    .from('product_variants')
     .select('stock_quantity')
-    .eq('id', parsed.data.productId)
+    .eq('id', parsed.data.variantId)
     .single()
 
-  if (fetchError || !product) return { error: 'Producto no encontrado' }
+  if (fetchError || !variant) return { error: 'Talle no encontrado' }
 
-  const newQty = product.stock_quantity + parsed.data.change
-  if (newQty < 0) return { error: `Stock insuficiente. Actual: ${product.stock_quantity}` }
+  const newQty = variant.stock_quantity + parsed.data.change
+  if (newQty < 0) return { error: `Stock insuficiente. Actual: ${variant.stock_quantity}` }
 
   const { error: updateError } = await supabase
-    .from('products')
+    .from('product_variants')
     .update({ stock_quantity: newQty })
-    .eq('id', parsed.data.productId)
+    .eq('id', parsed.data.variantId)
 
   if (updateError) return { error: updateError.message }
 
   const { error: insertError } = await supabase.from('stock_adjustments').insert({
-    product_id: parsed.data.productId,
+    variant_id: parsed.data.variantId,
     quantity_change: parsed.data.change,
     reason: parsed.data.reason,
     notes: parsed.data.notes || null,
