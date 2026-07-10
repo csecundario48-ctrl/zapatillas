@@ -8,6 +8,7 @@ export const productSchema = z.object({
   size: z.string().min(1, 'Requerido'),
   cost_price: z.number().min(0, 'Debe ser positivo'),
   sale_price: z.number().min(0, 'Debe ser positivo'),
+  stock_quantity: z.number().int('Debe ser un número entero').min(0, 'No puede ser negativo'),
   supplier_id: z.string().optional().nullable(),
   active: z.boolean(),
 })

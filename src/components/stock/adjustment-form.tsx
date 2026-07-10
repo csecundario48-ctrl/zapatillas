@@ -60,18 +60,29 @@ export function AdjustmentForm({ productId, productName, currentStock, onClose }
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Cambio de cantidad</Label>
-        <Input
-          type="number"
-          value={quantityChange}
-          onChange={e => setQuantityChange(Number(e.target.value))}
-          placeholder="+5 o -3"
-        />
-        <p className="text-xs text-foreground/55">
-          Stock resultante:{' '}
-          <span className={`font-semibold ${resultingStock < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-            {resultingStock}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Stock final</Label>
+          <Input
+            type="number"
+            min={0}
+            value={resultingStock}
+            onChange={e => setQuantityChange(Number(e.target.value) - currentStock)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Cambio (+/−)</Label>
+          <Input
+            type="number"
+            value={quantityChange}
+            onChange={e => setQuantityChange(Number(e.target.value))}
+            placeholder="+5 o -3"
+          />
+        </div>
+        <p className="col-span-2 text-xs text-foreground/55">
+          Escribí el stock final directamente, o el cambio (ej: +5 llegaron, −3 rotos). Quedará:{' '}
+          <span className={`font-mono font-semibold tabular-nums ${resultingStock < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            {resultingStock} ud.
           </span>
         </p>
       </div>

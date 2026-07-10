@@ -9,6 +9,7 @@ import { productSchema, type ProductFormData } from '@/lib/validations/product'
 import { generateSku } from '@/lib/utils/sku'
 import { getSizesForGender, BRANDS } from '@/lib/utils/sizes'
 import { createClient } from '@/lib/supabase/client'
+import { adjustStock } from '@/app/actions/stock'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,9 +41,10 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
           brand: product.brand, model: product.model, color: product.color,
           gender: product.gender, size: product.size,
           cost_price: product.cost_price, sale_price: product.sale_price,
+          stock_quantity: product.stock_quantity,
           supplier_id: product.supplier_id ?? undefined, active: product.active,
         }
-      : { active: true },
+      : { active: true, stock_quantity: 0 },
   })
 
   const gender = watch('gender') as Gender | undefined
@@ -51,19 +53,44 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
   async function onSubmit(data: ProductFormData) {
     setError(null)
     const sku = generateSku(data.brand, data.model, data.color, data.size)
-    const payload = { ...data, sku, supplier_id: data.supplier_id || null }
+    const { stock_quantity, ...rest } = data
     const supabase = createClient()
-    const { error } = editing
-      ? await supabase.from('products').update(payload).eq('id', product!.id)
-      : await supabase.from('products').insert(payload)
-    if (error) {
-      setError(
-        error.code === '23505'
-          ? 'Ya existe un producto con ese SKU (misma marca, modelo, color y talle)'
-          : error.message
-      )
-      return
+
+    if (editing) {
+      // El stock no se pisa directo: si cambió, queda registrado como ajuste.
+      const payload = { ...rest, sku, supplier_id: rest.supplier_id || null }
+      const { error } = await supabase.from('products').update(payload).eq('id', product!.id)
+      if (error) {
+        setError(
+          error.code === '23505'
+            ? 'Ya existe un producto con ese SKU (misma marca, modelo, color y talle)'
+            : error.message
+        )
+        return
+      }
+      const delta = stock_quantity - product!.stock_quantity
+      if (delta !== 0) {
+        const { error: stockError } = await adjustStock(
+          product!.id, delta, 'ajuste_manual', 'Corrección desde catálogo'
+        )
+        if (stockError) {
+          setError(`Producto guardado, pero el stock no se pudo ajustar: ${stockError}`)
+          return
+        }
+      }
+    } else {
+      const payload = { ...rest, sku, stock_quantity, supplier_id: rest.supplier_id || null }
+      const { error } = await supabase.from('products').insert(payload)
+      if (error) {
+        setError(
+          error.code === '23505'
+            ? 'Ya existe un producto con ese SKU (misma marca, modelo, color y talle)'
+            : error.message
+        )
+        return
+      }
     }
+
     toast.success(editing ? 'Producto actualizado' : 'Producto agregado')
     router.refresh()
     onSuccess?.()
@@ -132,6 +159,14 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
           <Label className={lbl}>Precio de venta ($)</Label>
           <Input {...register('sale_price', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
           {errors.sale_price && <p className="text-xs text-red-600 dark:text-red-400">{errors.sale_price.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label className={lbl}>{editing ? 'Stock (unidades)' : 'Stock inicial (unidades)'}</Label>
+          <Input {...register('stock_quantity', { valueAsNumber: true })} type="number" step="1" min="0" placeholder="0" />
+          {errors.stock_quantity && <p className="text-xs text-red-600 dark:text-red-400">{errors.stock_quantity.message}</p>}
+          {editing && (
+            <p className="text-xs text-foreground/45">Si lo cambiás, queda registrado como ajuste manual.</p>
+          )}
         </div>
       </div>
       {editing && (

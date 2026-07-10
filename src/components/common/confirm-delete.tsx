@@ -62,7 +62,7 @@ export function ConfirmDelete({ onConfirm, title = 'Eliminar' }: ConfirmDeletePr
 /** Friendly message for common Postgres errors when deleting. */
 export function deleteErrorMessage(error: { code?: string; message: string }): string {
   if (error.code === '23503') {
-    return 'No se puede borrar: tiene registros asociados (ventas, compras...). Desactivalo en vez de borrarlo.'
+    return 'Tiene ventas o compras en el historial: borrarlo dejaría esos registros rotos. Para ocultarlo, editalo y desmarcá "Producto activo". Para vaciar todo y cargar de nuevo: node scripts/reset-datos.mjs'
   }
   return error.message
 }
