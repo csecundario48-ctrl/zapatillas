@@ -6,14 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { productSchema, type ProductFormData } from '@/lib/validations/product'
-import { generateSku } from '@/lib/utils/sku'
-import { getSizesForGender, BRANDS } from '@/lib/utils/sizes'
-import { createClient } from '@/lib/supabase/client'
-import { adjustStock } from '@/app/actions/stock'
+import { SIZE_RANGE } from '@/lib/utils/sizes'
+import { BRANDS } from '@/lib/utils/sizes'
+import { createProduct, updateProduct } from '@/app/actions/products'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Gender, Product, Supplier } from '@/types/database'
+import type { Product, Supplier } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50'
 const lbl = 'font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]'
@@ -27,70 +26,53 @@ interface ProductFormProps {
 export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps) {
   const router = useRouter()
   const editing = !!product
+
+  // Talles a mostrar: rango fijo + los que ya existan fuera de rango (datos viejos).
+  const existingSizes = product?.variants?.map(v => v.size) ?? []
+  const sizes = [...new Set([...SIZE_RANGE, ...existingSizes])].sort((a, b) => Number(a) - Number(b))
+  const stockBySize: Record<string, number> = {}
+  for (const v of product?.variants ?? []) stockBySize[v.size] = v.stock_quantity
+
   const [error, setError] = useState<string | null>(null)
+  const [stock, setStock] = useState<Record<string, number>>(() => {
+    const init: Record<string, number> = {}
+    for (const s of sizes) init[s] = stockBySize[s] ?? 0
+    return init
+  })
+
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: product
       ? {
           brand: product.brand, model: product.model, color: product.color,
-          gender: product.gender, size: product.size,
+          gender: product.gender ?? undefined,
           cost_price: product.cost_price, sale_price: product.sale_price,
-          stock_quantity: product.stock_quantity,
           supplier_id: product.supplier_id ?? undefined, active: product.active,
+          variants: [],
         }
-      : { active: true, stock_quantity: 0 },
+      : { active: true, variants: [] },
   })
 
-  const gender = watch('gender') as Gender | undefined
-  const sizes = gender ? getSizesForGender(gender) : []
+  const totalStock = Object.values(stock).reduce((a, b) => a + b, 0)
 
   async function onSubmit(data: ProductFormData) {
     setError(null)
-    const sku = generateSku(data.brand, data.model, data.color, data.size)
-    const { stock_quantity, ...rest } = data
-    const supabase = createClient()
-
-    if (editing) {
-      // El stock no se pisa directo: si cambió, queda registrado como ajuste.
-      const payload = { ...rest, sku, supplier_id: rest.supplier_id || null }
-      const { error } = await supabase.from('products').update(payload).eq('id', product!.id)
-      if (error) {
-        setError(
-          error.code === '23505'
-            ? 'Ya existe un producto con ese SKU (misma marca, modelo, color y talle)'
-            : error.message
-        )
-        return
-      }
-      const delta = stock_quantity - product!.stock_quantity
-      if (delta !== 0) {
-        const { error: stockError } = await adjustStock(
-          product!.id, delta, 'ajuste_manual', 'Corrección desde catálogo'
-        )
-        if (stockError) {
-          setError(`Producto guardado, pero el stock no se pudo ajustar: ${stockError}`)
-          return
-        }
-      }
-    } else {
-      const payload = { ...rest, sku, stock_quantity, supplier_id: rest.supplier_id || null }
-      const { error } = await supabase.from('products').insert(payload)
-      if (error) {
-        setError(
-          error.code === '23505'
-            ? 'Ya existe un producto con ese SKU (misma marca, modelo, color y talle)'
-            : error.message
-        )
-        return
-      }
+    const input = {
+      brand: data.brand, model: data.model, color: data.color,
+      gender: data.gender ?? null,
+      cost_price: data.cost_price, sale_price: data.sale_price,
+      supplier_id: data.supplier_id || null,
+      active: data.active,
+      variants: sizes.map(size => ({ size, stock_quantity: stock[size] ?? 0 })),
     }
-
+    const { error: err } = editing
+      ? await updateProduct(product!.id, input)
+      : await createProduct(input)
+    if (err) { setError(err); return }
     toast.success(editing ? 'Producto actualizado' : 'Producto agregado')
     router.refresh()
     onSuccess?.()
@@ -109,39 +91,13 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Modelo</Label>
-          <Input {...register('model')} placeholder="Air Force 1" />
+          <Input {...register('model')} placeholder="Campus" />
           {errors.model && <p className="text-xs text-red-600 dark:text-red-400">{errors.model.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Color</Label>
-          <Input {...register('color')} placeholder="Blanco/Negro" />
+          <Input {...register('color')} placeholder="Total Black" />
           {errors.color && <p className="text-xs text-red-600 dark:text-red-400">{errors.color.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label className={lbl}>Género</Label>
-          <select
-            {...register('gender')}
-            className={sel}
-            onChange={e => {
-              setValue('gender', e.target.value as Gender)
-              setValue('size', '')
-            }}
-          >
-            <option value="" className="bg-card">Seleccionar</option>
-            <option value="hombre" className="bg-card">Hombre</option>
-            <option value="mujer" className="bg-card">Mujer</option>
-            <option value="nino" className="bg-card">Niño</option>
-            <option value="unisex" className="bg-card">Unisex</option>
-          </select>
-          {errors.gender && <p className="text-xs text-red-600 dark:text-red-400">{errors.gender.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label className={lbl}>Talle</Label>
-          <select {...register('size')} className={sel} disabled={!gender}>
-            <option value="" className="bg-card">{gender ? 'Seleccionar' : 'Elegí género primero'}</option>
-            {sizes.map(s => <option key={s} value={s} className="bg-card">{s}</option>)}
-          </select>
-          {errors.size && <p className="text-xs text-red-600 dark:text-red-400">{errors.size.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Proveedor</Label>
@@ -160,15 +116,31 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
           <Input {...register('sale_price', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
           {errors.sale_price && <p className="text-xs text-red-600 dark:text-red-400">{errors.sale_price.message}</p>}
         </div>
-        <div className="space-y-1.5">
-          <Label className={lbl}>{editing ? 'Stock (unidades)' : 'Stock inicial (unidades)'}</Label>
-          <Input {...register('stock_quantity', { valueAsNumber: true })} type="number" step="1" min="0" placeholder="0" />
-          {errors.stock_quantity && <p className="text-xs text-red-600 dark:text-red-400">{errors.stock_quantity.message}</p>}
-          {editing && (
-            <p className="text-xs text-foreground/45">Si lo cambiás, queda registrado como ajuste manual.</p>
-          )}
+      </div>
+
+      {/* Tabla de talles */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className={lbl}>Stock por talle</Label>
+          <span className="text-xs text-foreground/55">Total: <span className="font-mono font-semibold text-foreground tabular-nums">{totalStock}</span></span>
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          {sizes.map(size => (
+            <div key={size} className="space-y-1">
+              <span className="block text-center text-[10px] text-foreground/45">T{size}</span>
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                value={stock[size] ?? 0}
+                onChange={e => setStock(prev => ({ ...prev, [size]: Math.max(0, Number(e.target.value)) }))}
+                className="text-center px-1"
+              />
+            </div>
+          ))}
         </div>
       </div>
+
       {editing && (
         <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer hover:text-foreground transition-colors">
           <input type="checkbox" {...register('active')} className="rounded" />
