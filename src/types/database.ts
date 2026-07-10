@@ -3,6 +3,7 @@ export type SaleChannel = 'fisica' | 'online'
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago'
 export type SaleStatus = 'completada' | 'cancelada' | 'devolucion'
 export type PaymentStatus = 'pagado' | 'pendiente' | 'parcial'
+export type DeliveryStatus = 'pedido' | 'recibido'
 export type ExpenseCategory = 'alquiler' | 'servicios' | 'marketing' | 'delivery' | 'salarios' | 'packaging' | 'otros'
 export type ExpenseType = 'fijo' | 'variable'
 export type AdjustmentReason = 'ajuste_manual' | 'rotura' | 'perdida' | 'devolucion_proveedor'
@@ -92,6 +93,7 @@ export interface Purchase {
   purchase_date: string
   total_amount: number
   payment_status: PaymentStatus
+  delivery_status: DeliveryStatus
   payment_due_date: string | null
   notes: string | null
   created_by: string | null

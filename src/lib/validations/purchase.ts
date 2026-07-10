@@ -6,6 +6,7 @@ export const purchaseSchema = z.object({
   supplier_id: z.string().uuid('Seleccioná un proveedor'),
   purchase_date: dateStr,
   payment_status: z.enum(['pagado', 'pendiente', 'parcial']),
+  delivery_status: z.enum(['pedido', 'recibido']),
   payment_due_date: dateStr.optional().or(z.literal('')),
   notes: z.string().max(500).optional(),
   items: z
