@@ -7,6 +7,19 @@
 
 begin;
 
+-- 0) Eliminar triggers/funciones viejos de stock que referencian columnas que
+--    este script borra (product_id / products.stock_quantity). Si nunca se
+--    aplicaron a esta base, los "if exists" no hacen nada. Los triggers de auth
+--    (handle_new_user / on_auth_user_created) NO se tocan.
+drop trigger if exists on_sale_item_insert on sale_items;
+drop trigger if exists on_sale_item_delete on sale_items;
+drop trigger if exists on_purchase_item_insert on purchase_items;
+drop trigger if exists on_stock_adjustment_insert on stock_adjustments;
+drop function if exists handle_sale_item_insert();
+drop function if exists handle_sale_item_delete();
+drop function if exists handle_purchase_item_insert();
+drop function if exists handle_stock_adjustment_insert();
+
 -- 1) Tabla de variantes (talle + stock). legacy_product_id es temporal.
 create table product_variants (
   id uuid primary key default uuid_generate_v4(),
@@ -29,8 +42,10 @@ from (
   from products
   group by brand, model, color, gender
 ) sub
-where p.brand = sub.brand and p.model = sub.model
-  and p.color = sub.color and p.gender is not distinct from sub.gender;
+where p.brand is not distinct from sub.brand
+  and p.model is not distinct from sub.model
+  and p.color is not distinct from sub.color
+  and p.gender is not distinct from sub.gender;
 
 -- 4) Una variante por cada fila de products, colgando del canonico.
 insert into product_variants (product_id, size, stock_quantity, sku, legacy_product_id)
@@ -71,10 +86,10 @@ set variant_id = v.id
 from product_variants v
 where v.legacy_product_id = sa.product_id;
 
--- 8) Borrar filas de products no canonicas (ahora representadas como variantes).
-delete from products where id <> parent_id;
-
--- 9) Reapuntar FKs y limpiar columnas viejas.
+-- 8) Reapuntar las FKs de las tablas hijas y soltar la columna product_id.
+--    ESTO VA ANTES del delete del paso 9: mientras exista la FK product_id
+--    apuntando a filas no canonicas, borrarlas violaria la FK (on delete
+--    no action) y abortaria la migracion.
 alter table sale_items drop constraint sale_items_product_id_fkey;
 alter table sale_items add constraint sale_items_variant_id_fkey
   foreign key (variant_id) references product_variants(id) on delete set null;
@@ -91,6 +106,10 @@ alter table stock_adjustments add constraint stock_adjustments_variant_id_fkey
 alter table stock_adjustments alter column variant_id set not null;
 alter table stock_adjustments drop column product_id;
 
+-- 9) Ahora si, borrar filas de products no canonicas (ya nada las referencia:
+--    las variantes cuelgan del canonico y las hijas apuntan a variant_id).
+delete from products where id <> parent_id;
+
 -- 10) Limpiar products: quitar columnas que ahora viven en la variante.
 alter table products drop column size;
 alter table products drop column stock_quantity;
@@ -103,7 +122,7 @@ alter table product_variants drop column legacy_product_id;
 alter table product_variants add constraint product_variants_unique_size unique (product_id, size);
 create index idx_product_variants_product on product_variants(product_id);
 
--- 12) RLS para la tabla nueva (mismo patron auth_all que las demas tablas de negocio).
+-- 12) RLS para la tabla nueva (mismo patron auth_all que las demas tablas).
 alter table product_variants enable row level security;
 drop policy if exists "auth_all_product_variants" on product_variants;
 create policy "auth_all_product_variants" on product_variants
