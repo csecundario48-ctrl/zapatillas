@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import type { PaymentMethod, SaleChannel } from '@/types/database'
 
 interface SaleItemInput {
-  product_id: string
+  variant_id: string
   quantity: number
   unit_price: number
   discount: number
@@ -20,14 +20,8 @@ interface CreateSaleInput {
 }
 
 /**
- * Registra una venta de forma centralizada en el servidor:
- * valida stock/precio contra la base (no confía en el cliente), inserta la
- * venta y sus items, y descuenta el stock. Si falla la carga de items,
- * revierte la venta. Setea created_by con el usuario autenticado.
- *
- * Nota: el descuento de stock se hace por item con lectura previa validada.
- * Para máxima seguridad ante ventas concurrentes, ver la función atómica
- * `create_sale` documentada en supabase/migrations/0001_rls_policies.sql.
+ * Registra una venta: valida stock/existencia contra la base, inserta la venta
+ * y sus items (con snapshot de nombre y talle), y descuenta el stock por variante.
  */
 export async function createSale(input: CreateSaleInput): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -36,33 +30,37 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
   if (!user) return { error: 'No autenticado' }
 
   if (!input.items?.length) return { error: 'Agregá al menos un producto' }
+  if (!input.customer_id) return { error: 'Seleccioná un cliente' }
 
-  const ids = [...new Set(input.items.map(i => i.product_id))]
-  const { data: products, error: prodErr } = await supabase
-    .from('products')
-    .select('id, stock_quantity, active')
+  const ids = [...new Set(input.items.map(i => i.variant_id))]
+  const { data: variants, error: varErr } = await supabase
+    .from('product_variants')
+    .select('id, size, stock_quantity, products(active, brand, model, color)')
     .in('id', ids)
-  if (prodErr) return { error: prodErr.message }
+  if (varErr) return { error: varErr.message }
 
-  const byId = new Map((products ?? []).map(p => [p.id, p]))
+  type Row = {
+    id: string; size: string; stock_quantity: number
+    products: { active: boolean; brand: string; model: string; color: string } | null
+  }
+  const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
-  // Consolidar cantidades por producto (por si el mismo producto viene repetido)
   const qtyById = new Map<string, number>()
   for (const item of input.items) {
     if (item.quantity < 1) return { error: 'Cantidad inválida' }
-    qtyById.set(item.product_id, (qtyById.get(item.product_id) ?? 0) + item.quantity)
+    qtyById.set(item.variant_id, (qtyById.get(item.variant_id) ?? 0) + item.quantity)
   }
 
   let total = 0
   for (const item of input.items) {
-    const p = byId.get(item.product_id)
-    if (!p || !p.active) return { error: 'Uno de los productos no existe o está inactivo' }
+    const v = byId.get(item.variant_id)
+    if (!v || !v.products?.active) return { error: 'Uno de los productos no existe o está inactivo' }
     total += (item.unit_price - item.discount) * item.quantity
   }
-  for (const [productId, qty] of qtyById) {
-    const p = byId.get(productId)!
-    if (qty > p.stock_quantity) {
-      return { error: `Stock insuficiente (disponible: ${p.stock_quantity}). Actualizá la página y reintentá.` }
+  for (const [variantId, qty] of qtyById) {
+    const v = byId.get(variantId)!
+    if (qty > v.stock_quantity) {
+      return { error: `Stock insuficiente (disponible: ${v.stock_quantity}). Actualizá la página y reintentá.` }
     }
   }
 
@@ -82,41 +80,45 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
   if (saleError || !sale) return { error: saleError?.message ?? 'No se pudo registrar la venta' }
 
   const { error: itemsError } = await supabase.from('sale_items').insert(
-    input.items.map(i => ({
-      sale_id: sale.id,
-      product_id: i.product_id,
-      quantity: i.quantity,
-      unit_price: i.unit_price,
-      discount: i.discount,
-      subtotal: (i.unit_price - i.discount) * i.quantity,
-    }))
+    input.items.map(i => {
+      const v = byId.get(i.variant_id)!
+      return {
+        sale_id: sale.id,
+        variant_id: i.variant_id,
+        product_label: v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
+        size_label: v.size,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+        discount: i.discount,
+        subtotal: (i.unit_price - i.discount) * i.quantity,
+      }
+    })
   )
   if (itemsError) {
     await supabase.from('sales').delete().eq('id', sale.id)
     return { error: itemsError.message }
   }
 
-  for (const [productId, qty] of qtyById) {
-    const p = byId.get(productId)!
+  for (const [variantId, qty] of qtyById) {
+    const v = byId.get(variantId)!
     const { error: stockErr } = await supabase
-      .from('products')
-      .update({ stock_quantity: p.stock_quantity - qty })
-      .eq('id', productId)
+      .from('product_variants')
+      .update({ stock_quantity: v.stock_quantity - qty })
+      .eq('id', variantId)
     if (stockErr) {
-      return { error: `Venta registrada, pero falló actualizar el stock de un producto: ${stockErr.message}` }
+      return { error: `Venta registrada, pero falló actualizar el stock: ${stockErr.message}` }
     }
   }
 
   revalidatePath('/ventas')
   revalidatePath('/stock')
   revalidatePath('/')
-  return { }
+  return {}
 }
 
 /**
  * Marca una venta completada como devolución y repone el stock de sus items.
- * El update condicionado por status evita reponer dos veces si se dispara
- * en simultáneo (solo una transición completada→devolucion puede ganar).
+ * El update condicionado por status evita reponer dos veces.
  */
 export async function returnSale(saleId: string): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -126,7 +128,7 @@ export async function returnSale(saleId: string): Promise<{ error?: string }> {
 
   const { data: sale, error: saleErr } = await supabase
     .from('sales')
-    .select('id, status, sale_items(product_id, quantity)')
+    .select('id, status, sale_items(variant_id, quantity)')
     .eq('id', saleId)
     .single()
   if (saleErr || !sale) return { error: saleErr?.message ?? 'Venta no encontrada' }
@@ -142,25 +144,27 @@ export async function returnSale(saleId: string): Promise<{ error?: string }> {
   if (!updated?.length) return { error: 'La venta ya fue devuelta o cancelada' }
 
   const qtyById = new Map<string, number>()
-  for (const item of sale.sale_items ?? []) {
-    qtyById.set(item.product_id, (qtyById.get(item.product_id) ?? 0) + item.quantity)
+  for (const item of (sale.sale_items ?? []) as { variant_id: string | null; quantity: number }[]) {
+    if (!item.variant_id) continue
+    qtyById.set(item.variant_id, (qtyById.get(item.variant_id) ?? 0) + item.quantity)
   }
 
-  const { data: products, error: prodErr } = await supabase
-    .from('products')
-    .select('id, stock_quantity')
-    .in('id', [...qtyById.keys()])
-  if (prodErr) {
-    return { error: `Venta marcada como devolución, pero falló leer el stock: ${prodErr.message}` }
-  }
-
-  for (const p of products ?? []) {
-    const { error: stockErr } = await supabase
-      .from('products')
-      .update({ stock_quantity: p.stock_quantity + (qtyById.get(p.id) ?? 0) })
-      .eq('id', p.id)
-    if (stockErr) {
-      return { error: `Venta devuelta, pero falló reponer el stock de un producto: ${stockErr.message}` }
+  if (qtyById.size > 0) {
+    const { data: variants, error: varErr } = await supabase
+      .from('product_variants')
+      .select('id, stock_quantity')
+      .in('id', [...qtyById.keys()])
+    if (varErr) {
+      return { error: `Venta marcada como devolución, pero falló leer el stock: ${varErr.message}` }
+    }
+    for (const v of variants ?? []) {
+      const { error: stockErr } = await supabase
+        .from('product_variants')
+        .update({ stock_quantity: v.stock_quantity + (qtyById.get(v.id) ?? 0) })
+        .eq('id', v.id)
+      if (stockErr) {
+        return { error: `Venta devuelta, pero falló reponer el stock: ${stockErr.message}` }
+      }
     }
   }
 
@@ -168,5 +172,5 @@ export async function returnSale(saleId: string): Promise<{ error?: string }> {
   revalidatePath('/stock')
   revalidatePath('/finanzas')
   revalidatePath('/')
-  return { }
+  return {}
 }
