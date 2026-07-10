@@ -37,7 +37,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from('sales')
-      .select('total_amount, sale_items(quantity, products(cost_price))')
+      .select('total_amount, sale_items(quantity, product_variants(products(cost_price)))')
       .eq('status', 'completada')
       .gte('sale_date', monthStart),
     supabase
@@ -47,10 +47,10 @@ export default async function HomePage() {
       .eq('sale_date', todayStr),
     supabase.from('expenses').select('amount').gte('expense_date', monthStart),
     supabase
-      .from('products')
-      .select('id, brand, model, color, size, stock_quantity')
-      .eq('active', true)
-      .lte('stock_quantity', 2)
+      .from('product_variants')
+      .select('id, size, stock_quantity, products!inner(brand, model, color, active)')
+      .lte('stock_quantity', 1)
+      .eq('products.active', true)
       .order('stock_quantity', { ascending: true }),
     supabase
       .from('purchases')
@@ -64,12 +64,12 @@ export default async function HomePage() {
       .limit(6),
     supabase
       .from('sale_items')
-      .select('quantity, unit_price, products(brand, model), sales!inner(sale_date, status)')
+      .select('quantity, unit_price, product_label, sales!inner(sale_date, status)')
       .gte('sales.sale_date', monthStart)
       .eq('sales.status', 'completada')
       .limit(200),
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('active', true),
-    supabase.from('products').select('cost_price, stock_quantity').eq('active', true),
+    supabase.from('product_variants').select('stock_quantity, products!inner(cost_price, active)').eq('products.active', true),
     supabase.from('purchases').select('total_amount').gte('purchase_date', monthStart),
     supabase
       .from('expenses')
@@ -86,12 +86,12 @@ export default async function HomePage() {
   // KPI calculations
   const totalIncome = monthlySales?.reduce((s, x) => s + x.total_amount, 0) ?? 0
   const todayIncome = todaySalesRaw?.reduce((s, x) => s + x.total_amount, 0) ?? 0
-  type CogsItem = { quantity: number; products: { cost_price: number } | null }
+  type CogsItem = { quantity: number; product_variants: { products: { cost_price: number } | null } | null }
   const totalCOGS = monthlySales?.reduce(
     (s, sale) =>
       s +
       ((sale.sale_items ?? []) as unknown as CogsItem[]).reduce(
-        (si, item) => si + (item.products?.cost_price ?? 0) * item.quantity,
+        (si, item) => si + (item.product_variants?.products?.cost_price ?? 0) * item.quantity,
         0
       ),
     0
@@ -103,12 +103,15 @@ export default async function HomePage() {
   const txCount = monthlySales?.length ?? 0
   const avgTicket = txCount > 0 ? totalIncome / txCount : 0
 
-  const criticalStock = stockAlerts?.filter(p => p.stock_quantity === 0) ?? []
-  const lowStock = stockAlerts?.filter(p => p.stock_quantity > 0) ?? []
+  type VariantAlert = { id: string; size: string; stock_quantity: number; products: { brand: string; model: string; color: string } | null }
+  const alerts = (stockAlerts as VariantAlert[] | null) ?? []
+  const criticalStock = alerts.filter(v => v.stock_quantity === 0)
+  const lowStock = alerts.filter(v => v.stock_quantity > 0)
 
   // Stock valorizado (costo del inventario actual)
-  const stockValue = (stockValProducts ?? []).reduce(
-    (s, p) => s + (p.cost_price ?? 0) * (p.stock_quantity ?? 0), 0
+  type StockValRow = { stock_quantity: number; products: { cost_price: number } | null }
+  const stockValue = ((stockValProducts as StockValRow[] | null) ?? []).reduce(
+    (s, v) => s + (v.products?.cost_price ?? 0) * v.stock_quantity, 0
   )
 
   // Flujo de caja del mes: ingresos (ventas) vs egresos (compras + gastos)
@@ -132,13 +135,11 @@ export default async function HomePage() {
 
   // Top products from sale_items
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {}
-  for (const item of topProducts ?? []) {
-    const p = item.products as unknown as { brand: string; model: string } | null
-    if (!p) continue
-    const key = `${p.brand} ${p.model}`
-    if (!productMap[key]) productMap[key] = { name: key, units: 0, revenue: 0 }
-    productMap[key].units += item.quantity
-    productMap[key].revenue += item.unit_price * item.quantity
+  for (const item of (topProducts ?? []) as { quantity: number; unit_price: number; product_label: string | null }[]) {
+    const name = item.product_label ?? 'Producto eliminado'
+    if (!productMap[name]) productMap[name] = { name, units: 0, revenue: 0 }
+    productMap[name].units += item.quantity
+    productMap[name].revenue += item.unit_price * item.quantity
   }
   const topList = Object.values(productMap).sort((a, b) => b.units - a.units).slice(0, 5)
 
@@ -204,7 +205,7 @@ export default async function HomePage() {
           subtitle="Por transacción" />
         <KpiCard title="SKUs activos" value={totalActiveProducts ?? 0} color="green"
           subtitle={`${criticalStock.length} sin stock`} />
-        <KpiCard title="Stock bajo" value={(stockAlerts?.length ?? 0)} color={criticalStock.length > 0 ? 'red' : 'amber'}
+        <KpiCard title="Stock bajo" value={alerts.length} color={criticalStock.length > 0 ? 'red' : 'amber'}
           subtitle={`${criticalStock.length} sin stock · ${lowStock.length} bajo`} />
       </div>
 
@@ -340,17 +341,17 @@ export default async function HomePage() {
                 Ver <ArrowUpRight size={11} />
               </Link>
             </div>
-            {(stockAlerts?.length ?? 0) === 0 ? (
+            {alerts.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-[11px] text-foreground/35">Todo el stock en orden ✓</p>
               </div>
             ) : (
               <div className="divide-y divide-foreground/[0.05]">
-                {stockAlerts!.slice(0, 6).map(p => (
+                {alerts.slice(0, 6).map(p => (
                   <div key={p.id} className="flex items-center justify-between px-5 py-2.5">
                     <div className="min-w-0">
-                      <p className="text-[12px] text-foreground/70 truncate">{p.brand} {p.model}</p>
-                      <p className="text-[10px] text-foreground/40">{p.color} · T{p.size}</p>
+                      <p className="text-[12px] text-foreground/70 truncate">{p.products?.brand} {p.products?.model}</p>
+                      <p className="text-[10px] text-foreground/40">{p.products?.color} · T{p.size}</p>
                     </div>
                     <span className={`font-mono text-[11px] font-semibold ml-3 shrink-0 tabular-nums ${
                       p.stock_quantity === 0 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'
@@ -359,10 +360,10 @@ export default async function HomePage() {
                     </span>
                   </div>
                 ))}
-                {(stockAlerts!.length ?? 0) > 6 && (
+                {alerts.length > 6 && (
                   <div className="px-5 py-2.5">
                     <Link href="/stock" className="text-[11px] text-foreground/45 hover:text-indigo-400 transition-colors">
-                      +{stockAlerts!.length - 6} más...
+                      +{alerts.length - 6} más...
                     </Link>
                   </div>
                 )}

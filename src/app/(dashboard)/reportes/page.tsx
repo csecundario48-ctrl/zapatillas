@@ -11,12 +11,12 @@ export default async function ReportesPage() {
   const [{ data: salesRaw }, { data: products }] = await Promise.all([
     supabase
       .from('sales')
-      .select('sale_date, total_amount, channel, payment_method, sale_items(quantity, unit_price, products(id, brand, model, cost_price))')
+      .select('sale_date, total_amount, channel, payment_method, sale_items(quantity, unit_price, product_variants(products(id, brand, model, cost_price)))')
       .eq('status', 'completada')
       .order('sale_date'),
     supabase
       .from('products')
-      .select('id, brand, model, color, size, stock_quantity, cost_price')
+      .select('id, brand, model, color, cost_price, variants:product_variants(stock_quantity)')
       .eq('active', true),
   ])
 
@@ -39,10 +39,10 @@ export default async function ReportesPage() {
     type ReportItem = {
       quantity: number
       unit_price: number
-      products: { id: string; brand: string; model: string; cost_price: number } | null
+      product_variants: { products: { id: string; brand: string; model: string; cost_price: number } | null } | null
     }
     ;((sale.sale_items ?? []) as unknown as ReportItem[]).forEach(item => {
-      const p = item.products
+      const p = item.product_variants?.products
       const brand = p?.brand ?? 'Otro'
       byBrand[brand] = (byBrand[brand] ?? 0) + item.quantity
       unitsSold += item.quantity
@@ -63,13 +63,16 @@ export default async function ReportesPage() {
   const margin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0
   const avgTicket = salesCount > 0 ? totalRevenue / salesCount : 0
 
-  const stockValue = (products ?? []).reduce((s, p) => s + p.cost_price * p.stock_quantity, 0)
+  type ProdWithVariants = { id: string; brand: string; model: string; color: string; cost_price: number; variants: { stock_quantity: number }[] }
+  const prods = (products as ProdWithVariants[] | null) ?? []
+  const totalStock = (p: ProdWithVariants) => p.variants.reduce((s, v) => s + v.stock_quantity, 0)
+  const stockValue = prods.reduce((s, p) => s + p.cost_price * totalStock(p), 0)
   const rotation = stockValue > 0 ? totalCOGS / stockValue : 0
 
   // Dead stock: en stock pero nunca vendido
-  const deadStock = (products ?? [])
-    .filter(p => p.stock_quantity > 0 && !soldIds.has(p.id))
-    .map(p => ({ ...p, frozen: p.cost_price * p.stock_quantity }))
+  const deadStock = prods
+    .filter(p => totalStock(p) > 0 && !soldIds.has(p.id))
+    .map(p => ({ ...p, units: totalStock(p), frozen: p.cost_price * totalStock(p) }))
     .sort((a, b) => b.frozen - a.frozen)
   const deadMoney = deadStock.reduce((s, p) => s + p.frozen, 0)
 
@@ -195,7 +198,7 @@ export default async function ReportesPage() {
               <div key={p.id} className="flex items-center justify-between px-5 py-2.5">
                 <div className="min-w-0">
                   <p className="text-[13px] text-foreground/85 truncate">{p.brand} {p.model}</p>
-                  <p className="text-[10px] text-foreground/45">{p.color} · T{p.size} · {p.stock_quantity} ud.</p>
+                  <p className="text-[10px] text-foreground/45">{p.color} · {p.units} ud.</p>
                 </div>
                 <span className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 shrink-0">{formatCurrency(p.frozen)}</span>
               </div>

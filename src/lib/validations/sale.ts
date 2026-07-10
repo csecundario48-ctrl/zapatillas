@@ -3,7 +3,7 @@ import { z } from 'zod'
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')
 
 export const saleItemSchema = z.object({
-  product_id: z.string().uuid(),
+  variant_id: z.string().uuid(),
   quantity: z.number().int().min(1).max(999),
 })
 

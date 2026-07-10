@@ -18,10 +18,7 @@ interface HistorySale {
   total_amount: number
   status: string
   payment_method: string
-  sale_items: {
-    quantity: number
-    products: { brand: string; model: string; size: string; color: string } | null
-  }[]
+  sale_items: { quantity: number; product_label: string | null; size_label: string | null }[]
 }
 
 const statusStyle: Record<string, string> = {
@@ -38,7 +35,7 @@ function HistoryList({ customerId }: { customerId: string }) {
     const supabase = createClient()
     supabase
       .from('sales')
-      .select('id, sale_date, total_amount, status, payment_method, sale_items(quantity, products(brand, model, size, color))')
+      .select('id, sale_date, total_amount, status, payment_method, sale_items(quantity, product_label, size_label)')
       .eq('customer_id', customerId)
       .order('sale_date', { ascending: false })
       .limit(50)
@@ -67,10 +64,7 @@ function HistoryList({ customerId }: { customerId: string }) {
           </div>
           <p className="text-xs text-foreground/55">
             {sale.sale_items
-              .map(i => {
-                const p = i.products
-                return p ? `${i.quantity}× ${p.brand} ${p.model} T${p.size} (${p.color})` : `${i.quantity}× producto eliminado`
-              })
+              .map(i => i.product_label ? `${i.quantity}× ${i.product_label} T${i.size_label ?? ''}` : `${i.quantity}× producto eliminado`)
               .join(' · ')}
             <span className="text-foreground/40 capitalize"> — {sale.payment_method}</span>
           </p>

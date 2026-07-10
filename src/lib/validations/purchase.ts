@@ -11,7 +11,7 @@ export const purchaseSchema = z.object({
   items: z
     .array(
       z.object({
-        product_id: z.string().uuid(),
+        variant_id: z.string().uuid(),
         quantity: z.number().int().min(1).max(9999),
         unit_cost: z.number().min(0).finite(),
       })
