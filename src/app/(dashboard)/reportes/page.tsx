@@ -11,7 +11,7 @@ export default async function ReportesPage() {
   const [{ data: salesRaw }, { data: products }] = await Promise.all([
     supabase
       .from('sales')
-      .select('sale_date, total_amount, channel, payment_method, sale_items(quantity, unit_price, product_variants(products(id, brand, model, cost_price)))')
+      .select('sale_date, total_amount, channel, payment_method, sale_items(quantity, unit_price, unit_cost, product_variants(products(id, brand, model)))')
       .eq('status', 'completada')
       .order('sale_date'),
     supabase
@@ -39,14 +39,15 @@ export default async function ReportesPage() {
     type ReportItem = {
       quantity: number
       unit_price: number
-      product_variants: { products: { id: string; brand: string; model: string; cost_price: number } | null } | null
+      unit_cost: number
+      product_variants: { products: { id: string; brand: string; model: string } | null } | null
     }
     ;((sale.sale_items ?? []) as unknown as ReportItem[]).forEach(item => {
       const p = item.product_variants?.products
       const brand = p?.brand ?? 'Otro'
       byBrand[brand] = (byBrand[brand] ?? 0) + item.quantity
       unitsSold += item.quantity
-      totalCOGS += (p?.cost_price ?? 0) * item.quantity
+      totalCOGS += item.unit_cost * item.quantity
       if (p?.id) soldIds.add(p.id)
       const key = `${p?.brand ?? ''} ${p?.model ?? ''}`.trim() || 'Otro'
       if (!byProduct[key]) byProduct[key] = { name: key, units: 0, revenue: 0 }

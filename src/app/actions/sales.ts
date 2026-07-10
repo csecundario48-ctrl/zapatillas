@@ -35,13 +35,13 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
   const ids = [...new Set(input.items.map(i => i.variant_id))]
   const { data: variants, error: varErr } = await supabase
     .from('product_variants')
-    .select('id, size, stock_quantity, products(active, brand, model, color)')
+    .select('id, size, stock_quantity, products(active, brand, model, color, cost_price)')
     .in('id', ids)
   if (varErr) return { error: varErr.message }
 
   type Row = {
     id: string; size: string; stock_quantity: number
-    products: { active: boolean; brand: string; model: string; color: string } | null
+    products: { active: boolean; brand: string; model: string; color: string; cost_price: number } | null
   }
   const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
@@ -89,6 +89,7 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
         size_label: v.size,
         quantity: i.quantity,
         unit_price: i.unit_price,
+        unit_cost: v.products?.cost_price ?? 0,
         discount: i.discount,
         subtotal: (i.unit_price - i.discount) * i.quantity,
       }

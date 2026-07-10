@@ -56,11 +56,13 @@ from products;
 alter table sale_items add column variant_id uuid;
 alter table sale_items add column product_label text;
 alter table sale_items add column size_label text;
+alter table sale_items add column unit_cost numeric(10,2) not null default 0;
 
 update sale_items si
 set variant_id = v.id,
     product_label = p.brand || ' ' || p.model || ' ' || p.color,
-    size_label = p.size
+    size_label = p.size,
+    unit_cost = p.cost_price
 from products p
 join product_variants v on v.legacy_product_id = p.id
 where si.product_id = p.id;

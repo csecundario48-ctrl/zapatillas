@@ -11,7 +11,7 @@ export default async function FinanzasPage() {
   const [{ data: sales }, { data: expenses }, { data: pendingPurchases }] = await Promise.all([
     supabase
       .from('sales')
-      .select('total_amount, sale_date, sale_items(quantity, product_variants(products(cost_price)))')
+      .select('total_amount, sale_date, sale_items(quantity, unit_cost)')
       .eq('status', 'completada'),
     supabase.from('expenses').select('amount, expense_date, category'),
     supabase.from('purchases').select('total_amount').neq('payment_status', 'pagado'),
@@ -23,11 +23,11 @@ export default async function FinanzasPage() {
   const totalIncome = sales?.reduce((s, sale) => s + sale.total_amount, 0) ?? 0
   const monthIncome = sales?.filter(s => s.sale_date >= monthStart).reduce((s, sale) => s + sale.total_amount, 0) ?? 0
 
-  type CogsItem = { quantity: number; product_variants: { products: { cost_price: number } | null } | null }
+  type CogsItem = { quantity: number; unit_cost: number }
   const totalCOGS = sales?.reduce(
     (s, sale) =>
       s + ((sale.sale_items ?? []) as unknown as CogsItem[]).reduce(
-        (si, item) => si + (item.product_variants?.products?.cost_price ?? 0) * item.quantity, 0
+        (si, item) => si + item.unit_cost * item.quantity, 0
       ), 0
   ) ?? 0
 

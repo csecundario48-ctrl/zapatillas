@@ -80,6 +80,7 @@ export interface SaleItem {
   size_label: string | null
   quantity: number
   unit_price: number
+  unit_cost: number
   discount: number
   subtotal: number
   variant?: ProductVariant

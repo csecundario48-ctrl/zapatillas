@@ -37,7 +37,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from('sales')
-      .select('total_amount, sale_items(quantity, product_variants(products(cost_price)))')
+      .select('total_amount, sale_items(quantity, unit_cost)')
       .eq('status', 'completada')
       .gte('sale_date', monthStart),
     supabase
@@ -86,12 +86,12 @@ export default async function HomePage() {
   // KPI calculations
   const totalIncome = monthlySales?.reduce((s, x) => s + x.total_amount, 0) ?? 0
   const todayIncome = todaySalesRaw?.reduce((s, x) => s + x.total_amount, 0) ?? 0
-  type CogsItem = { quantity: number; product_variants: { products: { cost_price: number } | null } | null }
+  type CogsItem = { quantity: number; unit_cost: number }
   const totalCOGS = monthlySales?.reduce(
     (s, sale) =>
       s +
       ((sale.sale_items ?? []) as unknown as CogsItem[]).reduce(
-        (si, item) => si + (item.product_variants?.products?.cost_price ?? 0) * item.quantity,
+        (si, item) => si + item.unit_cost * item.quantity,
         0
       ),
     0
