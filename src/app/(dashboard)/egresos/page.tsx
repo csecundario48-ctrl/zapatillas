@@ -16,10 +16,11 @@ const categoryColors: Record<string, string> = {
 
 export default async function EgresosPage() {
   const supabase = await createClient()
-  const { data: expenses } = await supabase
-    .from('expenses')
-    .select('*')
-    .order('expense_date', { ascending: false })
+  const [{ data: expenses }, { data: categoryRows }] = await Promise.all([
+    supabase.from('expenses').select('*').order('expense_date', { ascending: false }),
+    supabase.from('expense_categories').select('name').order('name'),
+  ])
+  const categories = ((categoryRows as { name: string }[] | null) ?? []).map(c => c.name)
 
   const total = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
   const thisMonth = expenses
@@ -46,7 +47,7 @@ export default async function EgresosPage() {
             <DialogHeader>
               <DialogTitle className="text-foreground">Registrar egreso</DialogTitle>
             </DialogHeader>
-            <ExpenseForm />
+            <ExpenseForm categories={categories} />
           </DialogContent>
         </Dialog>
       </div>

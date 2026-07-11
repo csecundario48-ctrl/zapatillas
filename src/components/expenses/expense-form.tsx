@@ -11,11 +11,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDateForInput } from '@/lib/utils/format'
-import { EXPENSE_CATEGORIES } from '@/lib/utils/sizes'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
-export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
+export function ExpenseForm({ categories, onSuccess }: { categories: string[]; onSuccess?: () => void }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const {
@@ -45,7 +44,7 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
         <div className="space-y-1.5">
           <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Categoría</Label>
           <select {...register('category')} className={sel}>
-            {EXPENSE_CATEGORIES.map(c => (
+            {categories.map(c => (
               <option key={c} value={c} className="capitalize bg-card">{c}</option>
             ))}
           </select>

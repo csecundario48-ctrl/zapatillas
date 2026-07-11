@@ -10,6 +10,7 @@ import {
   BarChart3,
   Users,
   Contact,
+  Settings,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -58,5 +59,9 @@ export const navGroups: NavGroup[] = [
       { href: '/finanzas', label: 'Finanzas', icon: TrendingUp },
       { href: '/reportes', label: 'Reportes', icon: BarChart3 },
     ],
+  },
+  {
+    label: 'Sistema',
+    items: [{ href: '/configuracion', label: 'Configuración', icon: Settings }],
   },
 ]

@@ -6,8 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { productSchema, type ProductFormData } from '@/lib/validations/product'
-import { SIZE_RANGE } from '@/lib/utils/sizes'
 import { BRANDS } from '@/lib/utils/sizes'
+import { buildSizeRange } from '@/lib/utils/size-range'
+import { useSettings } from '@/components/settings/settings-context'
 import { createProduct, updateProduct } from '@/app/actions/products'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,10 +27,12 @@ interface ProductFormProps {
 export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps) {
   const router = useRouter()
   const editing = !!product
+  const { sizeMin, sizeMax } = useSettings()
+  const sizeRange = buildSizeRange(sizeMin, sizeMax)
 
-  // Talles a mostrar: rango fijo + los que ya existan fuera de rango (datos viejos).
+  // Talles a mostrar: rango configurado + los que ya existan fuera de rango (datos viejos).
   const existingSizes = product?.variants?.map(v => v.size) ?? []
-  const sizes = [...new Set([...SIZE_RANGE, ...existingSizes])].sort((a, b) => Number(a) - Number(b))
+  const sizes = [...new Set([...sizeRange, ...existingSizes])].sort((a, b) => Number(a) - Number(b))
   const stockBySize: Record<string, number> = {}
   for (const v of product?.variants ?? []) stockBySize[v.size] = v.stock_quantity
 
