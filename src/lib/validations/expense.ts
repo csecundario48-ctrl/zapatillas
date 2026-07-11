@@ -1,10 +1,7 @@
 import { z } from 'zod'
 
 export const expenseSchema = z.object({
-  category: z.enum([
-    'alquiler', 'servicios', 'marketing', 'delivery',
-    'salarios', 'packaging', 'otros',
-  ]),
+  category: z.string().min(1, 'Elegí una categoría'),
   type: z.enum(['fijo', 'variable']),
   description: z.string().optional(),
   amount: z.number().min(0.01, 'Debe ser mayor a 0'),
