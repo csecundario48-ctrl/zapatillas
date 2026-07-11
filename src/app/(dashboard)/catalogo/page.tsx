@@ -8,7 +8,11 @@ export default async function CatalogoPage() {
   } = await supabase.auth.getUser()
 
   const [{ data: products }, { data: suppliers }, { data: profileData }] = await Promise.all([
-    supabase.from('products').select('*, suppliers(name)').order('brand').order('model'),
+    supabase
+      .from('products')
+      .select('*, suppliers(name), variants:product_variants(*)')
+      .order('brand')
+      .order('model'),
     supabase.from('suppliers').select('id, name').order('name'),
     supabase.from('user_profiles').select('role').eq('id', user!.id).single(),
   ])
@@ -17,8 +21,8 @@ export default async function CatalogoPage() {
 
   return (
     <CatalogoClient
-      products={(products as any) ?? []}
-      suppliers={(suppliers as any) ?? []}
+      products={products ?? []}
+      suppliers={suppliers ?? []}
       isAdmin={isAdmin}
     />
   )

@@ -3,6 +3,7 @@ export type SaleChannel = 'fisica' | 'online'
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago'
 export type SaleStatus = 'completada' | 'cancelada' | 'devolucion'
 export type PaymentStatus = 'pagado' | 'pendiente' | 'parcial'
+export type DeliveryStatus = 'pedido' | 'recibido'
 export type ExpenseCategory = 'alquiler' | 'servicios' | 'marketing' | 'delivery' | 'salarios' | 'packaging' | 'otros'
 export type ExpenseType = 'fijo' | 'variable'
 export type AdjustmentReason = 'ajuste_manual' | 'rotura' | 'perdida' | 'devolucion_proveedor'
@@ -24,16 +25,27 @@ export interface Product {
   brand: string
   model: string
   color: string
-  gender: Gender
-  size: string
+  gender: Gender | null
   cost_price: number
   sale_price: number
-  stock_quantity: number
+  discount_price: number | null
+  image_url: string | null
+  description: string | null
   supplier_id: string | null
-  sku: string
   active: boolean
   created_at: string
   suppliers?: Supplier
+  variants?: ProductVariant[]
+}
+
+export interface ProductVariant {
+  id: string
+  product_id: string
+  size: string
+  stock_quantity: number
+  sku: string | null
+  created_at: string
+  products?: Product
 }
 
 export interface Customer {
@@ -64,12 +76,15 @@ export interface Sale {
 export interface SaleItem {
   id: string
   sale_id: string
-  product_id: string
+  variant_id: string | null
+  product_label: string | null
+  size_label: string | null
   quantity: number
   unit_price: number
+  unit_cost: number
   discount: number
   subtotal: number
-  products?: Product
+  variant?: ProductVariant
 }
 
 export interface Purchase {
@@ -78,6 +93,7 @@ export interface Purchase {
   purchase_date: string
   total_amount: number
   payment_status: PaymentStatus
+  delivery_status: DeliveryStatus
   payment_due_date: string | null
   notes: string | null
   created_by: string | null
@@ -89,11 +105,13 @@ export interface Purchase {
 export interface PurchaseItem {
   id: string
   purchase_id: string
-  product_id: string
+  variant_id: string | null
+  product_label: string | null
+  size_label: string | null
   quantity: number
   unit_cost: number
   subtotal: number
-  products?: Product
+  variant?: ProductVariant
 }
 
 export interface Expense {
@@ -112,13 +130,13 @@ export interface Expense {
 
 export interface StockAdjustment {
   id: string
-  product_id: string
+  variant_id: string
   quantity_change: number
   reason: AdjustmentReason
   notes: string | null
   created_by: string | null
   created_at: string
-  products?: Product
+  variant?: ProductVariant
 }
 
 export interface UserProfile {
@@ -144,15 +162,16 @@ export type Database = {
         }[]
       }
       products: {
-        Row: Omit<Product, 'suppliers'>
-        Insert: Omit<Product, 'id' | 'created_at' | 'suppliers'>
-        Update: Partial<Omit<Product, 'id' | 'created_at' | 'suppliers'>>
-        Relationships: {
-          foreignKeyName: string
-          columns: string[]
-          referencedRelation: string
-          referencedColumns: string[]
-        }[]
+        Row: Omit<Product, 'suppliers' | 'variants'>
+        Insert: Omit<Product, 'id' | 'created_at' | 'suppliers' | 'variants'>
+        Update: Partial<Omit<Product, 'id' | 'created_at' | 'suppliers' | 'variants'>>
+        Relationships: []
+      }
+      product_variants: {
+        Row: Omit<ProductVariant, 'products'>
+        Insert: Omit<ProductVariant, 'id' | 'created_at' | 'products'>
+        Update: Partial<Omit<ProductVariant, 'id' | 'created_at' | 'products'>>
+        Relationships: []
       }
       customers: {
         Row: Customer
@@ -177,15 +196,10 @@ export type Database = {
         }[]
       }
       sale_items: {
-        Row: Omit<SaleItem, 'products'>
-        Insert: Omit<SaleItem, 'id' | 'products'>
-        Update: Partial<Omit<SaleItem, 'id' | 'products'>>
-        Relationships: {
-          foreignKeyName: string
-          columns: string[]
-          referencedRelation: string
-          referencedColumns: string[]
-        }[]
+        Row: Omit<SaleItem, 'variant'>
+        Insert: Omit<SaleItem, 'id' | 'variant'>
+        Update: Partial<Omit<SaleItem, 'id' | 'variant'>>
+        Relationships: []
       }
       purchases: {
         Row: Omit<Purchase, 'suppliers' | 'purchase_items'>
@@ -199,15 +213,10 @@ export type Database = {
         }[]
       }
       purchase_items: {
-        Row: Omit<PurchaseItem, 'products'>
-        Insert: Omit<PurchaseItem, 'id' | 'products'>
-        Update: Partial<Omit<PurchaseItem, 'id' | 'products'>>
-        Relationships: {
-          foreignKeyName: string
-          columns: string[]
-          referencedRelation: string
-          referencedColumns: string[]
-        }[]
+        Row: Omit<PurchaseItem, 'variant'>
+        Insert: Omit<PurchaseItem, 'id' | 'variant'>
+        Update: Partial<Omit<PurchaseItem, 'id' | 'variant'>>
+        Relationships: []
       }
       expenses: {
         Row: Expense
@@ -221,15 +230,10 @@ export type Database = {
         }[]
       }
       stock_adjustments: {
-        Row: Omit<StockAdjustment, 'products'>
-        Insert: Omit<StockAdjustment, 'id' | 'created_at' | 'products'>
-        Update: Partial<Omit<StockAdjustment, 'id' | 'created_at' | 'products'>>
-        Relationships: {
-          foreignKeyName: string
-          columns: string[]
-          referencedRelation: string
-          referencedColumns: string[]
-        }[]
+        Row: Omit<StockAdjustment, 'variant'>
+        Insert: Omit<StockAdjustment, 'id' | 'created_at' | 'variant'>
+        Update: Partial<Omit<StockAdjustment, 'id' | 'created_at' | 'variant'>>
+        Relationships: []
       }
       user_profiles: {
         Row: UserProfile

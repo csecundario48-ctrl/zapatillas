@@ -41,5 +41,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Excluye assets estáticos: sin esto, cada imagen/ícono dispara una
+  // verificación de sesión contra Supabase en el proxy.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml|woff2?)$).*)',
+  ],
 }

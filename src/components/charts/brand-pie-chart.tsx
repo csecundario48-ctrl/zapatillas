@@ -11,7 +11,7 @@ interface BrandData {
 
 export function BrandPieChart({ data }: { data: BrandData[] }) {
   if (data.length === 0) {
-    return <p className="text-center text-[#6e6e6e] text-sm py-12">Sin datos de ventas aún</p>
+    return <p className="text-center text-foreground/45 text-sm py-12">Sin datos de ventas aún</p>
   }
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -31,15 +31,15 @@ export function BrandPieChart({ data }: { data: BrandData[] }) {
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: '#111',
-            border: '1px solid #2a2a2a',
+            backgroundColor: 'var(--popover)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
-            color: '#fff',
+            color: 'var(--popover-foreground)',
             fontSize: 12,
           }}
         />
         <Legend
-          formatter={(value) => <span style={{ color: '#888', fontSize: 12 }}>{value}</span>}
+          formatter={(value) => <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>

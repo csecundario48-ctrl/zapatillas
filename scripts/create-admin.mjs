@@ -13,8 +13,12 @@ const URL_ = env.NEXT_PUBLIC_SUPABASE_URL
 const ANON = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const SERVICE = env.SUPABASE_SERVICE_ROLE_KEY
 
-const EMAIL = process.argv[2] || 'csecundario48@gmail.com'
-const PASSWORD = process.argv[3] || 'Zapatillas1'
+const EMAIL = process.argv[2]
+const PASSWORD = process.argv[3]
+if (!EMAIL || !PASSWORD) {
+  console.error('Uso: node scripts/create-admin.mjs <email> <password>')
+  process.exit(1)
+}
 
 const admin = createClient(URL_, SERVICE, { auth: { persistSession: false } })
 
@@ -45,7 +49,7 @@ console.log('Perfil admin OK.')
 // Verificar el login real
 console.log('\nVerificando login...')
 const anon = createClient(URL_, ANON)
-const { data: signIn, error: signInErr } = await anon.auth.signInWithPassword({
+const { error: signInErr } = await anon.auth.signInWithPassword({
   email: EMAIL,
   password: PASSWORD,
 })
@@ -53,6 +57,4 @@ if (signInErr) {
   console.log('LOGIN FALLÓ:', JSON.stringify({ message: signInErr.message, status: signInErr.status }, null, 2))
   process.exit(1)
 }
-console.log('✅ LOGIN OK! Ya podés entrar con:')
-console.log('   Email:', EMAIL)
-console.log('   Password:', PASSWORD)
+console.log('✅ LOGIN OK! Ya podés entrar con el email', EMAIL, 'y la contraseña que elegiste.')

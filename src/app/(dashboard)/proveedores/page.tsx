@@ -1,16 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { ProveedoresClient, type SupplierRow } from './proveedores-client'
 
-export default async function ProveedoresPage() {
-  const supabase = await createClient()
+interface SupplierRecord {
+  id: string
+  name: string
+  contact_name: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
+  notes: string | null
+}
 
-  const [{ data: suppliers }, { data: purchases }] = await Promise.all([
-    supabase.from('suppliers').select('*').order('name'),
-    supabase.from('purchases').select('supplier_id, total_amount, purchase_date, payment_status'),
-  ])
+interface PurchaseRecord {
+  supplier_id: string | null
+  total_amount: number
+  purchase_date: string
+  payment_status: string
+}
 
+function buildSupplierRows(suppliers: SupplierRecord[], purchases: PurchaseRecord[]): SupplierRow[] {
   const agg: Record<string, { count: number; total: number; debt: number; last: string | null }> = {}
-  for (const p of purchases ?? []) {
+  for (const p of purchases) {
     if (!p.supplier_id) continue
     const a = agg[p.supplier_id] ?? { count: 0, total: 0, debt: 0, last: null }
     a.count += 1
@@ -21,7 +31,7 @@ export default async function ProveedoresPage() {
   }
 
   const now = Date.now()
-  const rows: SupplierRow[] = (suppliers ?? []).map(s => {
+  const rows: SupplierRow[] = suppliers.map(s => {
     const a = agg[s.id] ?? { count: 0, total: 0, debt: 0, last: null }
     const daysSince = a.last
       ? Math.floor((now - new Date(a.last).getTime()) / 86_400_000)
@@ -43,6 +53,17 @@ export default async function ProveedoresPage() {
   })
 
   rows.sort((a, b) => b.debt - a.debt || b.totalBought - a.totalBought || a.name.localeCompare(b.name))
+  return rows
+}
 
+export default async function ProveedoresPage() {
+  const supabase = await createClient()
+
+  const [{ data: suppliers }, { data: purchases }] = await Promise.all([
+    supabase.from('suppliers').select('*').order('name'),
+    supabase.from('purchases').select('supplier_id, total_amount, purchase_date, payment_status'),
+  ])
+
+  const rows = buildSupplierRows(suppliers ?? [], purchases ?? [])
   return <ProveedoresClient rows={rows} />
 }

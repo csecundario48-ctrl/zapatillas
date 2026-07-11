@@ -1,20 +1,23 @@
 import { createClient } from '@/lib/supabase/server'
 import { KpiCard } from '@/components/kpis/kpi-card'
-import { formatCurrency } from '@/lib/utils/format'
+import { argDateStr, formatCurrency } from '@/lib/utils/format'
 import Link from 'next/link'
-import { HeroOrbClient } from '@/components/3d/hero-orb-client'
-import { AlertTriangle, ArrowUpRight, Plus } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, Plus, ShoppingCart, Package, Boxes, BarChart3 } from 'lucide-react'
 
 export default async function HomePage() {
   const supabase = await createClient()
 
   const now = new Date()
-  const todayStr = now.toISOString().split('T')[0]
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-  const monthName = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+  const todayStr = argDateStr(now)
+  const monthStart = `${todayStr.slice(0, 7)}-01`
+  const monthName = now.toLocaleDateString('es-AR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  })
 
   const dayMs = 86_400_000
-  const dayStr = (offset: number) => new Date(now.getTime() - offset * dayMs).toISOString().split('T')[0]
+  const dayStr = (offset: number) => argDateStr(new Date(now.getTime() - offset * dayMs))
   const last7Start = dayStr(6)   // last 7 days (incl. today)
   const prev7Start = dayStr(13)  // the 7 days before that
 
@@ -34,7 +37,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from('sales')
-      .select('total_amount, sale_items(quantity, products(cost_price))')
+      .select('total_amount, sale_items(quantity, unit_cost)')
       .eq('status', 'completada')
       .gte('sale_date', monthStart),
     supabase
@@ -44,10 +47,10 @@ export default async function HomePage() {
       .eq('sale_date', todayStr),
     supabase.from('expenses').select('amount').gte('expense_date', monthStart),
     supabase
-      .from('products')
-      .select('id, brand, model, color, size, stock_quantity')
-      .eq('active', true)
-      .lte('stock_quantity', 2)
+      .from('product_variants')
+      .select('id, size, stock_quantity, products!inner(brand, model, color, active)')
+      .lte('stock_quantity', 1)
+      .eq('products.active', true)
       .order('stock_quantity', { ascending: true }),
     supabase
       .from('purchases')
@@ -61,11 +64,12 @@ export default async function HomePage() {
       .limit(6),
     supabase
       .from('sale_items')
-      .select('quantity, unit_price, products(brand, model)')
-      .gte('created_at', new Date(now.getFullYear(), now.getMonth(), 1).toISOString())
-      .limit(50),
+      .select('quantity, unit_price, product_label, sales!inner(sale_date, status)')
+      .gte('sales.sale_date', monthStart)
+      .eq('sales.status', 'completada')
+      .limit(200),
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('active', true),
-    supabase.from('products').select('cost_price, stock_quantity').eq('active', true),
+    supabase.from('product_variants').select('stock_quantity, products!inner(cost_price, active)').eq('products.active', true),
     supabase.from('purchases').select('total_amount').gte('purchase_date', monthStart),
     supabase
       .from('expenses')
@@ -82,11 +86,12 @@ export default async function HomePage() {
   // KPI calculations
   const totalIncome = monthlySales?.reduce((s, x) => s + x.total_amount, 0) ?? 0
   const todayIncome = todaySalesRaw?.reduce((s, x) => s + x.total_amount, 0) ?? 0
+  type CogsItem = { quantity: number; unit_cost: number }
   const totalCOGS = monthlySales?.reduce(
     (s, sale) =>
       s +
-      ((sale.sale_items as any[]) ?? []).reduce(
-        (si: number, item: any) => si + (item.products?.cost_price ?? 0) * item.quantity,
+      ((sale.sale_items ?? []) as unknown as CogsItem[]).reduce(
+        (si, item) => si + item.unit_cost * item.quantity,
         0
       ),
     0
@@ -98,12 +103,15 @@ export default async function HomePage() {
   const txCount = monthlySales?.length ?? 0
   const avgTicket = txCount > 0 ? totalIncome / txCount : 0
 
-  const criticalStock = stockAlerts?.filter(p => p.stock_quantity === 0) ?? []
-  const lowStock = stockAlerts?.filter(p => p.stock_quantity > 0) ?? []
+  type VariantAlert = { id: string; size: string; stock_quantity: number; products: { brand: string; model: string; color: string } | null }
+  const alerts = (stockAlerts as VariantAlert[] | null) ?? []
+  const criticalStock = alerts.filter(v => v.stock_quantity === 0)
+  const lowStock = alerts.filter(v => v.stock_quantity > 0)
 
   // Stock valorizado (costo del inventario actual)
-  const stockValue = (stockValProducts ?? []).reduce(
-    (s, p) => s + (p.cost_price ?? 0) * (p.stock_quantity ?? 0), 0
+  type StockValRow = { stock_quantity: number; products: { cost_price: number } | null }
+  const stockValue = ((stockValProducts as StockValRow[] | null) ?? []).reduce(
+    (s, v) => s + (v.products?.cost_price ?? 0) * v.stock_quantity, 0
   )
 
   // Flujo de caja del mes: ingresos (ventas) vs egresos (compras + gastos)
@@ -127,11 +135,11 @@ export default async function HomePage() {
 
   // Top products from sale_items
   const productMap: Record<string, { name: string; units: number; revenue: number }> = {}
-  for (const item of topProducts ?? []) {
-    const key = `${(item.products as any)?.brand} ${(item.products as any)?.model}`
-    if (!productMap[key]) productMap[key] = { name: key, units: 0, revenue: 0 }
-    productMap[key].units += item.quantity
-    productMap[key].revenue += item.unit_price * item.quantity
+  for (const item of (topProducts ?? []) as { quantity: number; unit_price: number; product_label: string | null }[]) {
+    const name = item.product_label ?? 'Producto eliminado'
+    if (!productMap[name]) productMap[name] = { name, units: 0, revenue: 0 }
+    productMap[name].units += item.quantity
+    productMap[name].revenue += item.unit_price * item.quantity
   }
   const topList = Object.values(productMap).sort((a, b) => b.units - a.units).slice(0, 5)
 
@@ -143,45 +151,40 @@ export default async function HomePage() {
   return (
     <div className="space-y-6 cine-stagger">
       {/* ─── Hero ─── */}
-      <div className="relative rounded-2xl border border-white/[0.06] bg-[#101116] overflow-hidden">
+      <div className="relative rounded-2xl border border-foreground/[0.06] bg-card overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_50%,rgba(99,102,241,0.05)_0%,rgba(167,139,250,0.03)_40%,transparent_70%)]" />
-        <div className="relative flex flex-col md:flex-row items-center gap-0">
+        <div className="relative">
           {/* Stats */}
-          <div className="flex-1 px-7 py-7 z-10">
-            <p className="text-[10px] text-[#505050] uppercase tracking-[0.18em] font-semibold mb-2">
-              {monthName}
+          <div className="px-7 py-7">
+            <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.2em] font-medium mb-2">
+              KALA · {monthName}
             </p>
-            <p className="text-2xl font-semibold tracking-tight text-white mb-5">
+            <p className="text-2xl font-semibold tracking-tight text-foreground mb-5">
               Resumen del negocio
             </p>
             <div className="flex flex-wrap gap-5">
               <div>
-                <p className="text-xl font-bold text-indigo-400 tracking-tight">{formatCurrency(totalIncome)}</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas mes</p>
+                <p className="font-mono text-xl font-semibold text-indigo-400 tracking-tight tabular-nums">{formatCurrency(totalIncome)}</p>
+                <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mt-1">Ventas mes</p>
               </div>
-              <div className="w-px bg-[#1b1c22] self-stretch" />
+              <div className="w-px bg-border self-stretch" />
               <div>
-                <p className={`text-xl font-bold tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className={`font-mono text-xl font-semibold tracking-tight tabular-nums ${netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   {formatCurrency(netProfit)}
                 </p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ganancia neta</p>
+                <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mt-1">Ganancia neta</p>
               </div>
-              <div className="w-px bg-[#1b1c22] self-stretch" />
+              <div className="w-px bg-border self-stretch" />
               <div>
-                <p className="text-xl font-bold text-violet-400 tracking-tight">{margin}%</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Margen</p>
+                <p className="font-mono text-xl font-semibold text-violet-400 tracking-tight tabular-nums">{margin}%</p>
+                <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mt-1">Margen</p>
               </div>
-              <div className="w-px bg-[#1b1c22] self-stretch" />
+              <div className="w-px bg-border self-stretch" />
               <div>
-                <p className="text-xl font-bold text-amber-400 tracking-tight">{formatCurrency(todayIncome)}</p>
-                <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mt-0.5">Ventas hoy</p>
+                <p className="font-mono text-xl font-semibold text-amber-600 dark:text-amber-400 tracking-tight tabular-nums">{formatCurrency(todayIncome)}</p>
+                <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mt-1">Ventas hoy</p>
               </div>
             </div>
-          </div>
-          {/* 3D orb */}
-          <div className="relative w-full md:w-56 h-48 md:h-56 shrink-0">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.06),transparent_70%)] pulse-glow" />
-            <HeroOrbClient />
           </div>
         </div>
       </div>
@@ -202,40 +205,40 @@ export default async function HomePage() {
           subtitle="Por transacción" />
         <KpiCard title="SKUs activos" value={totalActiveProducts ?? 0} color="green"
           subtitle={`${criticalStock.length} sin stock`} />
-        <KpiCard title="Stock bajo" value={(stockAlerts?.length ?? 0)} color={criticalStock.length > 0 ? 'red' : 'amber'}
+        <KpiCard title="Stock bajo" value={alerts.length} color={criticalStock.length > 0 ? 'red' : 'amber'}
           subtitle={`${criticalStock.length} sin stock · ${lowStock.length} bajo`} />
       </div>
 
       {/* ─── Flujo de caja del mes ─── */}
-      <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
-          <h2 className="text-[13px] font-semibold text-white">Flujo de caja · {monthName}</h2>
-          <Link href="/finanzas" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+      <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-foreground/[0.06] flex items-center justify-between">
+          <h2 className="text-[13px] font-semibold text-foreground">Flujo de caja · {monthName}</h2>
+          <Link href="/finanzas" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
             Finanzas <ArrowUpRight size={11} />
           </Link>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-foreground/[0.06]">
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Ingresos</p>
-            <p className="text-lg font-bold text-emerald-400 tracking-tight">{formatCurrency(totalIncome)}</p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Ventas del mes</p>
+            <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mb-1.5">Ingresos</p>
+            <p className="font-mono text-lg font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">{formatCurrency(totalIncome)}</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Ventas del mes</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Egresos</p>
-            <p className="text-lg font-bold text-red-400 tracking-tight">{formatCurrency(cashOut)}</p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Compras + gastos</p>
+            <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mb-1.5">Egresos</p>
+            <p className="font-mono text-lg font-semibold text-red-600 dark:text-red-400 tracking-tight tabular-nums">{formatCurrency(cashOut)}</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Compras + gastos</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Caja neta</p>
-            <p className={`text-lg font-bold tracking-tight ${cashNet >= 0 ? 'text-white' : 'text-red-400'}`}>
+            <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mb-1.5">Caja neta</p>
+            <p className={`font-mono text-lg font-semibold tracking-tight tabular-nums ${cashNet >= 0 ? 'text-foreground' : 'text-red-600 dark:text-red-400'}`}>
               {formatCurrency(cashNet)}
             </p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Ingresos − egresos</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Ingresos − egresos</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[10px] text-[#5c5c5c] uppercase tracking-wider mb-1">Stock valorizado</p>
-            <p className="text-lg font-bold text-indigo-400 tracking-tight">{formatCurrency(stockValue)}</p>
-            <p className="text-[10px] text-[#606060] mt-0.5">Costo del inventario</p>
+            <p className="font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] mb-1.5">Stock valorizado</p>
+            <p className="font-mono text-lg font-semibold text-indigo-400 tracking-tight tabular-nums">{formatCurrency(stockValue)}</p>
+            <p className="text-[10px] text-foreground/40 mt-0.5">Costo del inventario</p>
           </div>
         </div>
       </div>
@@ -243,12 +246,12 @@ export default async function HomePage() {
       {/* ─── Alerts ─── */}
       {showSalesDrop && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04]">
-          <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
+          <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-amber-300">
               Las ventas bajaron {salesDropPct}% respecto a la semana pasada
             </p>
-            <p className="text-[11px] text-[#6e6e6e] mt-0.5">
+            <p className="text-[11px] text-foreground/45 mt-0.5">
               Últimos 7 días: {formatCurrency(thisWeek)} · semana anterior: {formatCurrency(lastWeek)}
             </p>
           </div>
@@ -257,16 +260,16 @@ export default async function HomePage() {
 
       {(overduePurchases?.length ?? 0) > 0 && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/[0.04]">
-          <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />
+          <AlertTriangle size={14} className="text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-red-300">
               {overduePurchases!.length} pago{overduePurchases!.length > 1 ? 's' : ''} vencido{overduePurchases!.length > 1 ? 's' : ''} a proveedores
             </p>
-            <p className="text-[11px] text-[#6e6e6e] mt-0.5 truncate">
-              {overduePurchases!.map(p => (p.suppliers as any)?.name).filter(Boolean).join(', ')}
+            <p className="text-[11px] text-foreground/45 mt-0.5 truncate">
+              {overduePurchases!.map(p => (p.suppliers as unknown as { name: string } | null)?.name).filter(Boolean).join(', ')}
             </p>
           </div>
-          <Link href="/compras" className="text-[11px] text-red-400 hover:text-red-300 font-medium shrink-0 flex items-center gap-1 transition-colors">
+          <Link href="/compras" className="text-[11px] text-red-600 dark:text-red-400 hover:text-red-300 font-medium shrink-0 flex items-center gap-1 transition-colors">
             Ver <ArrowUpRight size={11} />
           </Link>
         </div>
@@ -276,16 +279,16 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Ventas recientes */}
-        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-            <h2 className="text-[13px] font-semibold text-white">Ventas recientes</h2>
-            <Link href="/ventas" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+        <div className="lg:col-span-2 rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
+            <h2 className="text-[13px] font-semibold text-foreground">Ventas recientes</h2>
+            <Link href="/ventas" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
               Ver todas <ArrowUpRight size={11} />
             </Link>
           </div>
           {(recentSales?.length ?? 0) === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-[13px] text-[#5c5c5c]">Sin ventas registradas</p>
+              <p className="text-[13px] text-foreground/40">Sin ventas registradas</p>
               <Link href="/ventas/nueva" className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors">
                 <Plus size={12} /> Registrar primera venta
               </Link>
@@ -293,21 +296,21 @@ export default async function HomePage() {
           ) : (
             <table className="w-full text-[12px]">
               <thead>
-                <tr className="border-b border-white/[0.05]">
-                  <th className="text-left px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Fecha</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Cliente</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Canal</th>
-                  <th className="text-right px-5 py-2.5 text-[10px] text-[#505050] uppercase tracking-wider font-semibold">Total</th>
+                <tr className="border-b border-foreground/[0.05]">
+                  <th className="text-left px-5 py-2.5 font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] font-medium">Fecha</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] font-medium">Cliente</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] font-medium">Canal</th>
+                  <th className="text-right px-5 py-2.5 font-mono text-[10px] text-foreground/40 uppercase tracking-[0.14em] font-medium">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recentSales!.map((sale) => (
-                  <tr key={sale.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-5 py-3 text-[#969696]">
-                      {new Date(sale.sale_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                  <tr key={sale.id} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02] transition-colors">
+                    <td className="px-5 py-3 font-mono text-[11px] text-foreground/60">
+                      {new Date(sale.sale_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                     </td>
-                    <td className="px-3 py-3 text-[#a8a8a8]">
-                      {(sale.customers as any)?.name ?? <span className="text-[#606060]">—</span>}
+                    <td className="px-3 py-3 text-foreground/70">
+                      {(sale.customers as unknown as { name: string } | null)?.name ?? <span className="text-foreground/40">—</span>}
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
@@ -318,7 +321,7 @@ export default async function HomePage() {
                         {channelLabel[sale.channel] ?? sale.channel}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-semibold text-white">
+                    <td className="px-5 py-3 text-right font-mono font-medium text-foreground tabular-nums">
                       {formatCurrency(sale.total_amount)}
                     </td>
                   </tr>
@@ -331,36 +334,36 @@ export default async function HomePage() {
         {/* Right column */}
         <div className="space-y-4">
           {/* Stock crítico */}
-          <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-              <h2 className="text-[13px] font-semibold text-white">Stock crítico</h2>
-              <Link href="/stock" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+          <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
+              <h2 className="text-[13px] font-semibold text-foreground">Stock crítico</h2>
+              <Link href="/stock" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
                 Ver <ArrowUpRight size={11} />
               </Link>
             </div>
-            {(stockAlerts?.length ?? 0) === 0 ? (
+            {alerts.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[11px] text-[#505050]">Todo el stock en orden ✓</p>
+                <p className="text-[11px] text-foreground/35">Todo el stock en orden ✓</p>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.05]">
-                {stockAlerts!.slice(0, 6).map(p => (
+              <div className="divide-y divide-foreground/[0.05]">
+                {alerts.slice(0, 6).map(p => (
                   <div key={p.id} className="flex items-center justify-between px-5 py-2.5">
                     <div className="min-w-0">
-                      <p className="text-[12px] text-[#a8a8a8] truncate">{p.brand} {p.model}</p>
-                      <p className="text-[10px] text-[#606060]">{p.color} · T{p.size}</p>
+                      <p className="text-[12px] text-foreground/70 truncate">{p.products?.brand} {p.products?.model}</p>
+                      <p className="text-[10px] text-foreground/40">{p.products?.color} · T{p.size}</p>
                     </div>
-                    <span className={`text-[11px] font-bold ml-3 shrink-0 ${
-                      p.stock_quantity === 0 ? 'text-red-400' : 'text-amber-400'
+                    <span className={`font-mono text-[11px] font-semibold ml-3 shrink-0 tabular-nums ${
+                      p.stock_quantity === 0 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'
                     }`}>
                       {p.stock_quantity === 0 ? 'AGOTADO' : `${p.stock_quantity} ud.`}
                     </span>
                   </div>
                 ))}
-                {(stockAlerts!.length ?? 0) > 6 && (
+                {alerts.length > 6 && (
                   <div className="px-5 py-2.5">
-                    <Link href="/stock" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 transition-colors">
-                      +{stockAlerts!.length - 6} más...
+                    <Link href="/stock" className="text-[11px] text-foreground/45 hover:text-indigo-400 transition-colors">
+                      +{alerts.length - 6} más...
                     </Link>
                   </div>
                 )}
@@ -369,24 +372,24 @@ export default async function HomePage() {
           </div>
 
           {/* Top productos */}
-          <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/[0.06]">
-              <h2 className="text-[13px] font-semibold text-white">Más vendidos este mes</h2>
+          <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+            <div className="px-5 py-4 border-b border-foreground/[0.06]">
+              <h2 className="text-[13px] font-semibold text-foreground">Más vendidos este mes</h2>
             </div>
             {topList.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[11px] text-[#505050]">Sin datos de ventas</p>
+                <p className="text-[11px] text-foreground/35">Sin datos de ventas</p>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.05]">
+              <div className="divide-y divide-foreground/[0.05]">
                 {topList.map((p, i) => (
                   <div key={p.name} className="flex items-center gap-3 px-5 py-2.5">
-                    <span className="text-[10px] text-[#4a4a4a] font-mono w-4 shrink-0">{i + 1}</span>
+                    <span className="text-[10px] text-foreground/30 font-mono w-4 shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-[#a8a8a8] truncate">{p.name}</p>
-                      <p className="text-[10px] text-[#606060]">{p.units} unidades</p>
+                      <p className="text-[12px] text-foreground/70 truncate">{p.name}</p>
+                      <p className="text-[10px] text-foreground/40">{p.units} unidades</p>
                     </div>
-                    <p className="text-[11px] font-semibold text-white shrink-0">
+                    <p className="font-mono text-[11px] font-medium text-foreground shrink-0 tabular-nums">
                       {formatCurrency(p.revenue)}
                     </p>
                   </div>
@@ -398,34 +401,34 @@ export default async function HomePage() {
       </div>
 
       {/* ─── Últimos gastos ─── */}
-      <div className="rounded-xl border border-white/[0.06] bg-[#101116] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <h2 className="text-[13px] font-semibold text-white">Últimos gastos</h2>
-          <Link href="/egresos" className="text-[11px] text-[#6e6e6e] hover:text-indigo-400 flex items-center gap-1 transition-colors">
+      <div className="rounded-xl border border-foreground/[0.06] bg-card overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
+          <h2 className="text-[13px] font-semibold text-foreground">Últimos gastos</h2>
+          <Link href="/egresos" className="text-[11px] text-foreground/45 hover:text-indigo-400 flex items-center gap-1 transition-colors">
             Ver todos <ArrowUpRight size={11} />
           </Link>
         </div>
         {(recentExpensesData?.length ?? 0) === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-[11px] text-[#505050]">Sin gastos registrados</p>
+            <p className="text-[11px] text-foreground/35">Sin gastos registrados</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.05]">
+          <div className="divide-y divide-foreground/[0.05]">
             {recentExpensesData!.map((e, i) => (
               <div key={i} className="flex items-center justify-between px-5 py-2.5">
                 <div className="min-w-0 flex items-center gap-3">
-                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-white/[0.04] text-[#a8a8a8] border border-white/10 shrink-0">
+                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-foreground/[0.04] text-foreground/70 border border-foreground/10 shrink-0">
                     {expenseCatLabel[e.category] ?? e.category}
                   </span>
-                  <p className="text-[12px] text-[#a8a8a8] truncate">
-                    {e.description ?? <span className="text-[#606060]">—</span>}
+                  <p className="text-[12px] text-foreground/70 truncate">
+                    {e.description ?? <span className="text-foreground/40">—</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-[10px] text-[#606060]">
-                    {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                  <span className="font-mono text-[10px] text-foreground/40">
+                    {new Date(e.expense_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                   </span>
-                  <span className="text-[12px] font-semibold text-red-400">−{formatCurrency(e.amount)}</span>
+                  <span className="font-mono text-[12px] font-medium text-red-600 dark:text-red-400 tabular-nums">−{formatCurrency(e.amount)}</span>
                 </div>
               </div>
             ))}
@@ -436,17 +439,17 @@ export default async function HomePage() {
       {/* ─── Quick actions ─── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { href: '/ventas/nueva', label: 'Nueva venta',   icon: '💰', accent: 'hover:border-indigo-500/25 hover:text-white' },
-          { href: '/catalogo',     label: 'Agregar producto', icon: '📦', accent: 'hover:border-violet-500/25 hover:text-white' },
-          { href: '/stock',        label: 'Ajustar stock', icon: '📊', accent: 'hover:border-emerald-500/25 hover:text-white' },
-          { href: '/reportes',     label: 'Ver reportes',  icon: '📈', accent: 'hover:border-amber-500/25 hover:text-white' },
-        ].map(({ href, label, icon, accent }) => (
+          { href: '/ventas/nueva', label: 'Nueva venta',      Icon: ShoppingCart, accent: 'hover:border-indigo-500/25 hover:text-foreground',  iconCls: 'text-indigo-400' },
+          { href: '/catalogo',     label: 'Agregar producto', Icon: Package,      accent: 'hover:border-violet-500/25 hover:text-foreground',  iconCls: 'text-violet-400' },
+          { href: '/stock',        label: 'Ajustar stock',    Icon: Boxes,        accent: 'hover:border-emerald-500/25 hover:text-foreground', iconCls: 'text-emerald-600 dark:text-emerald-400' },
+          { href: '/reportes',     label: 'Ver reportes',     Icon: BarChart3,    accent: 'hover:border-amber-500/25 hover:text-foreground',   iconCls: 'text-amber-600 dark:text-amber-400' },
+        ].map(({ href, label, Icon, accent, iconCls }) => (
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-[#101116] px-4 py-2.5 text-[12px] text-[#828282] transition-all duration-150 ${accent}`}
+            className={`flex items-center gap-2.5 rounded-lg border border-foreground/[0.06] bg-card px-4 py-2.5 text-[12px] text-foreground/65 transition-all duration-150 ${accent}`}
           >
-            <span className="text-sm">{icon}</span>
+            <Icon size={15} className={iconCls} />
             {label}
           </Link>
         ))}

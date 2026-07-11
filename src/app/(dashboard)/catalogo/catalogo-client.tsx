@@ -15,7 +15,7 @@ import type { Product, Supplier } from '@/types/database'
 
 interface Props {
   products: Product[]
-  suppliers: Supplier[]
+  suppliers: Pick<Supplier, 'id' | 'name'>[]
   isAdmin: boolean
 }
 
@@ -24,7 +24,7 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
 
   const filtered = search
     ? products.filter(p =>
-        `${p.brand} ${p.model} ${p.color} ${p.sku} ${p.size}`
+        `${p.brand} ${p.model} ${p.color}`
           .toLowerCase()
           .includes(search.toLowerCase())
       )
@@ -34,9 +34,9 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Catálogo</h1>
-          <p className="text-[#828282] text-sm mt-0.5">
-            {filtered.length} de {products.length} SKUs
+          <h1 className="text-2xl font-bold text-foreground">Catálogo</h1>
+          <p className="text-foreground/55 text-sm mt-0.5">
+            {filtered.length} de {products.length} productos
           </p>
         </div>
         <div className="flex gap-3">
@@ -44,15 +44,15 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por marca, modelo, talle..."
-            className="w-64 bg-[#131419] border border-white/10 text-white placeholder-[#444] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
+            placeholder="Buscar por marca, modelo o color..."
+            className="w-64 bg-card border border-foreground/10 text-foreground placeholder-foreground/45 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
           {isAdmin && (
             <Dialog>
               <DialogTrigger render={<Button />}>+ Nuevo producto</DialogTrigger>
-              <DialogContent className="max-w-2xl bg-[#15161c] border-white/10">
+              <DialogContent className="max-w-2xl bg-card border-foreground/10">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Agregar producto</DialogTitle>
+                  <DialogTitle className="text-foreground">Agregar producto</DialogTitle>
                 </DialogHeader>
                 <ProductForm suppliers={suppliers} />
               </DialogContent>
@@ -62,13 +62,13 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] py-16 text-center">
-          <p className="text-[#6e6e6e] text-sm">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card py-16 text-center">
+          <p className="text-foreground/45 text-sm">
             {search ? `Sin resultados para "${search}"` : 'No hay productos cargados aún.'}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card overflow-hidden">
           <ProductTable products={filtered} isAdmin={isAdmin} suppliers={suppliers} />
         </div>
       )}

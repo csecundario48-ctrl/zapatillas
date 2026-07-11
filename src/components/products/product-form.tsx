@@ -6,16 +6,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { productSchema, type ProductFormData } from '@/lib/validations/product'
-import { generateSku } from '@/lib/utils/sku'
-import { getSizesForGender, BRANDS } from '@/lib/utils/sizes'
-import { createClient } from '@/lib/supabase/client'
+import { SIZE_RANGE } from '@/lib/utils/sizes'
+import { BRANDS } from '@/lib/utils/sizes'
+import { createProduct, updateProduct } from '@/app/actions/products'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Gender, Product, Supplier } from '@/types/database'
+import type { Product, Supplier } from '@/types/database'
 
-const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50'
-const lbl = 'text-xs text-[#969696] uppercase tracking-wider'
+const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50'
+const lbl = 'font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]'
 
 interface ProductFormProps {
   suppliers: Pick<Supplier, 'id' | 'name'>[]
@@ -26,44 +26,53 @@ interface ProductFormProps {
 export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps) {
   const router = useRouter()
   const editing = !!product
+
+  // Talles a mostrar: rango fijo + los que ya existan fuera de rango (datos viejos).
+  const existingSizes = product?.variants?.map(v => v.size) ?? []
+  const sizes = [...new Set([...SIZE_RANGE, ...existingSizes])].sort((a, b) => Number(a) - Number(b))
+  const stockBySize: Record<string, number> = {}
+  for (const v of product?.variants ?? []) stockBySize[v.size] = v.stock_quantity
+
   const [error, setError] = useState<string | null>(null)
+  const [stock, setStock] = useState<Record<string, number>>(() => {
+    const init: Record<string, number> = {}
+    for (const s of sizes) init[s] = stockBySize[s] ?? 0
+    return init
+  })
+
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: product
       ? {
           brand: product.brand, model: product.model, color: product.color,
-          gender: product.gender, size: product.size,
+          gender: product.gender ?? undefined,
           cost_price: product.cost_price, sale_price: product.sale_price,
           supplier_id: product.supplier_id ?? undefined, active: product.active,
+          variants: [],
         }
-      : { active: true },
+      : { active: true, variants: [] },
   })
 
-  const gender = watch('gender') as Gender | undefined
-  const sizes = gender ? getSizesForGender(gender) : []
+  const totalStock = Object.values(stock).reduce((a, b) => a + b, 0)
 
   async function onSubmit(data: ProductFormData) {
     setError(null)
-    const sku = generateSku(data.brand, data.model, data.color, data.size)
-    const payload = { ...data, sku, supplier_id: data.supplier_id || null }
-    const supabase = createClient()
-    const { error } = editing
-      ? await supabase.from('products').update(payload).eq('id', product!.id)
-      : await supabase.from('products').insert(payload)
-    if (error) {
-      setError(
-        error.code === '23505'
-          ? 'Ya existe un producto con ese SKU (misma marca, modelo, color y talle)'
-          : error.message
-      )
-      return
+    const input = {
+      brand: data.brand, model: data.model, color: data.color,
+      gender: data.gender ?? null,
+      cost_price: data.cost_price, sale_price: data.sale_price,
+      supplier_id: data.supplier_id || null,
+      active: data.active,
+      variants: sizes.map(size => ({ size, stock_quantity: stock[size] ?? 0 })),
     }
+    const { error: err } = editing
+      ? await updateProduct(product!.id, input)
+      : await createProduct(input)
+    if (err) { setError(err); return }
     toast.success(editing ? 'Producto actualizado' : 'Producto agregado')
     router.refresh()
     onSuccess?.()
@@ -75,72 +84,70 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
         <div className="space-y-1.5">
           <Label className={lbl}>Marca</Label>
           <select {...register('brand')} className={sel}>
-            <option value="" className="bg-[#15161c]">Seleccionar</option>
-            {BRANDS.map(b => <option key={b} value={b} className="bg-[#15161c]">{b}</option>)}
+            <option value="" className="bg-card">Seleccionar</option>
+            {BRANDS.map(b => <option key={b} value={b} className="bg-card">{b}</option>)}
           </select>
-          {errors.brand && <p className="text-xs text-red-400">{errors.brand.message}</p>}
+          {errors.brand && <p className="text-xs text-red-600 dark:text-red-400">{errors.brand.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Modelo</Label>
-          <Input {...register('model')} placeholder="Air Force 1" />
-          {errors.model && <p className="text-xs text-red-400">{errors.model.message}</p>}
+          <Input {...register('model')} placeholder="Campus" />
+          {errors.model && <p className="text-xs text-red-600 dark:text-red-400">{errors.model.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Color</Label>
-          <Input {...register('color')} placeholder="Blanco/Negro" />
-          {errors.color && <p className="text-xs text-red-400">{errors.color.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label className={lbl}>Género</Label>
-          <select
-            {...register('gender')}
-            className={sel}
-            onChange={e => {
-              setValue('gender', e.target.value as Gender)
-              setValue('size', '')
-            }}
-          >
-            <option value="" className="bg-[#15161c]">Seleccionar</option>
-            <option value="hombre" className="bg-[#15161c]">Hombre</option>
-            <option value="mujer" className="bg-[#15161c]">Mujer</option>
-            <option value="nino" className="bg-[#15161c]">Niño</option>
-            <option value="unisex" className="bg-[#15161c]">Unisex</option>
-          </select>
-          {errors.gender && <p className="text-xs text-red-400">{errors.gender.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label className={lbl}>Talle</Label>
-          <select {...register('size')} className={sel} disabled={!gender}>
-            <option value="" className="bg-[#15161c]">{gender ? 'Seleccionar' : 'Elegí género primero'}</option>
-            {sizes.map(s => <option key={s} value={s} className="bg-[#15161c]">{s}</option>)}
-          </select>
-          {errors.size && <p className="text-xs text-red-400">{errors.size.message}</p>}
+          <Input {...register('color')} placeholder="Total Black" />
+          {errors.color && <p className="text-xs text-red-600 dark:text-red-400">{errors.color.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Proveedor</Label>
           <select {...register('supplier_id')} className={sel}>
-            <option value="" className="bg-[#15161c]">Sin proveedor</option>
-            {suppliers.map(s => <option key={s.id} value={s.id} className="bg-[#15161c]">{s.name}</option>)}
+            <option value="" className="bg-card">Sin proveedor</option>
+            {suppliers.map(s => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Costo ($)</Label>
           <Input {...register('cost_price', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
-          {errors.cost_price && <p className="text-xs text-red-400">{errors.cost_price.message}</p>}
+          {errors.cost_price && <p className="text-xs text-red-600 dark:text-red-400">{errors.cost_price.message}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className={lbl}>Precio de venta ($)</Label>
           <Input {...register('sale_price', { valueAsNumber: true })} type="number" step="0.01" min="0" placeholder="0" />
-          {errors.sale_price && <p className="text-xs text-red-400">{errors.sale_price.message}</p>}
+          {errors.sale_price && <p className="text-xs text-red-600 dark:text-red-400">{errors.sale_price.message}</p>}
         </div>
       </div>
+
+      {/* Tabla de talles */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className={lbl}>Stock por talle</Label>
+          <span className="text-xs text-foreground/55">Total: <span className="font-mono font-semibold text-foreground tabular-nums">{totalStock}</span></span>
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          {sizes.map(size => (
+            <div key={size} className="space-y-1">
+              <span className="block text-center text-[10px] text-foreground/45">T{size}</span>
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                value={stock[size] ?? 0}
+                onChange={e => setStock(prev => ({ ...prev, [size]: Math.max(0, Number(e.target.value)) }))}
+                className="text-center px-1"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {editing && (
-        <label className="flex items-center gap-2 text-sm text-[#a8a8a8] cursor-pointer hover:text-white transition-colors">
+        <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer hover:text-foreground transition-colors">
           <input type="checkbox" {...register('active')} className="rounded" />
           Producto activo (desactivalo para ocultarlo sin borrarlo)
         </label>
       )}
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Guardar producto'}
       </Button>

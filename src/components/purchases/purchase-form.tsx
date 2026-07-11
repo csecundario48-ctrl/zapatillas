@@ -3,26 +3,28 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+import { createPurchase } from '@/app/actions/purchases'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
-import type { Product, Supplier } from '@/types/database'
+import { type VariantOption } from '@/components/sales/sale-form'
+import type { Supplier } from '@/types/database'
 
-const sel = 'w-full bg-[#131419] border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
+const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 interface PurchaseItem {
-  product: Product
+  variant: VariantOption
   quantity: number
   unit_cost: number
 }
 
-export function PurchaseForm({ products, suppliers }: { products: Product[]; suppliers: Supplier[] }) {
+export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[]; suppliers: Supplier[] }) {
   const router = useRouter()
   const [supplierId, setSupplierId] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(formatDateForInput())
   const [paymentStatus, setPaymentStatus] = useState('pendiente')
+  const [deliveryStatus, setDeliveryStatus] = useState<'pedido' | 'recibido'>('recibido')
   const [paymentDueDate, setPaymentDueDate] = useState('')
   const [notes, setNotes] = useState('')
   const [items, setItems] = useState<PurchaseItem[]>([])
@@ -30,13 +32,13 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const filteredProducts = products.filter(p =>
-    `${p.brand} ${p.model} ${p.color} ${p.size}`.toLowerCase().includes(search.toLowerCase())
+  const filteredVariants = variants.filter(v =>
+    `${v.brand} ${v.model} ${v.color} ${v.size}`.toLowerCase().includes(search.toLowerCase())
   )
 
-  function addItem(product: Product) {
-    if (items.find(i => i.product.id === product.id)) return
-    setItems([...items, { product, quantity: 1, unit_cost: product.cost_price }])
+  function addItem(variant: VariantOption) {
+    if (items.find(i => i.variant.id === variant.id)) return
+    setItems([...items, { variant, quantity: 1, unit_cost: variant.cost_price }])
     setSearch('')
   }
 
@@ -48,36 +50,24 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
     if (items.length === 0) { setError('Agregá al menos un producto'); return }
     setLoading(true)
     setError(null)
-    const supabase = createClient()
 
-    const { data: purchase, error: pErr } = await supabase
-      .from('purchases')
-      .insert({
-        supplier_id: supplierId,
-        purchase_date: purchaseDate,
-        total_amount: total,
-        payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
-        payment_due_date: paymentDueDate || null,
-        notes: notes || null,
-      })
-      .select()
-      .single()
-
-    if (pErr) { setError(pErr.message); setLoading(false); return }
-
-    const { error: iErr } = await supabase.from('purchase_items').insert(
-      items.map(i => ({
-        purchase_id: purchase.id,
-        product_id: i.product.id,
+    const { error: pErr } = await createPurchase({
+      supplier_id: supplierId,
+      purchase_date: purchaseDate,
+      payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
+      delivery_status: deliveryStatus,
+      payment_due_date: paymentDueDate || null,
+      notes: notes || null,
+      items: items.map(i => ({
+        variant_id: i.variant.id,
         quantity: i.quantity,
         unit_cost: i.unit_cost,
-        subtotal: i.unit_cost * i.quantity,
-      }))
-    )
+      })),
+    })
 
-    if (iErr) { setError(iErr.message); setLoading(false); return }
+    if (pErr) { setError(pErr); setLoading(false); return }
 
-    toast.success('Compra registrada')
+    toast.success('Compra registrada — stock actualizado')
     router.push('/compras')
     router.refresh()
   }
@@ -86,73 +76,83 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Proveedor</Label>
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Proveedor</Label>
           <select value={supplierId} onChange={e => setSupplierId(e.target.value)} className={sel}>
-            <option value="" className="bg-[#15161c]">Seleccionar proveedor</option>
-            {suppliers.map(s => <option key={s.id} value={s.id} className="bg-[#15161c]">{s.name}</option>)}
+            <option value="" className="bg-card">Seleccionar proveedor</option>
+            {suppliers.map(s => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Fecha de compra</Label>
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Fecha de compra</Label>
           <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Estado de pago</Label>
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Estado de pago</Label>
           <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)} className={sel}>
-            <option value="pendiente" className="bg-[#15161c]">Pendiente</option>
-            <option value="pagado" className="bg-[#15161c]">Pagado</option>
-            <option value="parcial" className="bg-[#15161c]">Parcial</option>
+            <option value="pendiente" className="bg-card">Pendiente</option>
+            <option value="pagado" className="bg-card">Pagado</option>
+            <option value="parcial" className="bg-card">Parcial</option>
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Vencimiento pago</Label>
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Vencimiento pago</Label>
           <Input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)} />
         </div>
+        <div className="space-y-1.5">
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Entrega</Label>
+          <select value={deliveryStatus} onChange={e => setDeliveryStatus(e.target.value as 'pedido' | 'recibido')} className={sel}>
+            <option value="recibido" className="bg-card">Recibido (suma stock)</option>
+            <option value="pedido" className="bg-card">Pedido (no suma stock)</option>
+          </select>
+        </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-xs text-[#969696] uppercase tracking-wider">Notas</Label>
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Notas</Label>
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas de la compra..." />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-[#969696] uppercase tracking-wider">Buscar producto</Label>
+        <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Buscar producto</Label>
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Nike Air Force 1..." />
         {search && (
-          <div className="rounded-xl border border-white/10 bg-[#131419] divide-y divide-white/[0.06] max-h-44 overflow-y-auto shadow-xl">
-            {filteredProducts.slice(0, 8).map(p => (
+          <div className="rounded-xl border border-foreground/10 bg-card divide-y divide-foreground/[0.06] max-h-44 overflow-y-auto shadow-xl">
+            {filteredVariants.slice(0, 8).map(v => (
               <button
-                key={p.id}
+                key={v.id}
                 type="button"
-                onClick={() => addItem(p)}
-                className="w-full text-left px-4 py-2.5 hover:bg-white/[0.03] text-sm flex justify-between transition-colors"
+                onClick={() => addItem(v)}
+                className="w-full text-left px-4 py-2.5 hover:bg-foreground/[0.03] text-sm flex justify-between transition-colors"
               >
-                <span className="text-white">{p.brand} {p.model} <span className="text-[#969696]">— {p.color} T{p.size}</span></span>
-                <span className="text-[#828282] text-xs">Costo: {formatCurrency(p.cost_price)}</span>
+                <span className="text-foreground">{v.brand} {v.model} <span className="text-foreground/60">— {v.color} T{v.size}</span></span>
+                <span className="text-foreground/55 text-xs">Costo: {formatCurrency(v.cost_price)}</span>
               </button>
             ))}
-            {filteredProducts.length === 0 && (
-              <p className="px-4 py-3 text-sm text-[#6e6e6e]">Sin resultados</p>
+            {filteredVariants.length === 0 && (
+              <p className="px-4 py-3 text-sm text-foreground/45">Sin resultados</p>
             )}
           </div>
         )}
       </div>
 
       {items.length > 0 && (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/[0.06] bg-[#0a0a0a]">
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Producto</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Cant.</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Costo unit.</th>
-                <th className="text-left px-4 py-3 text-xs text-[#6e6e6e] uppercase tracking-wider">Subtotal</th>
+              <tr className="border-b border-foreground/[0.06] bg-background">
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">Producto</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">Cant.</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">Costo unit.</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em]">Subtotal</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {items.map(item => (
-                <tr key={item.product.id} className="border-b border-white/[0.06]">
-                  <td className="px-4 py-3 text-white">{item.product.brand} {item.product.model} T{item.product.size}</td>
+                <tr key={item.variant.id} className="border-b border-foreground/[0.06]">
+                  <td className="px-4 py-3 text-foreground">
+                    {item.variant.brand} {item.variant.model} T{item.variant.size}
+                    <span className="text-foreground/55 text-xs ml-1">({item.variant.color})</span>
+                  </td>
                   <td className="px-4 py-3">
                     <Input
                       type="number"
@@ -161,7 +161,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
                       className="w-16"
                       onChange={e =>
                         setItems(items.map(i =>
-                          i.product.id === item.product.id ? { ...i, quantity: Math.max(1, Number(e.target.value)) } : i
+                          i.variant.id === item.variant.id ? { ...i, quantity: Math.max(1, Number(e.target.value)) } : i
                         ))
                       }
                     />
@@ -175,17 +175,17 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
                       className="w-28"
                       onChange={e =>
                         setItems(items.map(i =>
-                          i.product.id === item.product.id ? { ...i, unit_cost: Number(e.target.value) } : i
+                          i.variant.id === item.variant.id ? { ...i, unit_cost: Number(e.target.value) } : i
                         ))
                       }
                     />
                   </td>
-                  <td className="px-4 py-3 text-white font-medium">{formatCurrency(item.unit_cost * item.quantity)}</td>
+                  <td className="px-4 py-3 text-foreground font-medium">{formatCurrency(item.unit_cost * item.quantity)}</td>
                   <td className="px-4 py-3">
                     <button
                       type="button"
-                      onClick={() => setItems(items.filter(i => i.product.id !== item.product.id))}
-                      className="text-[#6e6e6e] hover:text-red-400 text-xs transition-colors"
+                      onClick={() => setItems(items.filter(i => i.variant.id !== item.variant.id))}
+                      className="text-foreground/45 hover:text-red-600 dark:hover:text-red-400 text-xs transition-colors"
                     >
                       Quitar
                     </button>
@@ -194,9 +194,9 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-white/10 bg-[#0a0a0a]">
-                <td colSpan={3} className="px-4 py-3 text-right text-[#969696] font-medium">Total:</td>
-                <td className="px-4 py-3 font-bold text-white text-lg">{formatCurrency(total)}</td>
+              <tr className="border-t border-foreground/10 bg-background">
+                <td colSpan={3} className="px-4 py-3 text-right text-foreground/60 font-medium">Total:</td>
+                <td className="px-4 py-3 font-mono font-semibold text-foreground text-lg tabular-nums">{formatCurrency(total)}</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -204,7 +204,7 @@ export function PurchaseForm({ products, suppliers }: { products: Product[]; sup
         </div>
       )}
 
-      {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? 'Guardando...' : 'Registrar compra'}
       </Button>

@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button'
 import { CustomerForm } from '@/components/customers/customer-form'
 import { WhatsAppButton } from '@/components/contact/whatsapp-button'
 import { ConfirmDelete, deleteErrorMessage } from '@/components/common/confirm-delete'
+import { ExportCsvButton } from '@/components/common/export-csv-button'
+import { CustomerHistoryButton } from '@/components/customers/customer-history'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils/format'
 import type { Customer } from '@/types/database'
@@ -56,15 +58,15 @@ function CustomerRowActions({ row }: { row: CustomerRow }) {
             <button
               type="button"
               title="Editar"
-              className="p-1.5 rounded-md text-[#6e6e6e] hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+              className="p-1.5 rounded-md text-foreground/45 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
             />
           }
         >
           <Pencil size={14} />
         </DialogTrigger>
-        <DialogContent className="max-w-lg bg-[#15161c] border-white/10">
+        <DialogContent className="max-w-lg bg-card border-foreground/10">
           <DialogHeader>
-            <DialogTitle className="text-white">Editar cliente</DialogTitle>
+            <DialogTitle className="text-foreground">Editar cliente</DialogTitle>
           </DialogHeader>
           <CustomerForm customer={customer} onSuccess={() => setOpen(false)} />
         </DialogContent>
@@ -75,10 +77,10 @@ function CustomerRowActions({ row }: { row: CustomerRow }) {
 }
 
 const badgeStyle: Record<CustomerRow['badges'][number], { label: string; cls: string }> = {
-  vip:       { label: 'VIP',       cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  vip:       { label: 'VIP',       cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
   frecuente: { label: 'Frecuente', cls: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
-  inactivo:  { label: 'Inactivo',  cls: 'bg-red-500/10 text-red-400 border-red-500/20' },
-  nuevo:     { label: 'Nuevo',     cls: 'bg-white/[0.04] text-[#969696] border-white/10' },
+  inactivo:  { label: 'Inactivo',  cls: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
+  nuevo:     { label: 'Nuevo',     cls: 'bg-foreground/[0.04] text-foreground/60 border-foreground/10' },
 }
 
 function lastLabel(row: CustomerRow) {
@@ -110,24 +112,32 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Clientes</h1>
-          <p className="text-[#828282] text-sm mt-0.5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Clientes</h1>
+          <p className="text-foreground/55 text-sm mt-0.5">
             {rows.length} clientes · {vipCount} VIP · {inactiveCount} inactivos
           </p>
         </div>
         <div className="flex gap-3">
+          <ExportCsvButton
+            filename="clientes.csv"
+            headers={['Nombre', 'Teléfono', 'Email', 'Instagram', 'Compras', 'Total gastado', 'Última compra']}
+            rows={rows.map(r => [
+              r.name, r.phone, r.email, r.instagram,
+              r.purchases, r.totalSpent, r.lastPurchase,
+            ])}
+          />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre, tel, email..."
-            className="w-64 bg-[#131419] border border-white/10 text-white placeholder-[#6e6e6e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
+            className="w-64 bg-card border border-foreground/10 text-foreground placeholder-foreground/45 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={<Button />}>+ Nuevo cliente</DialogTrigger>
-            <DialogContent className="max-w-lg bg-[#15161c] border-white/10">
+            <DialogContent className="max-w-lg bg-card border-foreground/10">
               <DialogHeader>
-                <DialogTitle className="text-white">Agregar cliente</DialogTitle>
+                <DialogTitle className="text-foreground">Agregar cliente</DialogTitle>
               </DialogHeader>
               <CustomerForm onSuccess={() => setOpen(false)} />
             </DialogContent>
@@ -136,31 +146,31 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] py-16 text-center">
-          <p className="text-[#6e6e6e] text-sm">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card py-16 text-center">
+          <p className="text-foreground/45 text-sm">
             {search ? `Sin resultados para "${search}"` : 'No hay clientes cargados aún.'}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/[0.08] bg-[#15161c] overflow-hidden">
+        <div className="rounded-xl border border-foreground/[0.08] bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] bg-[#101116]">
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Cliente</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Contacto</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Compras</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Gasto total</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Última</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#828282] uppercase tracking-wider font-medium">Acción</th>
+                <tr className="border-b border-foreground/[0.06] bg-card">
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Cliente</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Contacto</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Compras</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Gasto total</th>
+                  <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Última</th>
+                  <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(r => (
-                  <tr key={r.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors">
+                  <tr key={r.id} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">{r.name}</span>
+                        <span className="font-medium text-foreground">{r.name}</span>
                         {r.badges.map(b => (
                           <span key={b} className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium border ${badgeStyle[b].cls}`}>
                             {badgeStyle[b].label}
@@ -168,7 +178,7 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#a8a8a8]">
+                    <td className="px-4 py-3 text-foreground/70">
                       <div className="flex flex-col gap-0.5">
                         {r.instagram && (
                           <a
@@ -179,15 +189,16 @@ export function ClientesClient({ rows }: { rows: CustomerRow[] }) {
                             {r.instagram.startsWith('@') ? r.instagram : `@${r.instagram}`}
                           </a>
                         )}
-                        {r.email && <span className="text-[12px] text-[#828282]">{r.email}</span>}
-                        {!r.instagram && !r.email && <span className="text-[12px] text-[#5c5c5c]">—</span>}
+                        {r.email && <span className="text-[12px] text-foreground/55">{r.email}</span>}
+                        {!r.instagram && !r.email && <span className="text-[12px] text-foreground/40">—</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-[#cfcfcf] font-mono">{r.purchases}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-white">{formatCurrency(r.totalSpent)}</td>
-                    <td className="px-4 py-3 text-[#828282]">{lastLabel(r)}</td>
+                    <td className="px-4 py-3 text-right text-foreground/85 font-mono">{r.purchases}</td>
+                    <td className="px-4 py-3 text-right font-mono font-medium text-foreground tabular-nums">{formatCurrency(r.totalSpent)}</td>
+                    <td className="px-4 py-3 text-foreground/55">{lastLabel(r)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <CustomerHistoryButton customerId={r.id} customerName={r.name} />
                         <WhatsAppButton phone={r.phone} name={r.name} withTemplates />
                         <CustomerRowActions row={r} />
                       </div>
