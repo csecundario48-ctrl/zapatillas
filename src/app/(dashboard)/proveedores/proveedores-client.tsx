@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Pencil } from 'lucide-react'
 import {
@@ -153,7 +154,11 @@ export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
               <tbody>
                 {filtered.map(r => (
                   <tr key={r.id} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02] transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/proveedores/${r.id}`} className="text-foreground hover:text-indigo-400 transition-colors">
+                        {r.name}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-foreground/70">
                       <div className="flex flex-col gap-0.5">
                         {r.contactName && <span className="text-[12px] text-foreground/85">{r.contactName}</span>}
