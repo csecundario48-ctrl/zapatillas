@@ -4,7 +4,7 @@ export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadop
 export type SaleStatus = 'completada' | 'cancelada' | 'devolucion' | 'encargo'
 export type PaymentStatus = 'pagado' | 'pendiente' | 'parcial'
 export type DeliveryStatus = 'pedido' | 'recibido'
-export type ExpenseCategory = 'alquiler' | 'servicios' | 'marketing' | 'delivery' | 'salarios' | 'packaging' | 'otros'
+export type ExpenseCategory = string
 export type ExpenseType = 'fijo' | 'variable'
 export type AdjustmentReason = 'ajuste_manual' | 'rotura' | 'perdida' | 'devolucion_proveedor'
 export type UserRole = 'admin' | 'vendedor'
@@ -129,6 +129,21 @@ export interface Expense {
   created_at: string
 }
 
+export interface BusinessSettings {
+  id: number
+  business_name: string
+  logo_url: string | null
+  size_min: number
+  size_max: number
+  updated_at: string
+}
+
+export interface ExpenseCategoryRow {
+  id: string
+  name: string
+  created_at: string
+}
+
 export interface StockAdjustment {
   id: string
   variant_id: string
@@ -234,6 +249,18 @@ export type Database = {
         Row: Omit<StockAdjustment, 'variant'>
         Insert: Omit<StockAdjustment, 'id' | 'created_at' | 'variant'>
         Update: Partial<Omit<StockAdjustment, 'id' | 'created_at' | 'variant'>>
+        Relationships: []
+      }
+      business_settings: {
+        Row: BusinessSettings
+        Insert: Partial<BusinessSettings> & { id?: number }
+        Update: Partial<Omit<BusinessSettings, 'id'>>
+        Relationships: []
+      }
+      expense_categories: {
+        Row: ExpenseCategoryRow
+        Insert: Omit<ExpenseCategoryRow, 'id' | 'created_at'>
+        Update: Partial<Omit<ExpenseCategoryRow, 'id' | 'created_at'>>
         Relationships: []
       }
       user_profiles: {
