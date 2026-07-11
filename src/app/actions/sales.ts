@@ -188,3 +188,103 @@ export async function returnSale(saleId: string): Promise<{ error?: string }> {
   revalidatePath('/')
   return {}
 }
+
+/**
+ * Completa un encargo: descuenta el stock de sus items (bloquea si no alcanza),
+ * lo pasa a 'completada' y registra la forma de pago del resto. El update
+ * condicionado por status evita completar dos veces.
+ */
+export async function completeEncargo(
+  saleId: string,
+  paymentMethod: PaymentMethod
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: sale, error: sErr } = await supabase
+    .from('sales')
+    .select('id, status, sale_items(variant_id, quantity, size_label)')
+    .eq('id', saleId)
+    .single()
+  if (sErr || !sale) return { error: sErr?.message ?? 'Encargo no encontrado' }
+  if (sale.status !== 'encargo') return { error: 'Este encargo ya fue completado o cancelado' }
+
+  const qtyById = new Map<string, number>()
+  const sizeById = new Map<string, string | null>()
+  for (const it of (sale.sale_items ?? []) as { variant_id: string | null; quantity: number; size_label: string | null }[]) {
+    if (!it.variant_id) continue
+    qtyById.set(it.variant_id, (qtyById.get(it.variant_id) ?? 0) + it.quantity)
+    sizeById.set(it.variant_id, it.size_label)
+  }
+
+  if (qtyById.size > 0) {
+    const ids = [...qtyById.keys()]
+    const { data: variants, error: vErr } = await supabase
+      .from('product_variants')
+      .select('id, size, stock_quantity')
+      .in('id', ids)
+    if (vErr) return { error: vErr.message }
+    const byId = new Map((variants ?? []).map(v => [v.id, v]))
+
+    // Chequear stock suficiente ANTES de tocar nada.
+    for (const [variantId, qty] of qtyById) {
+      const current = byId.get(variantId)?.stock_quantity ?? 0
+      if (current < qty) {
+        const size = byId.get(variantId)?.size ?? sizeById.get(variantId) ?? '?'
+        return {
+          error: `No hay stock para completar: talle ${size} tiene ${current} y se necesitan ${qty}. Registrá la compra/recepción antes de completar.`,
+        }
+      }
+    }
+    // Descontar.
+    for (const [variantId, qty] of qtyById) {
+      const current = byId.get(variantId)!.stock_quantity
+      const { error: stockErr } = await supabase
+        .from('product_variants')
+        .update({ stock_quantity: current - qty })
+        .eq('id', variantId)
+      if (stockErr) return { error: `Falló actualizar el stock: ${stockErr.message}` }
+    }
+  }
+
+  const { data: updated, error: uErr } = await supabase
+    .from('sales')
+    .update({ status: 'completada', payment_method: paymentMethod })
+    .eq('id', saleId)
+    .eq('status', 'encargo')
+    .select('id')
+  if (uErr) return { error: `Stock descontado, pero falló completar el encargo: ${uErr.message}` }
+  if (!updated?.length) return { error: 'Este encargo ya fue completado o cancelado' }
+
+  revalidatePath('/encargos')
+  revalidatePath('/ventas')
+  revalidatePath('/stock')
+  revalidatePath('/finanzas')
+  revalidatePath('/')
+  return {}
+}
+
+/**
+ * Cancela un encargo: pasa a 'cancelada' sin tocar stock. La seña cobrada queda
+ * para el negocio (Finanzas la cuenta como ingreso). Update condicionado por status.
+ */
+export async function cancelEncargo(saleId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: updated, error: uErr } = await supabase
+    .from('sales')
+    .update({ status: 'cancelada' })
+    .eq('id', saleId)
+    .eq('status', 'encargo')
+    .select('id')
+  if (uErr) return { error: uErr.message }
+  if (!updated?.length) return { error: 'Este encargo ya fue completado o cancelado' }
+
+  revalidatePath('/encargos')
+  revalidatePath('/finanzas')
+  revalidatePath('/')
+  return {}
+}
