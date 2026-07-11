@@ -24,6 +24,7 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
   const [supplierId, setSupplierId] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(formatDateForInput())
   const [paymentStatus, setPaymentStatus] = useState('pendiente')
+  const [deliveryStatus, setDeliveryStatus] = useState<'pedido' | 'recibido'>('recibido')
   const [paymentDueDate, setPaymentDueDate] = useState('')
   const [notes, setNotes] = useState('')
   const [items, setItems] = useState<PurchaseItem[]>([])
@@ -54,6 +55,7 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
       supplier_id: supplierId,
       purchase_date: purchaseDate,
       payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
+      delivery_status: deliveryStatus,
       payment_due_date: paymentDueDate || null,
       notes: notes || null,
       items: items.map(i => ({
@@ -95,6 +97,13 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
         <div className="space-y-1.5">
           <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Vencimiento pago</Label>
           <Input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Entrega</Label>
+          <select value={deliveryStatus} onChange={e => setDeliveryStatus(e.target.value as 'pedido' | 'recibido')} className={sel}>
+            <option value="recibido" className="bg-card">Recibido (suma stock)</option>
+            <option value="pedido" className="bg-card">Pedido (no suma stock)</option>
+          </select>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Notas</Label>

@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { PaymentStatus } from '@/types/database'
+import type { PaymentStatus, DeliveryStatus } from '@/types/database'
+import { sumByVariant } from '@/lib/utils/purchase-stock'
 
 interface PurchaseItemInput {
   variant_id: string
@@ -14,6 +15,7 @@ interface CreatePurchaseInput {
   supplier_id: string
   purchase_date: string
   payment_status: PaymentStatus
+  delivery_status: DeliveryStatus
   payment_due_date: string | null
   notes: string | null
   items: PurchaseItemInput[]
@@ -62,6 +64,7 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
       purchase_date: input.purchase_date,
       total_amount: total,
       payment_status: input.payment_status,
+      delivery_status: input.delivery_status,
       payment_due_date: input.payment_due_date,
       notes: input.notes,
       created_by: user.id,
@@ -89,14 +92,16 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
     return { error: iErr.message }
   }
 
-  for (const [variantId, qty] of qtyById) {
-    const v = byId.get(variantId)!
-    const { error: stockErr } = await supabase
-      .from('product_variants')
-      .update({ stock_quantity: v.stock_quantity + qty })
-      .eq('id', variantId)
-    if (stockErr) {
-      return { error: `Compra registrada, pero falló actualizar el stock: ${stockErr.message}` }
+  if (input.delivery_status === 'recibido') {
+    for (const [variantId, qty] of qtyById) {
+      const v = byId.get(variantId)!
+      const { error: stockErr } = await supabase
+        .from('product_variants')
+        .update({ stock_quantity: v.stock_quantity + qty })
+        .eq('id', variantId)
+      if (stockErr) {
+        return { error: `Compra registrada, pero falló actualizar el stock: ${stockErr.message}` }
+      }
     }
   }
 
