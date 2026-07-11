@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { argDateStr, formatCurrency, formatDate } from '@/lib/utils/format'
 import type { Purchase, Supplier } from '@/types/database'
+import { PurchaseRowActions } from '@/components/purchases/purchase-row-actions'
 
 type PurchaseWithSupplier = Purchase & { suppliers: Pick<Supplier, 'name'> | null }
 
@@ -9,6 +10,10 @@ const paymentStyle: Record<string, string> = {
   pagado: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
   pendiente: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
   parcial: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+}
+const deliveryStyle: Record<string, string> = {
+  recibido: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+  pedido: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
 }
 
 export default async function ComprasPage() {
@@ -47,6 +52,8 @@ export default async function ComprasPage() {
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Total</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Pago</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Vencimiento</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Entrega</th>
+                <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -72,6 +79,14 @@ export default async function ComprasPage() {
                       ) : (
                         <span className="text-foreground/45">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs border ${deliveryStyle[p.delivery_status] ?? ''}`}>
+                        {p.delivery_status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <PurchaseRowActions purchaseId={p.id} deliveryStatus={p.delivery_status} />
                     </td>
                   </tr>
                 )
