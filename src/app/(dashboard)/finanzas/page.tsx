@@ -8,11 +8,16 @@ const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'S
 export default async function FinanzasPage() {
   const supabase = await createClient()
 
-  const [{ data: sales }, { data: expenses }, { data: pendingPurchases }] = await Promise.all([
+  const [{ data: sales }, { data: cancelledDeposits }, { data: expenses }, { data: pendingPurchases }] = await Promise.all([
     supabase
       .from('sales')
       .select('total_amount, sale_date, sale_items(quantity, unit_cost)')
       .eq('status', 'completada'),
+    supabase
+      .from('sales')
+      .select('deposit_amount, sale_date')
+      .eq('status', 'cancelada')
+      .gt('deposit_amount', 0),
     supabase.from('expenses').select('amount, expense_date, category'),
     supabase.from('purchases').select('total_amount').neq('payment_status', 'pagado'),
   ])
@@ -20,8 +25,10 @@ export default async function FinanzasPage() {
   const now = new Date()
   const monthStart = `${argDateStr().slice(0, 7)}-01`
 
-  const totalIncome = sales?.reduce((s, sale) => s + sale.total_amount, 0) ?? 0
-  const monthIncome = sales?.filter(s => s.sale_date >= monthStart).reduce((s, sale) => s + sale.total_amount, 0) ?? 0
+  const depositIncome = cancelledDeposits?.reduce((s, d) => s + d.deposit_amount, 0) ?? 0
+  const monthDepositIncome = cancelledDeposits?.filter(d => d.sale_date >= monthStart).reduce((s, d) => s + d.deposit_amount, 0) ?? 0
+  const totalIncome = (sales?.reduce((s, sale) => s + sale.total_amount, 0) ?? 0) + depositIncome
+  const monthIncome = (sales?.filter(s => s.sale_date >= monthStart).reduce((s, sale) => s + sale.total_amount, 0) ?? 0) + monthDepositIncome
 
   type CogsItem = { quantity: number; unit_cost: number }
   const totalCOGS = sales?.reduce(
@@ -54,6 +61,10 @@ export default async function FinanzasPage() {
   for (const s of sales ?? []) {
     const m = cashflowByKey.get(s.sale_date.slice(0, 7))
     if (m) m.ingresos += s.total_amount
+  }
+  for (const d of cancelledDeposits ?? []) {
+    const m = cashflowByKey.get(d.sale_date.slice(0, 7))
+    if (m) m.ingresos += d.deposit_amount
   }
   for (const e of expenses ?? []) {
     const m = cashflowByKey.get(e.expense_date.slice(0, 7))
