@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { PaymentMethod, SaleChannel } from '@/types/database'
+import { isValidDeposit } from '@/lib/utils/deposit'
 
 interface SaleItemInput {
   variant_id: string
@@ -16,6 +17,8 @@ interface CreateSaleInput {
   channel: SaleChannel
   payment_method: PaymentMethod
   customer_id: string | null
+  is_encargo: boolean
+  deposit_amount: number
   items: SaleItemInput[]
 }
 
@@ -57,10 +60,16 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
     if (!v || !v.products?.active) return { error: 'Uno de los productos no existe o está inactivo' }
     total += (item.unit_price - item.discount) * item.quantity
   }
-  for (const [variantId, qty] of qtyById) {
-    const v = byId.get(variantId)!
-    if (qty > v.stock_quantity) {
-      return { error: `Stock insuficiente (disponible: ${v.stock_quantity}). Actualizá la página y reintentá.` }
+  if (input.is_encargo) {
+    if (!isValidDeposit(total, input.deposit_amount)) {
+      return { error: 'La seña debe ser mayor o igual a 0 y no puede superar el total' }
+    }
+  } else {
+    for (const [variantId, qty] of qtyById) {
+      const v = byId.get(variantId)!
+      if (qty > v.stock_quantity) {
+        return { error: `Stock insuficiente (disponible: ${v.stock_quantity}). Actualizá la página y reintentá.` }
+      }
     }
   }
 
@@ -72,7 +81,8 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
       channel: input.channel,
       payment_method: input.payment_method,
       total_amount: total,
-      status: 'completada',
+      deposit_amount: input.is_encargo ? input.deposit_amount : 0,
+      status: input.is_encargo ? 'encargo' : 'completada',
       created_by: user.id,
     })
     .select('id')
@@ -100,18 +110,21 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
     return { error: itemsError.message }
   }
 
-  for (const [variantId, qty] of qtyById) {
-    const v = byId.get(variantId)!
-    const { error: stockErr } = await supabase
-      .from('product_variants')
-      .update({ stock_quantity: v.stock_quantity - qty })
-      .eq('id', variantId)
-    if (stockErr) {
-      return { error: `Venta registrada, pero falló actualizar el stock: ${stockErr.message}` }
+  if (!input.is_encargo) {
+    for (const [variantId, qty] of qtyById) {
+      const v = byId.get(variantId)!
+      const { error: stockErr } = await supabase
+        .from('product_variants')
+        .update({ stock_quantity: v.stock_quantity - qty })
+        .eq('id', variantId)
+      if (stockErr) {
+        return { error: `Venta registrada, pero falló actualizar el stock: ${stockErr.message}` }
+      }
     }
   }
 
   revalidatePath('/ventas')
+  revalidatePath('/encargos')
   revalidatePath('/stock')
   revalidatePath('/')
   return {}
