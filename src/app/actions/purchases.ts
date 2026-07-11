@@ -110,3 +110,117 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
   revalidatePath('/')
   return {}
 }
+
+/** Marca una compra 'pedido' como 'recibido' y suma el stock de sus items. */
+export async function receivePurchase(purchaseId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: purchase, error: pErr } = await supabase
+    .from('purchases')
+    .select('id, delivery_status, purchase_items(variant_id, quantity)')
+    .eq('id', purchaseId)
+    .single()
+  if (pErr || !purchase) return { error: pErr?.message ?? 'Compra no encontrada' }
+
+  const row = purchase as unknown as {
+    delivery_status: string
+    purchase_items: { variant_id: string | null; quantity: number }[]
+  }
+  if (row.delivery_status === 'recibido') return { error: 'La compra ya está recibida' }
+
+  const deltas = sumByVariant(row.purchase_items ?? [])
+  if (deltas.size > 0) {
+    const ids = [...deltas.keys()]
+    const { data: variants, error: vErr } = await supabase
+      .from('product_variants')
+      .select('id, stock_quantity')
+      .in('id', ids)
+    if (vErr) return { error: vErr.message }
+    const stockById = new Map((variants ?? []).map(v => [v.id, v.stock_quantity]))
+
+    for (const [variantId, qty] of deltas) {
+      const current = stockById.get(variantId) ?? 0
+      const { error: sErr } = await supabase
+        .from('product_variants')
+        .update({ stock_quantity: current + qty })
+        .eq('id', variantId)
+      if (sErr) return { error: `Falló actualizar el stock: ${sErr.message}` }
+    }
+  }
+
+  const { error: uErr } = await supabase
+    .from('purchases')
+    .update({ delivery_status: 'recibido' })
+    .eq('id', purchaseId)
+  if (uErr) return { error: `Stock sumado, pero falló marcar recibida: ${uErr.message}` }
+
+  revalidatePath('/compras')
+  revalidatePath('/stock')
+  revalidatePath('/')
+  return {}
+}
+
+/**
+ * Borra una compra. Si estaba 'recibido', resta de cada variante el stock que
+ * había sumado; si dejaría alguna variante en negativo, bloquea con aviso.
+ */
+export async function deletePurchase(purchaseId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: purchase, error: pErr } = await supabase
+    .from('purchases')
+    .select('id, delivery_status, purchase_items(variant_id, quantity, size_label)')
+    .eq('id', purchaseId)
+    .single()
+  if (pErr || !purchase) return { error: pErr?.message ?? 'Compra no encontrada' }
+
+  const row = purchase as unknown as {
+    delivery_status: string
+    purchase_items: { variant_id: string | null; quantity: number; size_label: string | null }[]
+  }
+
+  if (row.delivery_status === 'recibido') {
+    const deltas = sumByVariant(row.purchase_items ?? [])
+    if (deltas.size > 0) {
+      const ids = [...deltas.keys()]
+      const { data: variants, error: vErr } = await supabase
+        .from('product_variants')
+        .select('id, size, stock_quantity')
+        .in('id', ids)
+      if (vErr) return { error: vErr.message }
+      const byId = new Map((variants ?? []).map(v => [v.id, v]))
+
+      // Chequear que ninguna quede negativa ANTES de tocar nada.
+      for (const [variantId, qty] of deltas) {
+        const current = byId.get(variantId)?.stock_quantity ?? 0
+        if (current - qty < 0) {
+          const size = byId.get(variantId)?.size ?? '?'
+          return {
+            error: `No se puede borrar: dejaría el talle ${size} en negativo (stock actual ${current}, se intentan restar ${qty}). Ajustá el stock antes de borrar.`,
+          }
+        }
+      }
+      // Aplicar la resta.
+      for (const [variantId, qty] of deltas) {
+        const current = byId.get(variantId)!.stock_quantity
+        const { error: sErr } = await supabase
+          .from('product_variants')
+          .update({ stock_quantity: current - qty })
+          .eq('id', variantId)
+        if (sErr) return { error: `Falló actualizar el stock: ${sErr.message}` }
+      }
+    }
+  }
+
+  const { error: dErr } = await supabase.from('purchases').delete().eq('id', purchaseId)
+  if (dErr) return { error: dErr.message }
+
+  revalidatePath('/compras')
+  revalidatePath('/stock')
+  revalidatePath('/')
+  return {}
+}
