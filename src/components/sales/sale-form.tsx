@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
+import { remainingAmount } from '@/lib/utils/deposit'
 import type { Customer } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
@@ -38,13 +39,15 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
   const [channel, setChannel] = useState('fisica')
   const [paymentMethod, setPaymentMethod] = useState('efectivo')
   const [saleDate, setSaleDate] = useState(formatDateForInput())
+  const [isEncargo, setIsEncargo] = useState(false)
+  const [deposit, setDeposit] = useState(0)
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const filteredVariants = variants.filter(
     v =>
-      v.stock_quantity > 0 &&
+      (isEncargo || v.stock_quantity > 0) &&
       `${v.brand} ${v.model} ${v.color} ${v.size}`
         .toLowerCase()
         .includes(search.toLowerCase())
@@ -53,7 +56,7 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
   function addItem(variant: VariantOption) {
     const existing = items.find(i => i.variant.id === variant.id)
     if (existing) {
-      if (existing.quantity >= variant.stock_quantity) {
+      if (!isEncargo && existing.quantity >= variant.stock_quantity) {
         setError(`Stock insuficiente: solo hay ${variant.stock_quantity} ud. de ${variant.brand} ${variant.model} T${variant.size}`)
         return
       }
@@ -96,6 +99,8 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
       channel: channel as 'fisica' | 'online',
       payment_method: paymentMethod as 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago',
       customer_id: customerId,
+      is_encargo: isEncargo,
+      deposit_amount: isEncargo ? deposit : 0,
       items: items.map(i => ({
         variant_id: i.variant.id,
         quantity: i.quantity,
@@ -106,8 +111,8 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
 
     if (saleError) { setError(saleError); setLoading(false); return }
 
-    toast.success(`Venta registrada — ${formatCurrency(total)}`)
-    router.push('/ventas')
+    toast.success(isEncargo ? `Encargo registrado — seña ${formatCurrency(deposit)}` : `Venta registrada — ${formatCurrency(total)}`)
+    router.push(isEncargo ? '/encargos' : '/ventas')
     router.refresh()
   }
 
@@ -144,6 +149,30 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
             <option value="mercadopago" className="bg-card">MercadoPago</option>
           </select>
         </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isEncargo}
+              onChange={e => { setIsEncargo(e.target.checked); if (!e.target.checked) setDeposit(0) }}
+              className="accent-indigo-500 size-4"
+            />
+            <span className="text-sm text-foreground">Es encargo (seña por un producto sin stock)</span>
+          </label>
+        </div>
+        {isEncargo && (
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Seña</Label>
+            <Input
+              type="number"
+              min={0}
+              value={deposit}
+              onChange={e => setDeposit(Math.max(0, Number(e.target.value)))}
+              placeholder="0"
+            />
+            <p className="text-[11px] text-foreground/55">Resto a pagar: {formatCurrency(remainingAmount(total, deposit))}</p>
+          </div>
+        )}
       </div>
 
       {/* Product search */}
@@ -205,16 +234,16 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
                     <Input
                       type="number"
                       min={1}
-                      max={item.variant.stock_quantity}
+                      max={isEncargo ? undefined : item.variant.stock_quantity}
                       value={item.quantity}
                       className="w-16"
-                      onChange={e =>
+                      onChange={e => {
+                        const raw = Math.max(1, Number(e.target.value))
+                        const qty = isEncargo ? raw : Math.min(raw, item.variant.stock_quantity)
                         setItems(items.map(i =>
-                          i.variant.id === item.variant.id
-                            ? { ...i, quantity: Math.min(Math.max(1, Number(e.target.value)), item.variant.stock_quantity) }
-                            : i
+                          i.variant.id === item.variant.id ? { ...i, quantity: qty } : i
                         ))
-                      }
+                      }}
                     />
                   </td>
                   <td className="px-4 py-3 text-foreground/70">{formatCurrency(item.unit_price)}</td>
@@ -253,7 +282,9 @@ export function SaleForm({ variants, customers }: { variants: VariantOption[]; c
         disabled={loading || items.length === 0}
         className="w-full py-3"
       >
-        {loading ? 'Registrando venta...' : `Confirmar venta — ${formatCurrency(total)}`}
+        {loading
+          ? (isEncargo ? 'Registrando encargo...' : 'Registrando venta...')
+          : (isEncargo ? `Confirmar encargo — seña ${formatCurrency(deposit)}` : `Confirmar venta — ${formatCurrency(total)}`)}
       </Button>
     </form>
   )

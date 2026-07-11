@@ -3,6 +3,7 @@ import {
   Package,
   Boxes,
   ShoppingCart,
+  ClipboardList,
   Truck,
   Receipt,
   TrendingUp,
@@ -39,6 +40,7 @@ export const navGroups: NavGroup[] = [
     label: 'Operaciones',
     items: [
       { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
+      { href: '/encargos', label: 'Encargos', icon: ClipboardList },
       { href: '/compras', label: 'Compras', icon: Truck },
       { href: '/egresos', label: 'Egresos', icon: Receipt },
     ],

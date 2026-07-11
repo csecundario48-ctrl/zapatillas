@@ -20,6 +20,7 @@ export default async function VentasPage() {
   const { data: sales } = await supabase
     .from('sales')
     .select('*, customers(name)')
+    .neq('status', 'encargo')
     .order('created_at', { ascending: false })
     .limit(100)
 

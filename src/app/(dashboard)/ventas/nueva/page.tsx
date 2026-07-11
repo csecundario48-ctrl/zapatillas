@@ -16,7 +16,7 @@ export default async function NuevaVentaPage() {
   ])
 
   const variants = ((variantRows as unknown as VariantRow[]) ?? [])
-    .filter(v => v.products?.active && v.stock_quantity > 0)
+    .filter(v => v.products?.active)
     .map(v => ({
       id: v.id, product_id: v.product_id, size: v.size, stock_quantity: v.stock_quantity,
       brand: v.products!.brand, model: v.products!.model, color: v.products!.color,

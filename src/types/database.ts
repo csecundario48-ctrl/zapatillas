@@ -1,7 +1,7 @@
 export type Gender = 'hombre' | 'mujer' | 'nino' | 'unisex'
 export type SaleChannel = 'fisica' | 'online'
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta' | 'mercadopago'
-export type SaleStatus = 'completada' | 'cancelada' | 'devolucion'
+export type SaleStatus = 'completada' | 'cancelada' | 'devolucion' | 'encargo'
 export type PaymentStatus = 'pagado' | 'pendiente' | 'parcial'
 export type DeliveryStatus = 'pedido' | 'recibido'
 export type ExpenseCategory = 'alquiler' | 'servicios' | 'marketing' | 'delivery' | 'salarios' | 'packaging' | 'otros'
@@ -64,6 +64,7 @@ export interface Sale {
   sale_date: string
   channel: SaleChannel
   total_amount: number
+  deposit_amount: number
   payment_method: PaymentMethod
   status: SaleStatus
   notes: string | null
