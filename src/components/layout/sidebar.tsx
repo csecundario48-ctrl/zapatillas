@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { navGroups } from './nav-config'
+import { useSettings } from '@/components/settings/settings-context'
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
+  const { businessName, logoUrl } = useSettings()
 
   return (
     <aside
@@ -17,8 +19,12 @@ export function Sidebar({ className }: { className?: string }) {
     >
       {/* Logo */}
       <div className="px-5 h-14 flex items-center border-b border-foreground/[0.06]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/kala-logo.png" alt="KALA" className="h-[18px] w-auto invert dark:invert-0" />
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={businessName} className="h-6 w-auto max-w-[140px] object-contain" />
+        ) : (
+          <span className="font-semibold text-sm tracking-tight text-foreground truncate">{businessName}</span>
+        )}
       </div>
 
       {/* Nav groups */}
@@ -63,7 +69,7 @@ export function Sidebar({ className }: { className?: string }) {
 
       {/* Footer */}
       <div className="px-5 py-3.5 border-t border-foreground/[0.06]">
-        <p className="text-[10px] text-foreground/30 font-mono tracking-widest uppercase">KALA · v1.0</p>
+        <p className="text-[10px] text-foreground/30 font-mono tracking-widest uppercase truncate">{businessName} · v1.0</p>
       </div>
     </aside>
   )

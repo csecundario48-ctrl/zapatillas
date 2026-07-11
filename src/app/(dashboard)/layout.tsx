@@ -4,6 +4,8 @@ import { Header } from '@/components/layout/header'
 import { Toaster } from '@/components/ui/sonner'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { SettingsProvider } from '@/components/settings/settings-context'
+import type { BusinessSettings } from '@/types/database'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -19,7 +21,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('active', true)
     .eq('stock_quantity', 0)
 
+  const { data: settingsRow } = await supabase
+    .from('business_settings')
+    .select('business_name, logo_url, size_min, size_max')
+    .eq('id', 1)
+    .single()
+  const s = settingsRow as Pick<BusinessSettings, 'business_name' | 'logo_url' | 'size_min' | 'size_max'> | null
+  const appSettings = {
+    businessName: s?.business_name ?? 'KALA',
+    logoUrl: s?.logo_url ?? null,
+    sizeMin: s?.size_min ?? 35,
+    sizeMax: s?.size_max ?? 45,
+  }
+
   return (
+    <SettingsProvider value={appSettings}>
     <div className="relative isolate flex h-screen overflow-hidden bg-background">
       {/* Aurora glow backdrop (Linear-style) */}
       <div className="aurora" />
@@ -51,5 +67,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <Toaster position="bottom-right" richColors />
     </div>
+    </SettingsProvider>
   )
 }

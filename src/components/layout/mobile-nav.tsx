@@ -7,10 +7,12 @@ import { Menu } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { navGroups } from './nav-config'
+import { useSettings } from '@/components/settings/settings-context'
 
 export function MobileNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const { businessName, logoUrl } = useSettings()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -28,8 +30,12 @@ export function MobileNav() {
       <SheetContent side="left" className="w-[250px] bg-background border-foreground/[0.06] p-0">
         <SheetTitle className="sr-only">Navegación</SheetTitle>
         <div className="px-5 h-14 flex items-center border-b border-foreground/[0.06]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/kala-logo.png" alt="KALA" className="h-[18px] w-auto invert dark:invert-0" />
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={businessName} className="h-6 w-auto max-w-[150px] object-contain" />
+          ) : (
+            <span className="font-semibold text-sm tracking-tight text-foreground truncate">{businessName}</span>
+          )}
         </div>
         <nav className="flex-1 px-2.5 py-3 space-y-4 overflow-y-auto">
           {navGroups.map(({ label, items }) => (
