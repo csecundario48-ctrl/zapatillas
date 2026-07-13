@@ -37,7 +37,12 @@ create index if not exists sales_status_date_idx on sales (status, sale_date);
 create index if not exists sales_created_at_idx on sales (created_at desc);
 create index if not exists expenses_expense_date_idx on expenses (expense_date desc);
 create index if not exists sale_items_sale_id_idx on sale_items (sale_id);
-create index if not exists sale_items_product_id_idx on sale_items (product_id);
 create index if not exists purchase_items_purchase_id_idx on purchase_items (purchase_id);
-create index if not exists stock_adjustments_product_id_idx on stock_adjustments (product_id);
 create index if not exists purchases_payment_status_idx on purchases (payment_status, payment_due_date);
+
+-- NOTA: 007_product_variants.sql reemplazó product_id por variant_id en
+-- sale_items, purchase_items y stock_adjustments. Estos índices se corrigieron
+-- para apuntar a variant_id (antes fallaban con "column product_id does not exist").
+create index if not exists sale_items_variant_id_idx on sale_items (variant_id);
+create index if not exists purchase_items_variant_id_idx on purchase_items (variant_id);
+create index if not exists stock_adjustments_variant_id_idx on stock_adjustments (variant_id);
