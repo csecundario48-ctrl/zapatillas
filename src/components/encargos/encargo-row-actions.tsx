@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { completeEncargo, cancelEncargo } from '@/app/actions/sales'
+import { completeEncargo, cancelEncargo, deleteSale } from '@/app/actions/sales'
+import { RowMenu } from '@/components/common/row-menu'
 import type { PaymentMethod } from '@/types/database'
 
 export function EncargoRowActions({ saleId }: { saleId: string }) {
@@ -21,6 +22,13 @@ export function EncargoRowActions({ saleId }: { saleId: string }) {
     if (error) { toast.error(error); return }
     toast.success('Encargo completado — stock descontado')
     router.refresh()
+  }
+
+  async function onDelete() {
+    const { error } = await deleteSale(saleId)
+    if (error) return { error }
+    router.refresh()
+    return {}
   }
 
   async function onCancel() {
@@ -91,6 +99,11 @@ export function EncargoRowActions({ saleId }: { saleId: string }) {
       >
         Cancelar
       </button>
+      <RowMenu
+        onDelete={onDelete}
+        deleteLabel="Eliminar encargo"
+        confirmDescription="Se borra el encargo y la seña deja de contarse en Finanzas. El stock no se modifica. No se puede deshacer."
+      />
     </div>
   )
 }

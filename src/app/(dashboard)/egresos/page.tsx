@@ -2,12 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ExpenseForm } from '@/components/expenses/expense-form'
+import { ExpenseRowActions } from '@/components/expenses/expense-row-actions'
 import { argDateStr, formatCurrency, formatDate } from '@/lib/utils/format'
 
 const categoryColors: Record<string, string> = {
   alquiler: 'text-violet-400',
   servicios: 'text-blue-400',
   marketing: 'text-indigo-400',
+  publicidad: 'text-pink-500 dark:text-pink-400',
   delivery: 'text-emerald-600 dark:text-emerald-400',
   salarios: 'text-amber-600 dark:text-amber-400',
   packaging: 'text-orange-400',
@@ -63,6 +65,7 @@ export default async function EgresosPage() {
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Tipo</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Monto</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Rec.</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -91,6 +94,9 @@ export default async function EgresosPage() {
                     ) : (
                       <span className="text-foreground/40">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <ExpenseRowActions expenseId={e.id} />
                   </td>
                 </tr>
               ))}

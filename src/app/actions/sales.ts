@@ -190,6 +190,71 @@ export async function returnSale(saleId: string): Promise<{ error?: string }> {
 }
 
 /**
+ * Elimina una venta o un encargo (sus items se borran en cascada).
+ *
+ * El stock se repone SOLO si la venta estaba 'completada', que es el único
+ * estado en el que hay unidades descontadas:
+ *  - 'encargo'    → nunca se descontó (se descuenta recién al completar).
+ *  - 'devolucion' → ya se repuso al registrar la devolución.
+ *  - 'cancelada'  → nunca se descontó.
+ * Reponer en esos casos inflaría el stock.
+ */
+export async function deleteSale(saleId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: sale, error: saleErr } = await supabase
+    .from('sales')
+    .select('id, status, sale_items(variant_id, quantity)')
+    .eq('id', saleId)
+    .single()
+  if (saleErr || !sale) return { error: saleErr?.message ?? 'Venta no encontrada' }
+
+  const qtyById = new Map<string, number>()
+  if (sale.status === 'completada') {
+    for (const item of (sale.sale_items ?? []) as { variant_id: string | null; quantity: number }[]) {
+      if (!item.variant_id) continue
+      qtyById.set(item.variant_id, (qtyById.get(item.variant_id) ?? 0) + item.quantity)
+    }
+  }
+
+  // Borrar primero: si el borrado falla no se tocó el stock, y si falla la
+  // reposición el usuario puede corregir el stock a mano. Al revés, un reintento
+  // después de un borrado fallido repondría dos veces.
+  const { error: delErr } = await supabase.from('sales').delete().eq('id', saleId)
+  if (delErr) return { error: delErr.message }
+
+  if (qtyById.size > 0) {
+    const { data: variants, error: varErr } = await supabase
+      .from('product_variants')
+      .select('id, stock_quantity')
+      .in('id', [...qtyById.keys()])
+    if (varErr) {
+      return { error: `Venta eliminada, pero falló leer el stock para reponerlo: ${varErr.message}` }
+    }
+
+    for (const v of variants ?? []) {
+      const { error: stockErr } = await supabase
+        .from('product_variants')
+        .update({ stock_quantity: v.stock_quantity + (qtyById.get(v.id) ?? 0) })
+        .eq('id', v.id)
+      if (stockErr) {
+        return { error: `Venta eliminada, pero falló reponer el stock: ${stockErr.message}` }
+      }
+    }
+  }
+
+  revalidatePath('/ventas')
+  revalidatePath('/encargos')
+  revalidatePath('/stock')
+  revalidatePath('/finanzas')
+  revalidatePath('/')
+  return {}
+}
+
+/**
  * Completa un encargo: descuenta el stock de sus items (bloquea si no alcanza),
  * lo pasa a 'completada' y registra la forma de pago del resto. El update
  * condicionado por status evita completar dos veces.
