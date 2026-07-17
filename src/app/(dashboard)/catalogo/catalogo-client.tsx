@@ -19,15 +19,28 @@ interface Props {
   isAdmin: boolean
 }
 
+const normalizeSize = (s: string) => s.trim().replace(',', '.')
+
 export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
   const [search, setSearch] = useState('')
 
-  const filtered = search
-    ? products.filter(p =>
-        `${p.brand} ${p.model} ${p.color}`
+  const query = search.trim().toLowerCase()
+  // "talle 38", "t 38", "38" o "38.5" → búsqueda por talle (solo con stock)
+  const sizeToken = normalizeSize(query.replace(/talles?|t\.?/g, ''))
+  const isSizeQuery = /^\d{1,2}(\.5)?$/.test(sizeToken)
+
+  const filtered = query
+    ? products.filter(p => {
+        const textMatch = `${p.brand} ${p.model} ${p.color}`
           .toLowerCase()
-          .includes(search.toLowerCase())
-      )
+          .includes(query)
+        const sizeMatch =
+          isSizeQuery &&
+          (p.variants ?? []).some(
+            v => normalizeSize(v.size) === sizeToken && v.stock_quantity > 0
+          )
+        return textMatch || sizeMatch
+      })
     : products
 
   return (
@@ -44,7 +57,7 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por marca, modelo o color..."
+            placeholder="Buscar por marca, modelo, color o talle (ej. 38)..."
             className="w-64 bg-card border border-foreground/10 text-foreground placeholder-foreground/45 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
           {isAdmin && (
