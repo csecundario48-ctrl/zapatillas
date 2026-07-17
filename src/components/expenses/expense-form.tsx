@@ -11,10 +11,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDateForInput } from '@/lib/utils/format'
+import type { Expense } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
-export function ExpenseForm({ categories, onSuccess }: { categories: string[]; onSuccess?: () => void }) {
+export function ExpenseForm({
+  categories,
+  expense,
+  onSuccess,
+}: {
+  categories: string[]
+  expense?: Expense
+  onSuccess?: () => void
+}) {
+  const isEdit = !!expense
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const {
@@ -24,12 +34,33 @@ export function ExpenseForm({ categories, onSuccess }: { categories: string[]; o
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { expense_date: formatDateForInput(), recurring: false },
+    defaultValues: expense
+      ? {
+          category: expense.category,
+          type: expense.type,
+          description: expense.description ?? '',
+          amount: expense.amount,
+          expense_date: expense.expense_date,
+          payment_method: expense.payment_method ?? '',
+          recurring: expense.recurring,
+          notes: expense.notes ?? '',
+        }
+      : { expense_date: formatDateForInput(), recurring: false },
   })
 
   async function onSubmit(data: ExpenseFormData) {
     setError(null)
     const supabase = createClient()
+
+    if (isEdit) {
+      const { error } = await supabase.from('expenses').update(data).eq('id', expense.id)
+      if (error) { setError(error.message); return }
+      toast.success('Egreso actualizado')
+      router.refresh()
+      onSuccess?.()
+      return
+    }
+
     const { error } = await supabase.from('expenses').insert(data)
     if (error) { setError(error.message); return }
     toast.success('Egreso registrado')
@@ -87,7 +118,7 @@ export function ExpenseForm({ categories, onSuccess }: { categories: string[]; o
       </label>
       {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Guardando...' : 'Registrar egreso'}
+        {isSubmitting ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Registrar egreso'}
       </Button>
     </form>
   )

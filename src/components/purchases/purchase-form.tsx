@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createPurchase } from '@/app/actions/purchases'
+import { createPurchase, updatePurchase } from '@/app/actions/purchases'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDateForInput } from '@/lib/utils/format'
 import { type VariantOption } from '@/components/sales/sale-form'
-import type { Supplier } from '@/types/database'
+import type { Supplier, PaymentStatus, DeliveryStatus } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
@@ -19,15 +19,47 @@ interface PurchaseItem {
   unit_cost: number
 }
 
-export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[]; suppliers: Supplier[] }) {
+export interface PurchaseForEdit {
+  id: string
+  delivery_status: DeliveryStatus
+  supplier_id: string
+  purchase_date: string
+  payment_status: PaymentStatus
+  payment_due_date: string | null
+  notes: string | null
+  items: { variant_id: string; quantity: number; unit_cost: number }[]
+  /** Ítems cuyo producto se borró del catálogo. Se conservan sin cambios al guardar. */
+  orphan: { count: number; total: number }
+}
+
+export function PurchaseForm({
+  variants,
+  suppliers,
+  purchase,
+}: {
+  variants: VariantOption[]
+  suppliers: Supplier[]
+  purchase?: PurchaseForEdit
+}) {
+  const isEdit = !!purchase
   const router = useRouter()
-  const [supplierId, setSupplierId] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState(formatDateForInput())
-  const [paymentStatus, setPaymentStatus] = useState('pendiente')
-  const [deliveryStatus, setDeliveryStatus] = useState<'pedido' | 'recibido'>('recibido')
-  const [paymentDueDate, setPaymentDueDate] = useState('')
-  const [notes, setNotes] = useState('')
-  const [items, setItems] = useState<PurchaseItem[]>([])
+  const [supplierId, setSupplierId] = useState(purchase?.supplier_id ?? '')
+  const [purchaseDate, setPurchaseDate] = useState(purchase?.purchase_date ?? formatDateForInput())
+  const [paymentStatus, setPaymentStatus] = useState<string>(purchase?.payment_status ?? 'pendiente')
+  // En edición el estado de entrega no se cambia: se usa "Marcar recibida".
+  const [deliveryStatus, setDeliveryStatus] = useState<'pedido' | 'recibido'>(
+    purchase?.delivery_status ?? 'recibido'
+  )
+  const [paymentDueDate, setPaymentDueDate] = useState(purchase?.payment_due_date ?? '')
+  const [notes, setNotes] = useState(purchase?.notes ?? '')
+  const [items, setItems] = useState<PurchaseItem[]>(() => {
+    if (!purchase) return []
+    const byId = new Map(variants.map(v => [v.id, v]))
+    return purchase.items.flatMap(i => {
+      const variant = byId.get(i.variant_id)
+      return variant ? [{ variant, quantity: i.quantity, unit_cost: i.unit_cost }] : []
+    })
+  })
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -42,7 +74,8 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
     setSearch('')
   }
 
-  const total = items.reduce((sum, i) => sum + i.unit_cost * i.quantity, 0)
+  const itemsTotal = items.reduce((sum, i) => sum + i.unit_cost * i.quantity, 0)
+  const total = itemsTotal + (purchase?.orphan.total ?? 0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -51,11 +84,10 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
     setLoading(true)
     setError(null)
 
-    const { error: pErr } = await createPurchase({
+    const payload = {
       supplier_id: supplierId,
       purchase_date: purchaseDate,
       payment_status: paymentStatus as 'pagado' | 'pendiente' | 'parcial',
-      delivery_status: deliveryStatus,
       payment_due_date: paymentDueDate || null,
       notes: notes || null,
       items: items.map(i => ({
@@ -63,7 +95,18 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
         quantity: i.quantity,
         unit_cost: i.unit_cost,
       })),
-    })
+    }
+
+    if (isEdit) {
+      const { error: updError, movedStock } = await updatePurchase(purchase.id, payload)
+      if (updError) { setError(updError); setLoading(false); return }
+      toast.success(movedStock ? 'Compra actualizada — stock ajustado' : 'Compra actualizada')
+      router.push('/compras')
+      router.refresh()
+      return
+    }
+
+    const { error: pErr } = await createPurchase({ ...payload, delivery_status: deliveryStatus })
 
     if (pErr) { setError(pErr); setLoading(false); return }
 
@@ -98,17 +141,25 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
           <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Vencimiento pago</Label>
           <Input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)} />
         </div>
-        <div className="space-y-1.5">
-          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Entrega</Label>
-          <select value={deliveryStatus} onChange={e => setDeliveryStatus(e.target.value as 'pedido' | 'recibido')} className={sel}>
-            <option value="recibido" className="bg-card">Recibido (suma stock)</option>
-            <option value="pedido" className="bg-card">Pedido (no suma stock)</option>
-          </select>
-        </div>
+        {!isEdit && (
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Entrega</Label>
+            <select value={deliveryStatus} onChange={e => setDeliveryStatus(e.target.value as 'pedido' | 'recibido')} className={sel}>
+              <option value="recibido" className="bg-card">Recibido (suma stock)</option>
+              <option value="pedido" className="bg-card">Pedido (no suma stock)</option>
+            </select>
+          </div>
+        )}
         <div className="space-y-1.5 sm:col-span-2">
           <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Notas</Label>
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas de la compra..." />
         </div>
+        {purchase && purchase.orphan.count > 0 && (
+          <p className="sm:col-span-2 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+            Esta compra incluye {purchase.orphan.count} producto{purchase.orphan.count > 1 ? 's' : ''} que ya no está{purchase.orphan.count > 1 ? 'n' : ''} en el catálogo,
+            por {formatCurrency(purchase.orphan.total)}. Se conserva{purchase.orphan.count > 1 ? 'n' : ''} sin cambios y suma{purchase.orphan.count > 1 ? 'n' : ''} al total.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -206,7 +257,11 @@ export function PurchaseForm({ variants, suppliers }: { variants: VariantOption[
 
       {error && <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Guardando...' : 'Registrar compra'}
+        {loading
+          ? 'Guardando...'
+          : isEdit
+            ? `Guardar cambios — ${formatCurrency(total)}`
+            : 'Registrar compra'}
       </Button>
     </form>
   )

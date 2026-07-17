@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { CustomerForm } from '@/components/customers/customer-form'
 import { WhatsAppButton } from '@/components/contact/whatsapp-button'
-import { ConfirmDelete, deleteErrorMessage } from '@/components/common/confirm-delete'
+import { RowMenu } from '@/components/common/row-menu'
+import { deleteErrorMessage } from '@/lib/utils/delete-error'
 import { ExportCsvButton } from '@/components/common/export-csv-button'
 import { CustomerHistoryButton } from '@/components/customers/customer-history'
 import { createClient } from '@/lib/supabase/client'
@@ -51,19 +51,14 @@ function CustomerRowActions({ row }: { row: CustomerRow }) {
   }
 
   return (
-    <div className="flex items-center justify-end gap-1">
+    <div className="flex items-center justify-end">
+      <RowMenu
+        onDelete={del}
+        deleteLabel="Eliminar cliente"
+        onEdit={() => setOpen(true)}
+        editLabel="Editar cliente"
+      />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger
-          render={
-            <button
-              type="button"
-              title="Editar"
-              className="p-1.5 rounded-md text-foreground/45 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
-            />
-          }
-        >
-          <Pencil size={14} />
-        </DialogTrigger>
         <DialogContent className="max-w-lg bg-card border-foreground/10">
           <DialogHeader>
             <DialogTitle className="text-foreground">Editar cliente</DialogTitle>
@@ -71,7 +66,6 @@ function CustomerRowActions({ row }: { row: CustomerRow }) {
           <CustomerForm customer={customer} onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
-      <ConfirmDelete onConfirm={del} title="Eliminar cliente" />
     </div>
   )
 }

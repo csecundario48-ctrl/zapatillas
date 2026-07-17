@@ -28,6 +28,8 @@ export function SaleRowActions({ saleId, status }: { saleId: string; status: str
           ? 'Se borra la venta y las unidades vuelven al stock. No se puede deshacer.'
           : 'Se borra la venta. El stock no se modifica. No se puede deshacer.'
       }
+      editHref={`/ventas/${saleId}/editar`}
+      editLabel="Editar venta"
     />
   )
 

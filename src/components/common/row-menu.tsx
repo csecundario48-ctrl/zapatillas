@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Menu } from '@base-ui/react/menu'
-import { MoreVertical, Trash2 } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -20,13 +21,22 @@ interface RowMenuProps {
   deleteLabel?: string
   /** Aclaración dentro del diálogo de confirmación. */
   confirmDescription?: string
+  /** Abre la edición en un modal. Excluyente con editHref. */
+  onEdit?: () => void
+  /** Navega a la página de edición. Excluyente con onEdit. */
+  editHref?: string
+  /** Texto de la opción de editar: "Editar venta", "Editar egreso", etc. */
+  editLabel?: string
 }
 
-/** Menú de 3 puntitos para una fila de tabla, con la opción de eliminar. */
+/** Menú de 3 puntitos para una fila de tabla, con las opciones de editar y eliminar. */
 export function RowMenu({
   onDelete,
   deleteLabel = 'Eliminar',
   confirmDescription = 'Esta acción no se puede deshacer.',
+  onEdit,
+  editHref,
+  editLabel = 'Editar',
 }: RowMenuProps) {
   const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -60,6 +70,24 @@ export function RowMenu({
         <Menu.Portal>
           <Menu.Positioner side="bottom" align="end" sideOffset={6} className="z-50 outline-none">
             <Menu.Popup className="min-w-[168px] rounded-lg bg-popover p-1 text-sm ring-1 ring-foreground/10 shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
+              {editHref && (
+                <Menu.Item
+                  render={<Link href={editHref} />}
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-md text-foreground/80 cursor-pointer select-none outline-none data-highlighted:bg-foreground/[0.06] data-highlighted:text-foreground"
+                >
+                  <Pencil size={14} />
+                  {editLabel}
+                </Menu.Item>
+              )}
+              {onEdit && (
+                <Menu.Item
+                  onClick={onEdit}
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-md text-foreground/80 cursor-pointer select-none outline-none data-highlighted:bg-foreground/[0.06] data-highlighted:text-foreground"
+                >
+                  <Pencil size={14} />
+                  {editLabel}
+                </Menu.Item>
+              )}
               <Menu.Item
                 onClick={() => setConfirming(true)}
                 className="flex items-center gap-2 px-2.5 py-2 rounded-md text-red-600 dark:text-red-400 cursor-pointer select-none outline-none data-highlighted:bg-red-500/10"

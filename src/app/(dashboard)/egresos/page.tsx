@@ -96,7 +96,7 @@ export default async function EgresosPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <ExpenseRowActions expenseId={e.id} />
+                    <ExpenseRowActions expense={e} categories={categories} />
                   </td>
                 </tr>
               ))}

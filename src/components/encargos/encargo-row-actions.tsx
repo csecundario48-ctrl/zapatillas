@@ -103,6 +103,8 @@ export function EncargoRowActions({ saleId }: { saleId: string }) {
         onDelete={onDelete}
         deleteLabel="Eliminar encargo"
         confirmDescription="Se borra el encargo y la seña deja de contarse en Finanzas. El stock no se modifica. No se puede deshacer."
+        editHref={`/ventas/${saleId}/editar`}
+        editLabel="Editar encargo"
       />
     </div>
   )

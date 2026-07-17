@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { receivePurchase, deletePurchase } from '@/app/actions/purchases'
-import { ConfirmDelete } from '@/components/common/confirm-delete'
+import { RowMenu } from '@/components/common/row-menu'
 
 interface PurchaseRowActionsProps {
   purchaseId: string
@@ -43,7 +43,17 @@ export function PurchaseRowActions({ purchaseId, deliveryStatus }: PurchaseRowAc
           {loading ? '...' : 'Marcar recibida'}
         </button>
       )}
-      <ConfirmDelete onConfirm={onDelete} title="Borrar compra" />
+      <RowMenu
+        onDelete={onDelete}
+        deleteLabel="Eliminar compra"
+        confirmDescription={
+          deliveryStatus === 'recibido'
+            ? 'Se borra la compra y sus unidades se restan del stock. No se puede deshacer.'
+            : 'Se borra la compra. El stock no se modifica. No se puede deshacer.'
+        }
+        editHref={`/compras/${purchaseId}/editar`}
+        editLabel="Editar compra"
+      />
     </div>
   )
 }
