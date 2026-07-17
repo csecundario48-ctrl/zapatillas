@@ -26,10 +26,12 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
 
   const query = search.trim().toLowerCase()
   // "talle 38", "t 38", "38" o "38.5" → búsqueda por talle (solo con stock)
-  const sizeToken = normalizeSize(query.replace(/talles?|t\.?/g, ''))
+  const sizeToken = normalizeSize(query.replace(/^(talles?|t)\.?\s*/, ''))
   const isSizeQuery = /^\d{1,2}(\.5)?$/.test(sizeToken)
+  // Escribir solo "talle"/"t" (sin número todavía) no filtra nada
+  const isBareKeyword = /^(talles?|t)\.?$/.test(query)
 
-  const filtered = query
+  const filtered = query && !isBareKeyword
     ? products.filter(p => {
         const textMatch = `${p.brand} ${p.model} ${p.color}`
           .toLowerCase()
