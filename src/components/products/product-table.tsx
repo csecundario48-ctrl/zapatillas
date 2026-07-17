@@ -6,13 +6,17 @@ interface ProductTableProps {
   products: Product[]
   isAdmin: boolean
   suppliers?: Pick<Supplier, 'id' | 'name'>[]
+  /** Si está seteado, solo se muestra/cuenta ese talle (búsqueda por talle) */
+  sizeFilter?: string | null
 }
+
+const normalizeSize = (s: string) => s.trim().replace(',', '.')
 
 function totalStock(p: Product): number {
   return (p.variants ?? []).reduce((sum, v) => sum + v.stock_quantity, 0)
 }
 
-export function ProductTable({ products, isAdmin, suppliers = [] }: ProductTableProps) {
+export function ProductTable({ products, isAdmin, suppliers = [], sizeFilter = null }: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -40,8 +44,13 @@ export function ProductTable({ products, isAdmin, suppliers = [] }: ProductTable
         </thead>
         <tbody>
           {products.map(p => {
-            const total = totalStock(p)
-            const sorted = [...(p.variants ?? [])].sort((a, b) => Number(a.size) - Number(b.size))
+            const visibleVariants = sizeFilter
+              ? (p.variants ?? []).filter(v => normalizeSize(v.size) === sizeFilter)
+              : (p.variants ?? [])
+            const total = sizeFilter
+              ? visibleVariants.reduce((sum, v) => sum + v.stock_quantity, 0)
+              : totalStock(p)
+            const sorted = [...visibleVariants].sort((a, b) => Number(a.size) - Number(b.size))
             return (
               <tr key={p.id} className="border-b border-foreground/[0.06] hover:bg-foreground/[0.02] transition-colors">
                 <td className="px-4 py-3 font-medium text-foreground">

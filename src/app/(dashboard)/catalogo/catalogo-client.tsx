@@ -82,7 +82,12 @@ export function CatalogoClient({ products, suppliers, isAdmin }: Props) {
         </div>
       ) : (
         <div className="rounded-xl border border-foreground/[0.08] bg-card overflow-hidden">
-          <ProductTable products={filtered} isAdmin={isAdmin} suppliers={suppliers} />
+          <ProductTable
+            products={filtered}
+            isAdmin={isAdmin}
+            suppliers={suppliers}
+            sizeFilter={isSizeQuery ? sizeToken : null}
+          />
         </div>
       )}
     </div>
