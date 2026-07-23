@@ -64,6 +64,13 @@ export function ProductForm({ suppliers, product, onSuccess }: ProductFormProps)
 
   async function onSubmit(data: ProductFormData) {
     setError(null)
+
+    const hasPositiveDelta = sizes.some(size => (stock[size] ?? 0) > (stockBySize[size] ?? 0))
+    if (hasPositiveDelta && !data.supplier_id) {
+      setError('Seleccioná un proveedor: vas a sumar stock y se registra como compra')
+      return
+    }
+
     const input = {
       brand: data.brand, model: data.model, color: data.color,
       gender: data.gender ?? null,
