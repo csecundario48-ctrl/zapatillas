@@ -9,6 +9,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { AdjustmentForm } from './adjustment-form'
+import type { Supplier } from '@/types/database'
 
 function badgeClass(qty: number) {
   if (qty === 0) return 'bg-transparent border-foreground/10 text-foreground/35 line-through'
@@ -22,9 +23,14 @@ interface StockBadgeButtonProps {
   productName: string
   size: string
   qty: number
+  supplierId: string | null
+  costPrice: number
+  suppliers: Pick<Supplier, 'id' | 'name'>[]
 }
 
-export function StockBadgeButton({ variantId, productId, productName, size, qty }: StockBadgeButtonProps) {
+export function StockBadgeButton({
+  variantId, productId, productName, size, qty, supplierId, costPrice, suppliers,
+}: StockBadgeButtonProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -50,6 +56,9 @@ export function StockBadgeButton({ variantId, productId, productName, size, qty 
           size={size}
           productName={`${productName} · T${size}`}
           currentStock={qty}
+          supplierId={supplierId}
+          costPrice={costPrice}
+          suppliers={suppliers}
           onClose={() => setOpen(false)}
         />
       </DialogContent>

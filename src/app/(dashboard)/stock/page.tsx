@@ -6,19 +6,27 @@ import { buildProductGroups, type VariantWithProduct } from '@/lib/utils/product
 
 export default async function StockPage() {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('product_variants')
-    .select('id, product_id, size, stock_quantity, products!inner(brand, model, color, active)')
+  const [{ data }, { data: suppliersData }] = await Promise.all([
+    supabase
+      .from('product_variants')
+      .select('id, product_id, size, stock_quantity, products!inner(brand, model, color, active, supplier_id, cost_price)'),
+    supabase.from('suppliers').select('id, name').order('name'),
+  ])
+  const suppliers = suppliersData ?? []
 
   type Row = {
     id: string; product_id: string; size: string; stock_quantity: number
-    products: { brand: string; model: string; color: string; active: boolean } | null
+    products: {
+      brand: string; model: string; color: string; active: boolean
+      supplier_id: string | null; cost_price: number
+    } | null
   }
   const rows = ((data as unknown as Row[]) ?? []).filter(r => r.products?.active)
 
   const variants: VariantWithProduct[] = rows.map(r => ({
     id: r.id, product_id: r.product_id, size: r.size, stock_quantity: r.stock_quantity,
     brand: r.products!.brand, model: r.products!.model, color: r.products!.color,
+    supplier_id: r.products!.supplier_id, cost_price: r.products!.cost_price,
   }))
   const groups = buildProductGroups(variants)
 
@@ -92,6 +100,9 @@ export default async function StockPage() {
                         productName={`${group.brand} ${group.model} ${group.color}`}
                         size={size}
                         qty={qty}
+                        supplierId={group.supplierId}
+                        costPrice={group.costPrice}
+                        suppliers={suppliers}
                       />
                       <span className="text-[10px] text-foreground/45">T{size}</span>
                     </div>

@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { adjustStock } from '@/app/actions/stock'
+import { createPurchase } from '@/app/actions/purchases'
 import { ensureVariant } from '@/app/actions/products'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { AdjustmentReason } from '@/types/database'
+import { formatDateForInput } from '@/lib/utils/format'
+import type { AdjustmentReason, Supplier } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
@@ -18,24 +20,34 @@ interface AdjustmentFormProps {
   size: string
   productName: string
   currentStock: number
+  supplierId: string | null
+  costPrice: number
+  suppliers: Pick<Supplier, 'id' | 'name'>[]
   onClose: () => void
 }
 
-export function AdjustmentForm({ variantId, productId, size, productName, currentStock, onClose }: AdjustmentFormProps) {
+export function AdjustmentForm({
+  variantId, productId, size, productName, currentStock,
+  supplierId, costPrice, suppliers, onClose,
+}: AdjustmentFormProps) {
   const router = useRouter()
   const [quantityChange, setQuantityChange] = useState(0)
   const [reason, setReason] = useState<AdjustmentReason>('ajuste_manual')
   const [notes, setNotes] = useState('')
+  const [supplier, setSupplier] = useState(supplierId ?? '')
+  const [unitCost, setUnitCost] = useState(costPrice)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const resultingStock = currentStock + quantityChange
+  const isPurchase = quantityChange > 0
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     if (quantityChange === 0) { setError('El cambio debe ser distinto de 0'); return }
     if (resultingStock < 0) { setError('El stock no puede quedar negativo'); return }
+    if (isPurchase && !supplier) { setError('Seleccioná un proveedor'); return }
     setLoading(true)
 
     // Si el talle todavía no existe como variante, crearlo primero.
@@ -46,9 +58,24 @@ export function AdjustmentForm({ variantId, productId, size, productName, curren
       vId = id
     }
 
-    const { error: adjErr } = await adjustStock(vId, quantityChange, reason, notes)
-    if (adjErr) { setError(adjErr); setLoading(false); return }
-    toast.success(`Stock ajustado a ${resultingStock} ud.`)
+    if (isPurchase) {
+      const purchErr = await createPurchase({
+        supplier_id: supplier,
+        purchase_date: formatDateForInput(),
+        payment_status: 'pendiente',
+        delivery_status: 'recibido',
+        payment_due_date: null,
+        notes: null,
+        items: [{ variant_id: vId, quantity: quantityChange, unit_cost: unitCost }],
+      })
+      if (purchErr.error) { setError(purchErr.error); setLoading(false); return }
+      toast.success(`Stock sumado a ${resultingStock} ud. — compra registrada`)
+    } else {
+      const { error: adjErr } = await adjustStock(vId, quantityChange, reason, notes)
+      if (adjErr) { setError(adjErr); setLoading(false); return }
+      toast.success(`Stock ajustado a ${resultingStock} ud.`)
+    }
+
     router.refresh()
     onClose()
   }
@@ -89,20 +116,44 @@ export function AdjustmentForm({ variantId, productId, size, productName, curren
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Motivo</Label>
-        <select value={reason} onChange={e => setReason(e.target.value as AdjustmentReason)} className={sel}>
-          <option value="ajuste_manual" className="bg-card">Ajuste manual</option>
-          <option value="rotura" className="bg-card">Rotura</option>
-          <option value="perdida" className="bg-card">Pérdida</option>
-          <option value="devolucion_proveedor" className="bg-card">Devolución a proveedor</option>
-        </select>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Notas (opcional)</Label>
-        <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ej: conteo físico de cierre de mes" />
-      </div>
+      {isPurchase ? (
+        <>
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Proveedor</Label>
+            <select value={supplier} onChange={e => setSupplier(e.target.value)} className={sel}>
+              <option value="" className="bg-card">Seleccionar proveedor</option>
+              {suppliers.map(s => <option key={s.id} value={s.id} className="bg-card">{s.name}</option>)}
+            </select>
+            <p className="text-xs text-foreground/55">Sumar stock se registra como una compra a este proveedor.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Costo unitario ($)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={unitCost}
+              onChange={e => setUnitCost(Number(e.target.value))}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Motivo</Label>
+            <select value={reason} onChange={e => setReason(e.target.value as AdjustmentReason)} className={sel}>
+              <option value="ajuste_manual" className="bg-card">Ajuste manual</option>
+              <option value="rotura" className="bg-card">Rotura</option>
+              <option value="perdida" className="bg-card">Pérdida</option>
+              <option value="devolucion_proveedor" className="bg-card">Devolución a proveedor</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Notas (opcional)</Label>
+            <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ej: conteo físico de cierre de mes" />
+          </div>
+        </>
+      )}
 
       {error && (
         <p className="text-xs text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
@@ -110,7 +161,7 @@ export function AdjustmentForm({ variantId, productId, size, productName, curren
 
       <div className="flex gap-2">
         <Button type="submit" disabled={loading} className="flex-1">
-          {loading ? 'Guardando...' : 'Confirmar ajuste'}
+          {loading ? 'Guardando...' : isPurchase ? 'Registrar compra' : 'Confirmar ajuste'}
         </Button>
         <Button type="button" variant="outline" onClick={onClose}>
           Cancelar
