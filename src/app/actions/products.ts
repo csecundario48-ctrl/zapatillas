@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { insertPurchaseRecord } from './purchases'
+import { argDateStr } from '@/lib/utils/format'
 
 export interface ProductInput {
   brand: string
@@ -28,11 +30,18 @@ function productFields(input: ProductInput) {
   }
 }
 
-/** Crea el producto y una variante por cada talle con stock > 0. */
+/** Crea el producto y una variante por cada talle con stock > 0. Si hay stock
+ *  inicial, además registra una compra al proveedor (sin volver a sumar
+ *  stock: ya quedó en su valor final al insertar la variante). */
 export async function createProduct(input: ProductInput): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
+
+  const hasInitialStock = input.variants.some(v => v.stock_quantity > 0)
+  if (hasInitialStock && !input.supplier_id) {
+    return { error: 'Seleccioná un proveedor: vas a cargar stock inicial y se registra como compra' }
+  }
 
   const { data: product, error } = await supabase
     .from('products')
@@ -46,10 +55,33 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
     .map(v => ({ product_id: product.id, size: v.size, stock_quantity: v.stock_quantity }))
 
   if (variants.length > 0) {
-    const { error: vErr } = await supabase.from('product_variants').insert(variants)
+    const { data: inserted, error: vErr } = await supabase
+      .from('product_variants')
+      .insert(variants)
+      .select('id, size, stock_quantity')
     if (vErr) {
       await supabase.from('products').delete().eq('id', product.id)
       return { error: vErr.message }
+    }
+
+    if (input.supplier_id) {
+      const { error: purchErr } = await insertPurchaseRecord(supabase, {
+        supplier_id: input.supplier_id,
+        purchase_date: argDateStr(),
+        payment_status: 'pendiente',
+        delivery_status: 'recibido',
+        payment_due_date: null,
+        notes: null,
+        created_by: user.id,
+        items: (inserted ?? []).map(v => ({
+          variant_id: v.id,
+          product_label: `${input.brand} ${input.model} ${input.color}`,
+          size_label: v.size,
+          quantity: v.stock_quantity,
+          unit_cost: input.cost_price,
+        })),
+      })
+      if (purchErr) return { error: `Producto creado, pero falló registrar la compra: ${purchErr}` }
     }
   }
 
