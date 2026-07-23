@@ -21,6 +21,72 @@ interface CreatePurchaseInput {
   items: PurchaseItemInput[]
 }
 
+export interface PurchaseRecordItem {
+  variant_id: string
+  product_label: string | null
+  size_label: string | null
+  quantity: number
+  unit_cost: number
+}
+
+export interface InsertPurchaseRecordInput {
+  supplier_id: string
+  purchase_date: string
+  payment_status: PaymentStatus
+  delivery_status: DeliveryStatus
+  payment_due_date: string | null
+  notes: string | null
+  created_by: string
+  items: PurchaseRecordItem[]
+}
+
+/**
+ * Inserta una compra y sus ítems. NO toca stock: quien la llama decide si
+ * corresponde sumarlo (createPurchase lo hace si delivery_status es
+ * 'recibido'; products.ts no, porque el alta/edición de variante ya deja
+ * el stock en su valor final).
+ */
+export async function insertPurchaseRecord(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  input: InsertPurchaseRecordInput
+): Promise<{ purchaseId?: string; error?: string }> {
+  const total = input.items.reduce((sum, i) => sum + i.unit_cost * i.quantity, 0)
+
+  const { data: purchase, error: pErr } = await supabase
+    .from('purchases')
+    .insert({
+      supplier_id: input.supplier_id,
+      purchase_date: input.purchase_date,
+      total_amount: total,
+      payment_status: input.payment_status,
+      delivery_status: input.delivery_status,
+      payment_due_date: input.payment_due_date,
+      notes: input.notes,
+      created_by: input.created_by,
+    })
+    .select('id')
+    .single()
+  if (pErr || !purchase) return { error: pErr?.message ?? 'No se pudo registrar la compra' }
+
+  const { error: iErr } = await supabase.from('purchase_items').insert(
+    input.items.map(i => ({
+      purchase_id: purchase.id,
+      variant_id: i.variant_id,
+      product_label: i.product_label,
+      size_label: i.size_label,
+      quantity: i.quantity,
+      unit_cost: i.unit_cost,
+      subtotal: i.unit_cost * i.quantity,
+    }))
+  )
+  if (iErr) {
+    await supabase.from('purchases').delete().eq('id', purchase.id)
+    return { error: iErr.message }
+  }
+
+  return { purchaseId: purchase.id }
+}
+
 /**
  * Registra una compra a proveedor: inserta la compra y sus items (con snapshot
  * de nombre y talle) y suma el stock de cada variante.
@@ -48,49 +114,33 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
   const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
   const qtyById = new Map<string, number>()
-  let total = 0
   for (const item of input.items) {
     if (item.quantity < 1) return { error: 'Cantidad inválida' }
     if (item.unit_cost < 0) return { error: 'Costo inválido' }
     if (!byId.has(item.variant_id)) return { error: 'Uno de los productos no existe' }
     qtyById.set(item.variant_id, (qtyById.get(item.variant_id) ?? 0) + item.quantity)
-    total += item.unit_cost * item.quantity
   }
 
-  const { data: purchase, error: pErr } = await supabase
-    .from('purchases')
-    .insert({
-      supplier_id: input.supplier_id,
-      purchase_date: input.purchase_date,
-      total_amount: total,
-      payment_status: input.payment_status,
-      delivery_status: input.delivery_status,
-      payment_due_date: input.payment_due_date,
-      notes: input.notes,
-      created_by: user.id,
-    })
-    .select('id')
-    .single()
-  if (pErr || !purchase) return { error: pErr?.message ?? 'No se pudo registrar la compra' }
-
-  const { error: iErr } = await supabase.from('purchase_items').insert(
-    input.items.map(i => {
+  const { purchaseId, error: insertErr } = await insertPurchaseRecord(supabase, {
+    supplier_id: input.supplier_id,
+    purchase_date: input.purchase_date,
+    payment_status: input.payment_status,
+    delivery_status: input.delivery_status,
+    payment_due_date: input.payment_due_date,
+    notes: input.notes,
+    created_by: user.id,
+    items: input.items.map(i => {
       const v = byId.get(i.variant_id)!
       return {
-        purchase_id: purchase.id,
         variant_id: i.variant_id,
         product_label: v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
         size_label: v.size,
         quantity: i.quantity,
         unit_cost: i.unit_cost,
-        subtotal: i.unit_cost * i.quantity,
       }
-    })
-  )
-  if (iErr) {
-    await supabase.from('purchases').delete().eq('id', purchase.id)
-    return { error: iErr.message }
-  }
+    }),
+  })
+  if (insertErr || !purchaseId) return { error: insertErr ?? 'No se pudo registrar la compra' }
 
   if (input.delivery_status === 'recibido') {
     for (const [variantId, qty] of qtyById) {
