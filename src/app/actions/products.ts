@@ -92,10 +92,11 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
 }
 
 /**
- * Edita el producto y sincroniza sus talles: crea los que aparecen y ajusta el
- * stock de los existentes dejando registro (stock_adjustments) en vez de
- * pisarlo. Los talles que quedan en 0 NO se borran (se conservan como variante
- * con stock 0 para no perder su historial).
+ * Edita el producto y sincroniza sus talles. Los talles que suben stock se
+ * agrupan en una compra al proveedor (no generan stock_adjustment); los que
+ * bajan siguen dejando registro en stock_adjustments como antes. Los talles
+ * que quedan en 0 NO se borran (se conservan como variante con stock 0 para
+ * no perder su historial).
  */
 export async function updateProduct(productId: string, input: ProductInput): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -113,14 +114,27 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
 
   const bySize = new Map((existing ?? []).map(v => [v.size, v]))
 
+  const hasPositiveDelta = input.variants.some(wanted => {
+    const current = bySize.get(wanted.size)
+    return wanted.stock_quantity > (current?.stock_quantity ?? 0)
+  })
+  if (hasPositiveDelta && !input.supplier_id) {
+    return { error: 'Seleccioná un proveedor: vas a sumar stock y se registra como compra' }
+  }
+
+  const purchaseItems: { variant_id: string; size_label: string; quantity: number }[] = []
+
   for (const wanted of input.variants) {
     const current = bySize.get(wanted.size)
     if (!current) {
       if (wanted.stock_quantity > 0) {
-        const { error: insErr } = await supabase
+        const { data: created, error: insErr } = await supabase
           .from('product_variants')
           .insert({ product_id: productId, size: wanted.size, stock_quantity: wanted.stock_quantity })
-        if (insErr) return { error: insErr.message }
+          .select('id')
+          .single()
+        if (insErr || !created) return { error: insErr?.message ?? 'No se pudo crear el talle' }
+        purchaseItems.push({ variant_id: created.id, size_label: wanted.size, quantity: wanted.stock_quantity })
       }
       continue
     }
@@ -131,16 +145,41 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
         .update({ stock_quantity: wanted.stock_quantity })
         .eq('id', current.id)
       if (updErr) return { error: updErr.message }
-      const { error: adjErr } = await supabase.from('stock_adjustments').insert({
-        variant_id: current.id,
-        quantity_change: delta,
-        reason: 'ajuste_manual',
-        notes: 'Corrección desde catálogo',
-        created_by: user.id,
-      })
-      if (adjErr) return { error: adjErr.message }
+
+      if (delta > 0) {
+        purchaseItems.push({ variant_id: current.id, size_label: wanted.size, quantity: delta })
+      } else {
+        const { error: adjErr } = await supabase.from('stock_adjustments').insert({
+          variant_id: current.id,
+          quantity_change: delta,
+          reason: 'ajuste_manual',
+          notes: 'Corrección desde catálogo',
+          created_by: user.id,
+        })
+        if (adjErr) return { error: adjErr.message }
+      }
     }
     bySize.delete(wanted.size)
+  }
+
+  if (purchaseItems.length > 0) {
+    const { error: purchErr } = await insertPurchaseRecord(supabase, {
+      supplier_id: input.supplier_id!,
+      purchase_date: argDateStr(),
+      payment_status: 'pendiente',
+      delivery_status: 'recibido',
+      payment_due_date: null,
+      notes: null,
+      created_by: user.id,
+      items: purchaseItems.map(i => ({
+        variant_id: i.variant_id,
+        product_label: `${input.brand} ${input.model} ${input.color}`,
+        size_label: i.size_label,
+        quantity: i.quantity,
+        unit_cost: input.cost_price,
+      })),
+    })
+    if (purchErr) return { error: `Producto actualizado, pero falló registrar la compra: ${purchErr}` }
   }
 
   revalidatePath('/catalogo')
