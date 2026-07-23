@@ -8,6 +8,8 @@ export interface VariantWithProduct {
   brand: string
   model: string
   color: string
+  supplier_id: string | null
+  cost_price: number
 }
 
 export interface SizeCell {
@@ -21,6 +23,8 @@ export interface ProductGroup {
   brand: string
   model: string
   color: string
+  supplierId: string | null
+  costPrice: number
   sizes: SizeCell[]
   totalStock: number
   minStock: number
@@ -29,13 +33,18 @@ export interface ProductGroup {
 export function buildProductGroups(variants: VariantWithProduct[]): ProductGroup[] {
   const map = new Map<string, {
     brand: string; model: string; color: string
+    supplierId: string | null; costPrice: number
     bySize: Map<string, { qty: number; variantId: string }>
   }>()
 
   for (const v of variants) {
     let group = map.get(v.product_id)
     if (!group) {
-      group = { brand: v.brand, model: v.model, color: v.color, bySize: new Map() }
+      group = {
+        brand: v.brand, model: v.model, color: v.color,
+        supplierId: v.supplier_id, costPrice: v.cost_price,
+        bySize: new Map(),
+      }
       map.set(v.product_id, group)
     }
     group.bySize.set(v.size, { qty: v.stock_quantity, variantId: v.id })
@@ -59,7 +68,11 @@ export function buildProductGroups(variants: VariantWithProduct[]): ProductGroup
       minStock = Math.min(minStock, qty)
     }
 
-    result.push({ productId, brand: group.brand, model: group.model, color: group.color, sizes, totalStock, minStock })
+    result.push({
+      productId, brand: group.brand, model: group.model, color: group.color,
+      supplierId: group.supplierId, costPrice: group.costPrice,
+      sizes, totalStock, minStock,
+    })
   }
 
   return result.sort((a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model) || a.color.localeCompare(b.color))

@@ -3,7 +3,8 @@ import { buildProductGroups, type VariantWithProduct } from './product-groups'
 
 const v = (over: Partial<VariantWithProduct>): VariantWithProduct => ({
   id: 'v1', product_id: 'p1', size: '40', stock_quantity: 1,
-  brand: 'Adidas', model: 'Campus', color: 'Total Black', ...over,
+  brand: 'Adidas', model: 'Campus', color: 'Total Black',
+  supplier_id: null, cost_price: 0, ...over,
 })
 
 describe('buildProductGroups', () => {
@@ -54,5 +55,13 @@ describe('buildProductGroups', () => {
       v({ id: 'b', product_id: 'p2', model: 'Forum' }),
     ])
     expect(groups).toHaveLength(2)
+  })
+
+  it('pasa supplier_id y cost_price del producto al grupo', () => {
+    const groups = buildProductGroups([
+      v({ id: 'a', supplier_id: 'sup-1', cost_price: 15000 }),
+    ])
+    expect(groups[0].supplierId).toBe('sup-1')
+    expect(groups[0].costPrice).toBe(15000)
   })
 })
