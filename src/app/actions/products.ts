@@ -103,9 +103,6 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { error } = await supabase.from('products').update(productFields(input)).eq('id', productId)
-  if (error) return { error: error.message }
-
   const { data: existing, error: exErr } = await supabase
     .from('product_variants')
     .select('id, size, stock_quantity')
@@ -121,6 +118,9 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
   if (hasPositiveDelta && !input.supplier_id) {
     return { error: 'Seleccioná un proveedor: vas a sumar stock y se registra como compra' }
   }
+
+  const { error } = await supabase.from('products').update(productFields(input)).eq('id', productId)
+  if (error) return { error: error.message }
 
   const purchaseItems: { variant_id: string; size_label: string; quantity: number }[] = []
 
