@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { ProveedoresClient, type SupplierRow } from './proveedores-client'
+import type { BusinessLine } from '@/types/database'
 
 interface SupplierRecord {
   id: string
@@ -9,6 +10,7 @@ interface SupplierRecord {
   email: string | null
   address: string | null
   notes: string | null
+  line_id: string | null
 }
 
 interface PurchaseRecord {
@@ -44,6 +46,7 @@ function buildSupplierRows(suppliers: SupplierRecord[], purchases: PurchaseRecor
       email: s.email,
       address: s.address,
       notes: s.notes,
+      lineId: s.line_id,
       purchases: a.count,
       totalBought: a.total,
       debt: a.debt,
@@ -59,11 +62,13 @@ function buildSupplierRows(suppliers: SupplierRecord[], purchases: PurchaseRecor
 export default async function ProveedoresPage() {
   const supabase = await createClient()
 
-  const [{ data: suppliers }, { data: purchases }] = await Promise.all([
+  const [{ data: suppliers }, { data: purchases }, { data: lineRows }] = await Promise.all([
     supabase.from('suppliers').select('*').order('name'),
     supabase.from('purchases').select('supplier_id, total_amount, purchase_date, payment_status'),
+    supabase.from('business_lines').select('*').order('sort_order'),
   ])
 
   const rows = buildSupplierRows(suppliers ?? [], purchases ?? [])
-  return <ProveedoresClient rows={rows} />
+  const lines = (lineRows as BusinessLine[] | null) ?? []
+  return <ProveedoresClient rows={rows} lines={lines} />
 }

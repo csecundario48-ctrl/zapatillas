@@ -18,11 +18,14 @@ const categoryColors: Record<string, string> = {
 
 export default async function EgresosPage() {
   const supabase = await createClient()
-  const [{ data: expenses }, { data: categoryRows }] = await Promise.all([
+  const [{ data: expenses }, { data: categoryRows }, { data: lineRows }] = await Promise.all([
     supabase.from('expenses').select('*').order('expense_date', { ascending: false }),
     supabase.from('expense_categories').select('name').order('name'),
+    supabase.from('business_lines').select('*').order('sort_order'),
   ])
   const categories = ((categoryRows as { name: string }[] | null) ?? []).map(c => c.name)
+  const lines = (lineRows as import('@/types/database').BusinessLine[] | null) ?? []
+  const lineName = (id: string | null) => lines.find(l => l.id === id)?.name ?? null
 
   const total = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
   const thisMonth = expenses
@@ -49,7 +52,7 @@ export default async function EgresosPage() {
             <DialogHeader>
               <DialogTitle className="text-foreground">Registrar egreso</DialogTitle>
             </DialogHeader>
-            <ExpenseForm categories={categories} />
+            <ExpenseForm categories={categories} lines={lines} />
           </DialogContent>
         </Dialog>
       </div>
@@ -61,6 +64,7 @@ export default async function EgresosPage() {
               <tr className="border-b border-foreground/[0.06] bg-background">
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Fecha</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Categoría</th>
+                <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Rubro</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Descripción</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Tipo</th>
                 <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Monto</th>
@@ -76,6 +80,11 @@ export default async function EgresosPage() {
                     <span className={`capitalize font-medium ${categoryColors[e.category] ?? 'text-foreground/90'}`}>
                       {e.category}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {lineName(e.line_id)
+                      ? <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] border border-foreground/10 text-foreground/60">{lineName(e.line_id)}</span>
+                      : <span className="text-foreground/35 text-xs">General</span>}
                   </td>
                   <td className="px-4 py-3 text-foreground/60">{e.description ?? '—'}</td>
                   <td className="px-4 py-3">
@@ -96,7 +105,7 @@ export default async function EgresosPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <ExpenseRowActions expense={e} categories={categories} />
+                    <ExpenseRowActions expense={e} categories={categories} lines={lines} />
                   </td>
                 </tr>
               ))}

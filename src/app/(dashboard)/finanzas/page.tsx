@@ -8,18 +8,19 @@ const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'S
 export default async function FinanzasPage() {
   const supabase = await createClient()
 
-  const [{ data: sales }, { data: cancelledDeposits }, { data: expenses }, { data: pendingPurchases }] = await Promise.all([
+  const [{ data: sales }, { data: cancelledDeposits }, { data: expenses }, { data: pendingPurchases }, { data: lineRows }] = await Promise.all([
     supabase
       .from('sales')
-      .select('total_amount, sale_date, sale_items(quantity, unit_cost)')
+      .select('total_amount, sale_date, sale_items(quantity, unit_cost, subtotal, line_id)')
       .eq('status', 'completada'),
     supabase
       .from('sales')
       .select('deposit_amount, sale_date')
       .eq('status', 'cancelada')
       .gt('deposit_amount', 0),
-    supabase.from('expenses').select('amount, expense_date, category'),
+    supabase.from('expenses').select('amount, expense_date, category, line_id'),
     supabase.from('purchases').select('total_amount').neq('payment_status', 'pagado'),
+    supabase.from('business_lines').select('*').order('sort_order'),
   ])
 
   const now = new Date()
@@ -50,6 +51,41 @@ export default async function FinanzasPage() {
     acc[e.category] = (acc[e.category] ?? 0) + e.amount
     return acc
   }, {} as Record<string, number>) ?? {}
+
+  // Resultado por rubro: ingresos, costo de mercadería y gastos directos.
+  // Los ingresos/costos se derivan del snapshot line_id de cada sale_item; los
+  // gastos e ingresos sin rubro (señas de encargos cancelados) van a "General".
+  const GENERAL = '__general__'
+  const lines = (lineRows as import('@/types/database').BusinessLine[] | null) ?? []
+  const lineName = (id: string) => (id === GENERAL ? 'General / Compartido' : lines.find(l => l.id === id)?.name ?? 'General / Compartido')
+
+  type LineAgg = { income: number; cogs: number; expenses: number }
+  const byLine = new Map<string, LineAgg>()
+  const bucket = (id: string) => {
+    const b = byLine.get(id) ?? { income: 0, cogs: 0, expenses: 0 }
+    byLine.set(id, b)
+    return b
+  }
+  type SaleLineItem = { quantity: number; unit_cost: number; subtotal: number; line_id: string | null }
+  for (const sale of sales ?? []) {
+    for (const item of ((sale.sale_items ?? []) as unknown as SaleLineItem[])) {
+      const b = bucket(item.line_id ?? GENERAL)
+      b.income += item.subtotal
+      b.cogs += item.unit_cost * item.quantity
+    }
+  }
+  for (const d of cancelledDeposits ?? []) bucket(GENERAL).income += d.deposit_amount
+  for (const e of expenses ?? []) bucket(e.line_id ?? GENERAL).expenses += e.amount
+
+  // Orden: rubros por sort_order, y General al final.
+  const lineResult = [...byLine.entries()]
+    .map(([id, agg]) => ({ id, name: lineName(id), ...agg, net: agg.income - agg.cogs - agg.expenses }))
+    .sort((a, b) => {
+      if (a.id === GENERAL) return 1
+      if (b.id === GENERAL) return -1
+      const ai = lines.findIndex(l => l.id === a.id), bi = lines.findIndex(l => l.id === b.id)
+      return ai - bi
+    })
 
   // Flujo de caja: ingresos vs egresos de los últimos 6 meses calendario
   const cashflow = Array.from({ length: 6 }, (_, i) => {
@@ -151,6 +187,38 @@ export default async function FinanzasPage() {
         <h2 className="text-sm font-semibold text-foreground mb-4">Flujo de caja — últimos 6 meses</h2>
         <CashflowBarChart data={cashflow.map(({ month, ingresos, egresos }) => ({ month, ingresos, egresos }))} />
       </div>
+
+      {/* Resultado por rubro */}
+      {lineResult.length > 0 && (
+        <div className="bg-card border border-foreground/[0.08] rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4">Resultado por rubro</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-foreground/[0.06]">
+                  <th className="text-left px-3 py-2 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Rubro</th>
+                  <th className="text-right px-3 py-2 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Ingresos</th>
+                  <th className="text-right px-3 py-2 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Mercadería</th>
+                  <th className="text-right px-3 py-2 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Gastos</th>
+                  <th className="text-right px-3 py-2 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Neto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lineResult.map(r => (
+                  <tr key={r.id} className="border-b border-foreground/[0.05]">
+                    <td className="px-3 py-2.5 text-foreground/90">{r.name}</td>
+                    <td className="px-3 py-2.5 text-right font-mono tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(r.income)}</td>
+                    <td className="px-3 py-2.5 text-right font-mono tabular-nums text-foreground/70">{formatCurrency(r.cogs)}</td>
+                    <td className="px-3 py-2.5 text-right font-mono tabular-nums text-foreground/70">{formatCurrency(r.expenses)}</td>
+                    <td className={`px-3 py-2.5 text-right font-mono font-semibold tabular-nums ${r.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(r.net)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-foreground/45 mt-3">Los gastos “General / Compartido” no se prorratean entre rubros.</p>
+        </div>
+      )}
 
       {/* Expenses by category */}
       {Object.keys(expenseByCategory).length > 0 && (

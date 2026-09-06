@@ -11,7 +11,7 @@ export default async function ReportesPage() {
   const [{ data: salesRaw }, { data: products }] = await Promise.all([
     supabase
       .from('sales')
-      .select('sale_date, total_amount, channel, payment_method, sale_items(quantity, unit_price, unit_cost, product_variants(products(id, brand, model)))')
+      .select('sale_date, total_amount, channel, payment_method, sale_items(quantity, unit_price, unit_cost, subtotal, category_label, product_variants(products(id, brand, model)))')
       .eq('status', 'completada')
       .order('sale_date'),
     supabase
@@ -22,6 +22,7 @@ export default async function ReportesPage() {
 
   const byMonth: Record<string, number> = {}
   const byBrand: Record<string, number> = {}
+  const byCategory: Record<string, number> = {}
   const byProduct: Record<string, { name: string; units: number; revenue: number }> = {}
   const byChannel: Record<string, number> = {}
   const byPayment: Record<string, number> = {}
@@ -40,12 +41,16 @@ export default async function ReportesPage() {
       quantity: number
       unit_price: number
       unit_cost: number
+      subtotal: number
+      category_label: string | null
       product_variants: { products: { id: string; brand: string; model: string } | null } | null
     }
     ;((sale.sale_items ?? []) as unknown as ReportItem[]).forEach(item => {
       const p = item.product_variants?.products
       const brand = p?.brand ?? 'Otro'
       byBrand[brand] = (byBrand[brand] ?? 0) + item.quantity
+      const cat = item.category_label ?? 'Sin categoría'
+      byCategory[cat] = (byCategory[cat] ?? 0) + item.subtotal
       unitsSold += item.quantity
       totalCOGS += item.unit_cost * item.quantity
       if (p?.id) soldIds.add(p.id)
@@ -127,6 +132,9 @@ export default async function ReportesPage() {
             <BreakdownCard title="Ventas por canal" data={byChannel} labels={channelLabel} total={totalRevenue} />
             <BreakdownCard title="Por medio de pago" data={byPayment} labels={payLabel} total={totalRevenue} />
           </div>
+
+          {/* Ventas por categoría (zapatillas vs ropa) */}
+          <BreakdownCard title="Ventas por categoría" data={byCategory} labels={{}} total={totalRevenue} />
 
           {/* Pie + top products */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

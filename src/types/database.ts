@@ -9,6 +9,54 @@ export type ExpenseType = 'fijo' | 'variable'
 export type AdjustmentReason = 'ajuste_manual' | 'rotura' | 'perdida' | 'devolucion_proveedor'
 export type UserRole = 'admin' | 'vendedor'
 
+export type AttributeType = 'text' | 'number' | 'select'
+
+/** Rubro / línea de negocio (Zapatillas, Ropa). Agrupa categorías y separa la plata. */
+export interface BusinessLine {
+  id: string
+  name: string
+  slug: string
+  sort_order: number
+  created_at: string
+}
+
+/** Categoría de producto: define sus talles y sus atributos propios. */
+export interface ProductCategory {
+  id: string
+  line_id: string | null
+  name: string
+  slug: string
+  size_options: string[]
+  sort_order: number
+  active: boolean
+  created_at: string
+  line?: BusinessLine
+  attributes?: CategoryAttribute[]
+}
+
+/** Campo propio de una categoría (motor del formulario dinámico). */
+export interface CategoryAttribute {
+  id: string
+  category_id: string
+  key: string
+  label: string
+  type: AttributeType
+  options: string[]
+  required: boolean
+  filterable: boolean
+  sort_order: number
+  created_at: string
+}
+
+/** Valores de los atributos propios de un producto: { "tipo": "Cargo", "material": "Gabardina" } */
+export type ProductAttributes = Record<string, string>
+
+export interface Brand {
+  id: string
+  name: string
+  created_at: string
+}
+
 export interface Supplier {
   id: string
   name: string
@@ -17,6 +65,7 @@ export interface Supplier {
   email: string | null
   address: string | null
   notes: string | null
+  line_id: string | null
   created_at: string
 }
 
@@ -32,10 +81,13 @@ export interface Product {
   image_url: string | null
   description: string | null
   supplier_id: string | null
+  category_id: string | null
+  attributes: ProductAttributes
   active: boolean
   created_at: string
   suppliers?: Supplier
   variants?: ProductVariant[]
+  category?: ProductCategory
 }
 
 export interface ProductVariant {
@@ -80,6 +132,8 @@ export interface SaleItem {
   variant_id: string | null
   product_label: string | null
   size_label: string | null
+  line_id: string | null
+  category_label: string | null
   quantity: number
   unit_price: number
   unit_cost: number
@@ -109,6 +163,8 @@ export interface PurchaseItem {
   variant_id: string | null
   product_label: string | null
   size_label: string | null
+  line_id: string | null
+  category_label: string | null
   quantity: number
   unit_cost: number
   subtotal: number
@@ -125,6 +181,7 @@ export interface Expense {
   payment_method: string | null
   recurring: boolean
   notes: string | null
+  line_id: string | null
   created_by: string | null
   created_at: string
 }
@@ -261,6 +318,30 @@ export type Database = {
         Row: ExpenseCategoryRow
         Insert: Omit<ExpenseCategoryRow, 'id' | 'created_at'>
         Update: Partial<Omit<ExpenseCategoryRow, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      business_lines: {
+        Row: BusinessLine
+        Insert: Omit<BusinessLine, 'id' | 'created_at'>
+        Update: Partial<Omit<BusinessLine, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      product_categories: {
+        Row: Omit<ProductCategory, 'line' | 'attributes'>
+        Insert: Omit<ProductCategory, 'id' | 'created_at' | 'line' | 'attributes'>
+        Update: Partial<Omit<ProductCategory, 'id' | 'created_at' | 'line' | 'attributes'>>
+        Relationships: []
+      }
+      category_attributes: {
+        Row: CategoryAttribute
+        Insert: Omit<CategoryAttribute, 'id' | 'created_at'>
+        Update: Partial<Omit<CategoryAttribute, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      brands: {
+        Row: Brand
+        Insert: Omit<Brand, 'id' | 'created_at'>
+        Update: Partial<Omit<Brand, 'id' | 'created_at'>>
         Relationships: []
       }
       user_profiles: {

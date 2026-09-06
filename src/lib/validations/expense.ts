@@ -9,6 +9,7 @@ export const expenseSchema = z.object({
   payment_method: z.string().optional(),
   recurring: z.boolean(),
   notes: z.string().optional(),
+  line_id: z.string().optional().nullable(),
 })
 
 export type ExpenseFormData = z.infer<typeof expenseSchema>

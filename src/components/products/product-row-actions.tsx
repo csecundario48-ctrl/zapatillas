@@ -11,14 +11,16 @@ import {
 import { ProductForm } from './product-form'
 import { RowMenu } from '@/components/common/row-menu'
 import { deleteProduct } from '@/app/actions/products'
-import type { Product, Supplier } from '@/types/database'
+import type { Product, Supplier, Brand, ProductCategory } from '@/types/database'
 
 interface Props {
   product: Product
   suppliers: Pick<Supplier, 'id' | 'name'>[]
+  categories: ProductCategory[]
+  brands: Brand[]
 }
 
-export function ProductRowActions({ product, suppliers }: Props) {
+export function ProductRowActions({ product, suppliers, categories, brands }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
@@ -42,7 +44,7 @@ export function ProductRowActions({ product, suppliers }: Props) {
           <DialogHeader>
             <DialogTitle className="text-foreground">Editar producto</DialogTitle>
           </DialogHeader>
-          <ProductForm suppliers={suppliers} product={product} onSuccess={() => setOpen(false)} />
+          <ProductForm suppliers={suppliers} categories={categories} brands={brands} product={product} onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>
