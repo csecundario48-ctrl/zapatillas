@@ -57,6 +57,26 @@ export interface Brand {
   created_at: string
 }
 
+/** Un outfit es un conjunto de productos con nombre (el "combina con"). */
+export interface Outfit {
+  id: string
+  name: string
+  notes: string | null
+  favorite: boolean
+  created_by: string | null
+  created_at: string
+  items?: OutfitItem[]
+}
+
+export interface OutfitItem {
+  id: string
+  outfit_id: string
+  product_id: string
+  sort_order: number
+  created_at: string
+  product?: Product
+}
+
 export interface Supplier {
   id: string
   name: string
@@ -342,6 +362,18 @@ export type Database = {
         Row: Brand
         Insert: Omit<Brand, 'id' | 'created_at'>
         Update: Partial<Omit<Brand, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      outfits: {
+        Row: Omit<Outfit, 'items'>
+        Insert: Omit<Outfit, 'id' | 'created_at' | 'items'>
+        Update: Partial<Omit<Outfit, 'id' | 'created_at' | 'items'>>
+        Relationships: []
+      }
+      outfit_items: {
+        Row: Omit<OutfitItem, 'product'>
+        Insert: Omit<OutfitItem, 'id' | 'created_at' | 'product'>
+        Update: Partial<Omit<OutfitItem, 'id' | 'created_at' | 'product'>>
         Relationships: []
       }
       user_profiles: {

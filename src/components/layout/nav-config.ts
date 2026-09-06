@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   Package,
   Boxes,
+  Shirt,
   ShoppingCart,
   ClipboardList,
   Truck,
@@ -34,6 +35,7 @@ export const navGroups: NavGroup[] = [
     label: 'Inventario',
     items: [
       { href: '/catalogo', label: 'Catálogo', icon: Package },
+      { href: '/outfits', label: 'Outfits', icon: Shirt },
       { href: '/stock', label: 'Stock', icon: Boxes },
     ],
   },

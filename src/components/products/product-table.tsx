@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Product, Supplier, Brand, ProductCategory } from '@/types/database'
 import { formatCurrency } from '@/lib/utils/format'
 import { ProductRowActions } from './product-row-actions'
@@ -68,7 +69,9 @@ export function ProductTable({ products, isAdmin, suppliers = [], categories = [
             return (
               <tr key={p.id} className="border-b border-foreground/[0.06] hover:bg-foreground/[0.02] transition-colors">
                 <td className="px-4 py-3 font-medium text-foreground">
-                  {p.brand} {p.model}
+                  <Link href={`/catalogo/${p.id}`} className="hover:text-indigo-400 transition-colors">
+                    {p.brand} {p.model}
+                  </Link>
                   <span className="text-foreground/55 text-xs ml-1">· {p.color}</span>
                 </td>
                 <td className="px-4 py-3">
