@@ -39,16 +39,13 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
   const ids = [...new Set(input.items.map(i => i.variant_id))]
   const { data: variants, error: varErr } = await supabase
     .from('product_variants')
-    .select('id, size, stock_quantity, products(active, brand, model, color, cost_price, category:product_categories(name, line_id))')
+    .select('id, size, stock_quantity, products(active, brand, model, color, cost_price)')
     .in('id', ids)
   if (varErr) return { error: varErr.message }
 
   type Row = {
     id: string; size: string; stock_quantity: number
-    products: {
-      active: boolean; brand: string; model: string; color: string; cost_price: number
-      category: { name: string; line_id: string | null } | null
-    } | null
+    products: { active: boolean; brand: string; model: string; color: string; cost_price: number } | null
   }
   const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
@@ -101,8 +98,6 @@ export async function createSale(input: CreateSaleInput): Promise<{ error?: stri
         variant_id: i.variant_id,
         product_label: v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
         size_label: v.size,
-        line_id: v.products?.category?.line_id ?? null,
-        category_label: v.products?.category?.name ?? null,
         quantity: i.quantity,
         unit_price: i.unit_price,
         unit_cost: v.products?.cost_price ?? 0,
@@ -171,7 +166,7 @@ export async function updateSale(
 
   const { data: sale, error: saleErr } = await supabase
     .from('sales')
-    .select('id, status, deposit_amount, sale_items(variant_id, quantity, unit_cost, product_label, size_label, line_id, category_label, subtotal)')
+    .select('id, status, deposit_amount, sale_items(variant_id, quantity, unit_cost, product_label, size_label, subtotal)')
     .eq('id', saleId)
     .single()
   if (saleErr || !sale) return { error: saleErr?.message ?? 'Venta no encontrada' }
@@ -182,8 +177,6 @@ export async function updateSale(
     unit_cost: number
     product_label: string | null
     size_label: string | null
-    line_id: string | null
-    category_label: string | null
     subtotal: number
   }
   const oldItems = (sale.sale_items ?? []) as OldItem[]
@@ -198,16 +191,13 @@ export async function updateSale(
   const ids = [...new Set(input.items.map(i => i.variant_id))]
   const { data: variants, error: varErr } = await supabase
     .from('product_variants')
-    .select('id, size, stock_quantity, products(active, brand, model, color, cost_price, category:product_categories(name, line_id))')
+    .select('id, size, stock_quantity, products(active, brand, model, color, cost_price)')
     .in('id', ids)
   if (varErr) return { error: varErr.message }
 
   type Row = {
     id: string; size: string; stock_quantity: number
-    products: {
-      active: boolean; brand: string; model: string; color: string; cost_price: number
-      category: { name: string; line_id: string | null } | null
-    } | null
+    products: { active: boolean; brand: string; model: string; color: string; cost_price: number } | null
   }
   const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
@@ -291,8 +281,6 @@ export async function updateSale(
           ? prev.product_label
           : v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
         size_label: prev ? prev.size_label : v.size,
-        line_id: prev ? prev.line_id : (v.products?.category?.line_id ?? null),
-        category_label: prev ? prev.category_label : (v.products?.category?.name ?? null),
         unit_cost: prev ? prev.unit_cost : (v.products?.cost_price ?? 0),
         quantity: i.quantity,
         unit_price: i.unit_price,

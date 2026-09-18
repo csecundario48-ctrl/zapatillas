@@ -1,4 +1,4 @@
-import type { Product, Supplier, Brand, ProductCategory } from '@/types/database'
+import type { Product, Supplier } from '@/types/database'
 import { formatCurrency } from '@/lib/utils/format'
 import { ProductRowActions } from './product-row-actions'
 
@@ -6,30 +6,17 @@ interface ProductTableProps {
   products: Product[]
   isAdmin: boolean
   suppliers?: Pick<Supplier, 'id' | 'name'>[]
-  categories?: ProductCategory[]
-  brands?: Brand[]
   /** Si está seteado, solo se muestra/cuenta ese talle (búsqueda por talle) */
   sizeFilter?: string | null
 }
 
 const normalizeSize = (s: string) => s.trim().replace(',', '.')
 
-/** Ordena talles: numéricos por valor, el resto alfabético; sirve para
- *  zapatillas (35–45) y para ropa (S/M/L, Única). */
-function compareSizes(a: string, b: string): number {
-  const na = Number(a), nb = Number(b)
-  const aNum = !Number.isNaN(na), bNum = !Number.isNaN(nb)
-  if (aNum && bNum) return na - nb
-  if (aNum) return -1
-  if (bNum) return 1
-  return a.localeCompare(b)
-}
-
 function totalStock(p: Product): number {
   return (p.variants ?? []).reduce((sum, v) => sum + v.stock_quantity, 0)
 }
 
-export function ProductTable({ products, isAdmin, suppliers = [], categories = [], brands = [], sizeFilter = null }: ProductTableProps) {
+export function ProductTable({ products, isAdmin, suppliers = [], sizeFilter = null }: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -43,7 +30,6 @@ export function ProductTable({ products, isAdmin, suppliers = [], categories = [
         <thead>
           <tr className="border-b border-foreground/[0.06] bg-background">
             <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Producto</th>
-            <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Categoría</th>
             <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Talles</th>
             {isAdmin && (
               <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/45 uppercase tracking-[0.14em] font-medium">Costo</th>
@@ -64,17 +50,12 @@ export function ProductTable({ products, isAdmin, suppliers = [], categories = [
             const total = sizeFilter
               ? visibleVariants.reduce((sum, v) => sum + v.stock_quantity, 0)
               : totalStock(p)
-            const sorted = [...visibleVariants].sort((a, b) => compareSizes(a.size, b.size))
+            const sorted = [...visibleVariants].sort((a, b) => Number(a.size) - Number(b.size))
             return (
               <tr key={p.id} className="border-b border-foreground/[0.06] hover:bg-foreground/[0.02] transition-colors">
                 <td className="px-4 py-3 font-medium text-foreground">
                   {p.brand} {p.model}
                   <span className="text-foreground/55 text-xs ml-1">· {p.color}</span>
-                </td>
-                <td className="px-4 py-3">
-                  {p.category?.name
-                    ? <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] border border-foreground/10 text-foreground/70 bg-foreground/[0.03]">{p.category.name}</span>
-                    : <span className="text-foreground/30 text-xs">—</span>}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
@@ -112,7 +93,7 @@ export function ProductTable({ products, isAdmin, suppliers = [], categories = [
                 </td>
                 {isAdmin && (
                   <td className="px-4 py-3">
-                    <ProductRowActions product={p} suppliers={suppliers} categories={categories} brands={brands} />
+                    <ProductRowActions product={p} suppliers={suppliers} />
                   </td>
                 )}
               </tr>

@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { insertPurchaseRecord } from './purchases'
 import { argDateStr } from '@/lib/utils/format'
-import type { ProductAttributes } from '@/types/database'
 
 export interface ProductInput {
   brand: string
@@ -14,8 +13,6 @@ export interface ProductInput {
   cost_price: number
   sale_price: number
   supplier_id: string | null
-  category_id: string
-  attributes: ProductAttributes
   active: boolean
   variants: { size: string; stock_quantity: number }[]
 }
@@ -29,24 +26,8 @@ function productFields(input: ProductInput) {
     cost_price: input.cost_price,
     sale_price: input.sale_price,
     supplier_id: input.supplier_id,
-    category_id: input.category_id,
-    attributes: input.attributes ?? {},
     active: input.active,
   }
-}
-
-/** Trae rubro (line_id) y nombre de la categoría para snapshotear los items. */
-async function categorySnapshot(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  categoryId: string | null
-): Promise<{ line_id: string | null; category_label: string | null }> {
-  if (!categoryId) return { line_id: null, category_label: null }
-  const { data } = await supabase
-    .from('product_categories')
-    .select('name, line_id')
-    .eq('id', categoryId)
-    .maybeSingle()
-  return { line_id: data?.line_id ?? null, category_label: data?.name ?? null }
 }
 
 /** Crea el producto y una variante por cada talle con stock > 0. Si hay stock
@@ -56,8 +37,6 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
-
-  if (!input.category_id) return { error: 'Elegí una categoría' }
 
   const hasInitialStock = input.variants.some(v => v.stock_quantity > 0)
   if (hasInitialStock && !input.supplier_id) {
@@ -86,7 +65,6 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
     }
 
     if (input.supplier_id) {
-      const snap = await categorySnapshot(supabase, input.category_id)
       const { error: purchErr } = await insertPurchaseRecord(supabase, {
         supplier_id: input.supplier_id,
         purchase_date: argDateStr(),
@@ -99,8 +77,6 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
           variant_id: v.id,
           product_label: `${input.brand} ${input.model} ${input.color}`,
           size_label: v.size,
-          line_id: snap.line_id,
-          category_label: snap.category_label,
           quantity: v.stock_quantity,
           unit_cost: input.cost_price,
         })),
@@ -187,7 +163,6 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
   }
 
   if (purchaseItems.length > 0) {
-    const snap = await categorySnapshot(supabase, input.category_id)
     const { error: purchErr } = await insertPurchaseRecord(supabase, {
       supplier_id: input.supplier_id!,
       purchase_date: argDateStr(),
@@ -200,8 +175,6 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
         variant_id: i.variant_id,
         product_label: `${input.brand} ${input.model} ${input.color}`,
         size_label: i.size_label,
-        line_id: snap.line_id,
-        category_label: snap.category_label,
         quantity: i.quantity,
         unit_cost: input.cost_price,
       })),

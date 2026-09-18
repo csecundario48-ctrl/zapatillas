@@ -11,18 +11,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDateForInput } from '@/lib/utils/format'
-import type { Expense, BusinessLine } from '@/types/database'
+import type { Expense } from '@/types/database'
 
 const sel = 'w-full bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors'
 
 export function ExpenseForm({
   categories,
-  lines = [],
   expense,
   onSuccess,
 }: {
   categories: string[]
-  lines?: BusinessLine[]
   expense?: Expense
   onSuccess?: () => void
 }) {
@@ -46,18 +44,16 @@ export function ExpenseForm({
           payment_method: expense.payment_method ?? '',
           recurring: expense.recurring,
           notes: expense.notes ?? '',
-          line_id: expense.line_id ?? '',
         }
-      : { expense_date: formatDateForInput(), recurring: false, line_id: '' },
+      : { expense_date: formatDateForInput(), recurring: false },
   })
 
   async function onSubmit(data: ExpenseFormData) {
     setError(null)
     const supabase = createClient()
-    const payload = { ...data, line_id: data.line_id || null }
 
     if (isEdit) {
-      const { error } = await supabase.from('expenses').update(payload).eq('id', expense.id)
+      const { error } = await supabase.from('expenses').update(data).eq('id', expense.id)
       if (error) { setError(error.message); return }
       toast.success('Egreso actualizado')
       router.refresh()
@@ -65,10 +61,10 @@ export function ExpenseForm({
       return
     }
 
-    const { error } = await supabase.from('expenses').insert(payload)
+    const { error } = await supabase.from('expenses').insert(data)
     if (error) { setError(error.message); return }
     toast.success('Egreso registrado')
-    reset({ expense_date: formatDateForInput(), recurring: false, line_id: '' })
+    reset({ expense_date: formatDateForInput(), recurring: false })
     router.refresh()
     onSuccess?.()
   }
@@ -113,13 +109,6 @@ export function ExpenseForm({
             <option value="efectivo" className="bg-card">Efectivo</option>
             <option value="transferencia" className="bg-card">Transferencia</option>
             <option value="tarjeta" className="bg-card">Tarjeta</option>
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="font-mono text-[10px] text-foreground/60 uppercase tracking-[0.14em]">Rubro</Label>
-          <select {...register('line_id')} className={sel}>
-            <option value="" className="bg-card">General / Compartido</option>
-            {lines.map(l => <option key={l.id} value={l.id} className="bg-card">{l.name}</option>)}
           </select>
         </div>
       </div>

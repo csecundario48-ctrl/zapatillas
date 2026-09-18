@@ -13,7 +13,6 @@ export const productSchema = z.object({
   cost_price: z.number().min(0, 'Debe ser positivo'),
   sale_price: z.number().min(0, 'Debe ser positivo'),
   supplier_id: z.string().optional().nullable(),
-  category_id: z.string().min(1, 'Elegí una categoría'),
   active: z.boolean(),
   variants: z.array(productVariantSchema),
 })

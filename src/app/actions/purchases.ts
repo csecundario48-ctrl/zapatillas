@@ -25,8 +25,6 @@ export interface PurchaseRecordItem {
   variant_id: string
   product_label: string | null
   size_label: string | null
-  line_id?: string | null
-  category_label?: string | null
   quantity: number
   unit_cost: number
 }
@@ -76,8 +74,6 @@ export async function insertPurchaseRecord(
       variant_id: i.variant_id,
       product_label: i.product_label,
       size_label: i.size_label,
-      line_id: i.line_id ?? null,
-      category_label: i.category_label ?? null,
       quantity: i.quantity,
       unit_cost: i.unit_cost,
       subtotal: i.unit_cost * i.quantity,
@@ -107,16 +103,13 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
   const ids = [...new Set(input.items.map(i => i.variant_id))]
   const { data: variants, error: varErr } = await supabase
     .from('product_variants')
-    .select('id, size, stock_quantity, products(brand, model, color, category:product_categories(name, line_id))')
+    .select('id, size, stock_quantity, products(brand, model, color)')
     .in('id', ids)
   if (varErr) return { error: varErr.message }
 
   type Row = {
     id: string; size: string; stock_quantity: number
-    products: {
-      brand: string; model: string; color: string
-      category: { name: string; line_id: string | null } | null
-    } | null
+    products: { brand: string; model: string; color: string } | null
   }
   const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
@@ -142,8 +135,6 @@ export async function createPurchase(input: CreatePurchaseInput): Promise<{ erro
         variant_id: i.variant_id,
         product_label: v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
         size_label: v.size,
-        line_id: v.products?.category?.line_id ?? null,
-        category_label: v.products?.category?.name ?? null,
         quantity: i.quantity,
         unit_cost: i.unit_cost,
       }
@@ -318,7 +309,7 @@ export async function updatePurchase(
 
   const { data: purchase, error: pErr } = await supabase
     .from('purchases')
-    .select('id, delivery_status, purchase_items(variant_id, quantity, unit_cost, product_label, size_label, line_id, category_label, subtotal)')
+    .select('id, delivery_status, purchase_items(variant_id, quantity, unit_cost, product_label, size_label, subtotal)')
     .eq('id', purchaseId)
     .single()
   if (pErr || !purchase) return { error: pErr?.message ?? 'Compra no encontrada' }
@@ -329,8 +320,6 @@ export async function updatePurchase(
     unit_cost: number
     product_label: string | null
     size_label: string | null
-    line_id: string | null
-    category_label: string | null
     subtotal: number
   }
   const row = purchase as unknown as { delivery_status: string; purchase_items: OldItem[] }
@@ -345,16 +334,13 @@ export async function updatePurchase(
   const ids = [...new Set(input.items.map(i => i.variant_id))]
   const { data: variants, error: varErr } = await supabase
     .from('product_variants')
-    .select('id, size, stock_quantity, products(brand, model, color, category:product_categories(name, line_id))')
+    .select('id, size, stock_quantity, products(brand, model, color)')
     .in('id', ids)
   if (varErr) return { error: varErr.message }
 
   type Row = {
     id: string; size: string; stock_quantity: number
-    products: {
-      brand: string; model: string; color: string
-      category: { name: string; line_id: string | null } | null
-    } | null
+    products: { brand: string; model: string; color: string } | null
   }
   const byId = new Map((variants as unknown as Row[] ?? []).map(v => [v.id, v]))
 
@@ -426,8 +412,6 @@ export async function updatePurchase(
           ? prev.product_label
           : v.products ? `${v.products.brand} ${v.products.model} ${v.products.color}` : null,
         size_label: prev ? prev.size_label : v.size,
-        line_id: prev ? prev.line_id : (v.products?.category?.line_id ?? null),
-        category_label: prev ? prev.category_label : (v.products?.category?.name ?? null),
         quantity: i.quantity,
         unit_cost: i.unit_cost,
         subtotal: i.unit_cost * i.quantity,

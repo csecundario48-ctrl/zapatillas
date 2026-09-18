@@ -12,16 +12,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ExpenseForm } from './expense-form'
-import type { Expense, BusinessLine } from '@/types/database'
+import type { Expense } from '@/types/database'
 
 export function ExpenseRowActions({
   expense,
   categories,
-  lines = [],
 }: {
   expense: Expense
   categories: string[]
-  lines?: BusinessLine[]
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
@@ -50,7 +48,6 @@ export function ExpenseRowActions({
           </DialogHeader>
           <ExpenseForm
             categories={categories}
-            lines={lines}
             expense={expense}
             onSuccess={() => setEditing(false)}
           />

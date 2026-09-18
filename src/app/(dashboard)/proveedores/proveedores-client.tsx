@@ -17,7 +17,7 @@ import { RowMenu } from '@/components/common/row-menu'
 import { deleteErrorMessage } from '@/lib/utils/delete-error'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils/format'
-import type { Supplier, BusinessLine } from '@/types/database'
+import type { Supplier } from '@/types/database'
 
 export interface SupplierRow {
   id: string
@@ -27,7 +27,6 @@ export interface SupplierRow {
   email: string | null
   address: string | null
   notes: string | null
-  lineId: string | null
   purchases: number
   totalBought: number
   debt: number
@@ -35,12 +34,12 @@ export interface SupplierRow {
   daysSince: number | null
 }
 
-function SupplierRowActions({ row, lines }: { row: SupplierRow; lines: BusinessLine[] }) {
+function SupplierRowActions({ row }: { row: SupplierRow }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const supplier = {
     id: row.id, name: row.name, contact_name: row.contactName, phone: row.phone,
-    email: row.email, address: row.address, notes: row.notes, line_id: row.lineId,
+    email: row.email, address: row.address, notes: row.notes,
   } as Supplier
 
   async function del() {
@@ -64,7 +63,7 @@ function SupplierRowActions({ row, lines }: { row: SupplierRow; lines: BusinessL
           <DialogHeader>
             <DialogTitle className="text-foreground">Editar proveedor</DialogTitle>
           </DialogHeader>
-          <SupplierForm supplier={supplier} lines={lines} onSuccess={() => setOpen(false)} />
+          <SupplierForm supplier={supplier} onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>
@@ -80,18 +79,17 @@ function lastLabel(days: number | null) {
   return `Hace ${months} mes${months > 1 ? 'es' : ''}`
 }
 
-export function ProveedoresClient({ rows, lines = [] }: { rows: SupplierRow[]; lines?: BusinessLine[] }) {
+export function ProveedoresClient({ rows }: { rows: SupplierRow[] }) {
   const [search, setSearch] = useState('')
-  const [lineFilter, setLineFilter] = useState('')
   const [open, setOpen] = useState(false)
 
-  const lineName = (id: string | null) => lines.find(l => l.id === id)?.name ?? null
-
-  const filtered = rows.filter(r => {
-    if (lineFilter && r.lineId !== lineFilter) return false
-    if (search && !`${r.name} ${r.contactName ?? ''} ${r.phone ?? ''} ${r.email ?? ''}`.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  const filtered = search
+    ? rows.filter(r =>
+        `${r.name} ${r.contactName ?? ''} ${r.phone ?? ''} ${r.email ?? ''}`
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      )
+    : rows
 
   const totalDebt = rows.reduce((s, r) => s + r.debt, 0)
 
@@ -107,16 +105,6 @@ export function ProveedoresClient({ rows, lines = [] }: { rows: SupplierRow[]; l
           </p>
         </div>
         <div className="flex gap-3">
-          {lines.length > 0 && (
-            <select
-              value={lineFilter}
-              onChange={e => setLineFilter(e.target.value)}
-              className="bg-card border border-foreground/10 text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
-            >
-              <option value="">Todo rubro</option>
-              {lines.map(l => <option key={l.id} value={l.id} className="bg-card">{l.name}</option>)}
-            </select>
-          )}
           <input
             type="text"
             value={search}
@@ -130,7 +118,7 @@ export function ProveedoresClient({ rows, lines = [] }: { rows: SupplierRow[]; l
               <DialogHeader>
                 <DialogTitle className="text-foreground">Agregar proveedor</DialogTitle>
               </DialogHeader>
-              <SupplierForm lines={lines} onSuccess={() => setOpen(false)} />
+              <SupplierForm onSuccess={() => setOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
@@ -150,7 +138,6 @@ export function ProveedoresClient({ rows, lines = [] }: { rows: SupplierRow[]; l
                 <tr className="border-b border-foreground/[0.06] bg-card">
                   <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Proveedor</th>
                   <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Contacto</th>
-                  <th className="text-left px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Rubro</th>
                   <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Compras</th>
                   <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Total</th>
                   <th className="text-right px-4 py-3 font-mono text-[10px] text-foreground/55 uppercase tracking-[0.14em] font-medium">Deuda</th>
@@ -173,11 +160,6 @@ export function ProveedoresClient({ rows, lines = [] }: { rows: SupplierRow[]; l
                         {!r.contactName && !r.email && <span className="text-[12px] text-foreground/40">—</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      {lineName(r.lineId)
-                        ? <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] border border-foreground/10 text-foreground/60">{lineName(r.lineId)}</span>
-                        : <span className="text-foreground/35 text-xs">General</span>}
-                    </td>
                     <td className="px-4 py-3 text-right text-foreground/85 font-mono">{r.purchases}</td>
                     <td className="px-4 py-3 text-right font-mono text-foreground/85 tabular-nums">{formatCurrency(r.totalBought)}</td>
                     <td className="px-4 py-3 text-right font-mono font-medium tabular-nums">
@@ -189,7 +171,7 @@ export function ProveedoresClient({ rows, lines = [] }: { rows: SupplierRow[]; l
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <WhatsAppButton phone={r.phone} name={r.contactName ?? r.name} />
-                        <SupplierRowActions row={r} lines={lines} />
+                        <SupplierRowActions row={r} />
                       </div>
                     </td>
                   </tr>
