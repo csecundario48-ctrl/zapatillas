@@ -11,6 +11,7 @@ const categoryColors: Record<string, string> = {
   marketing: 'text-indigo-400',
   publicidad: 'text-pink-500 dark:text-pink-400',
   delivery: 'text-emerald-600 dark:text-emerald-400',
+  'envíos': 'text-teal-600 dark:text-teal-400',
   salarios: 'text-amber-600 dark:text-amber-400',
   packaging: 'text-orange-400',
   otros: 'text-foreground/60',
@@ -18,19 +19,19 @@ const categoryColors: Record<string, string> = {
 
 export default async function EgresosPage() {
   const supabase = await createClient()
+  const monthStart = `${argDateStr().slice(0, 7)}-01`
   const [{ data: expenses }, { data: categoryRows }] = await Promise.all([
-    supabase.from('expenses').select('*').order('expense_date', { ascending: false }),
+    supabase
+      .from('expenses')
+      .select('*')
+      .gte('expense_date', monthStart)
+      .order('expense_date', { ascending: false }),
     supabase.from('expense_categories').select('name').order('name'),
   ])
   const categories = ((categoryRows as { name: string }[] | null) ?? []).map(c => c.name)
 
-  const total = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
-  const thisMonth = expenses
-    ?.filter(e => {
-      const monthStart = `${argDateStr().slice(0, 7)}-01`
-      return e.expense_date >= monthStart
-    })
-    .reduce((sum, e) => sum + e.amount, 0) ?? 0
+  const thisMonth = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
+  const monthName = new Date(`${monthStart}T12:00:00`).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -38,7 +39,7 @@ export default async function EgresosPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Egresos</h1>
           <p className="text-sm text-foreground/55 mt-0.5">
-            Este mes: {formatCurrency(thisMonth)} · Total: {formatCurrency(total)}
+            <span className="capitalize">{monthName}</span>: {formatCurrency(thisMonth)}
           </p>
         </div>
         <Dialog>
@@ -104,7 +105,7 @@ export default async function EgresosPage() {
           </table>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-foreground/45 text-sm">No hay egresos registrados aún.</p>
+            <p className="text-foreground/45 text-sm">No hay egresos registrados este mes.</p>
           </div>
         )}
       </div>

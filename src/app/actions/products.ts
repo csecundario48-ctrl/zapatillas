@@ -85,6 +85,8 @@ export async function createProduct(input: ProductInput): Promise<{ error?: stri
     }
   }
 
+  revalidatePath('/compras')
+  revalidatePath('/finanzas')
   revalidatePath('/catalogo')
   revalidatePath('/stock')
   revalidatePath('/')
@@ -182,6 +184,8 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
     if (purchErr) return { error: `Producto actualizado, pero falló registrar la compra: ${purchErr}` }
   }
 
+  revalidatePath('/compras')
+  revalidatePath('/finanzas')
   revalidatePath('/catalogo')
   revalidatePath('/stock')
   revalidatePath('/')
